@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/components/AuthProvider';
 import { Button } from "@/components/ui/button";
 import { Plus, LogOut, Users, Play, Loader2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -17,7 +18,7 @@ import { MadeWithDyad } from "@/components/made-with-dyad";
 import { showSuccess, showError } from '@/utils/toast';
 
 const Index = () => {
-  const [session, setSession] = useState<any>(null);
+  const { session, loading: authLoading } = useAuth();
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -25,20 +26,13 @@ const Index = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      if (!session) navigate('/login');
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      if (!session) navigate('/login');
-    });
-
-    return () => subscription.unsubscribe();
-  }, [navigate]);
+    if (!authLoading && !session) {
+      navigate('/login');
+    }
+  }, [session, authLoading, navigate]);
 
   const fetchCustomers = async () => {
+    if (!session) return;
     setLoading(true);
     const { data, error } = await supabase
       .from('customers')
@@ -53,7 +47,6 @@ const Index = () => {
     if (session) {
       fetchCustomers();
 
-      // Subscribe to real-time changes
       const channel = supabase
         .channel('schema-db-changes')
         .on(
@@ -77,15 +70,24 @@ const Index = () => {
     }
 
     setIsBulkProcessing(true);
-    const industry = localStorage.getItem('outreach_industry') || 'Service Provider';
-
+    
     try {
+      // Get industry from profile
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('industry')
+        .eq('id', session?.user.id)
+        .single();
+      
+      const industry = profile?.industry || 'Service Provider';
+
       for (const customer of newCustomers) {
         await supabase.functions.invoke('send-outreach', {
           body: { customerId: customer.id, industry }
         });
       }
       showSuccess(`Processed ${newCustomers.length} customers`);
+      fetchCustomers();
     } catch (err) {
       showError("Bulk processing encountered errors");
     } finally {
@@ -98,7 +100,13 @@ const Index = () => {
     navigate('/login');
   };
 
-  if (!session) return null;
+  if (authLoading || !session) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <Loader2 className="animate-spin text-primary" size={32} />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 pb-12">
@@ -160,6 +168,7 @@ const Index = () => {
                 </DialogHeader>
                 <AddCustomerForm onSuccess={() => {
                   setIsAddOpen(false);
+                  fetchCustomers();
                 }} />
               </DialogContent>
             </Dialog>
