@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { Button } from "@/components/ui/button";
-import { Plus, LogOut, Users } from "lucide-react";
+import { Plus, LogOut, Users, Play, Loader2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import AddCustomerForm from '@/components/AddCustomerForm';
 import BulkUpload from '@/components/BulkUpload';
@@ -12,13 +12,16 @@ import CustomerTable from '@/components/CustomerTable';
 import SystemStatus from '@/components/SystemStatus';
 import SettingsDialog from '@/components/SettingsDialog';
 import DashboardStats from '@/components/DashboardStats';
+import ActivityFeed from '@/components/ActivityFeed';
 import { MadeWithDyad } from "@/components/made-with-dyad";
+import { showSuccess, showError } from '@/utils/toast';
 
 const Index = () => {
   const [session, setSession] = useState<any>(null);
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [isBulkProcessing, setIsBulkProcessing] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -50,6 +53,31 @@ const Index = () => {
     if (session) fetchCustomers();
   }, [session]);
 
+  const handleBulkProcess = async () => {
+    const newCustomers = customers.filter(c => c.status === 'new');
+    if (newCustomers.length === 0) {
+      showError("No new customers to process");
+      return;
+    }
+
+    setIsBulkProcessing(true);
+    const industry = localStorage.getItem('outreach_industry') || 'Service Provider';
+
+    try {
+      for (const customer of newCustomers) {
+        await supabase.functions.invoke('send-outreach', {
+          body: { customerId: customer.id, industry }
+        });
+      }
+      showSuccess(`Processed ${newCustomers.length} customers`);
+      fetchCustomers();
+    } catch (err) {
+      showError("Bulk processing encountered errors");
+    } finally {
+      setIsBulkProcessing(false);
+    }
+  };
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate('/login');
@@ -79,7 +107,14 @@ const Index = () => {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <DashboardStats customers={customers} />
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 mb-8">
+          <div className="lg:col-span-3">
+            <DashboardStats customers={customers} />
+          </div>
+          <div className="lg:col-span-1">
+            <ActivityFeed customers={customers} />
+          </div>
+        </div>
 
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div>
@@ -87,6 +122,15 @@ const Index = () => {
             <p className="text-slate-500">Manage your review requests and outreach status.</p>
           </div>
           <div className="flex items-center gap-3">
+            <Button 
+              variant="default" 
+              className="bg-green-600 hover:bg-green-700 flex items-center gap-2"
+              onClick={handleBulkProcess}
+              disabled={isBulkProcessing || customers.filter(c => c.status === 'new').length === 0}
+            >
+              {isBulkProcessing ? <Loader2 className="animate-spin" size={16} /> : <Play size={16} />}
+              Process All New
+            </Button>
             <BulkUpload onSuccess={fetchCustomers} />
             <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
               <DialogTrigger asChild>
