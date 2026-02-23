@@ -50,7 +50,23 @@ const Index = () => {
   };
 
   useEffect(() => {
-    if (session) fetchCustomers();
+    if (session) {
+      fetchCustomers();
+
+      // Subscribe to real-time changes
+      const channel = supabase
+        .channel('schema-db-changes')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'customers' },
+          () => fetchCustomers()
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
   }, [session]);
 
   const handleBulkProcess = async () => {
@@ -70,7 +86,6 @@ const Index = () => {
         });
       }
       showSuccess(`Processed ${newCustomers.length} customers`);
-      fetchCustomers();
     } catch (err) {
       showError("Bulk processing encountered errors");
     } finally {
@@ -145,7 +160,6 @@ const Index = () => {
                 </DialogHeader>
                 <AddCustomerForm onSuccess={() => {
                   setIsAddOpen(false);
-                  fetchCustomers();
                 }} />
               </DialogContent>
             </Dialog>
@@ -153,7 +167,7 @@ const Index = () => {
         </div>
 
         <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-          {loading ? (
+          {loading && customers.length === 0 ? (
             <div className="p-12 text-center text-slate-500">Loading customers...</div>
           ) : (
             <CustomerTable customers={customers} onRefresh={fetchCustomers} />
