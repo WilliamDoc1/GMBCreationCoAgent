@@ -33,10 +33,22 @@ const CustomerTable = ({ customers, onRefresh }: CustomerTableProps) => {
 
   const triggerOutreach = async (customer: Customer) => {
     setLoadingId(customer.id);
-    const industry = localStorage.getItem('outreach_industry') || 'Service Provider';
     
     try {
-      // 1. Insert into queue
+      // 1. Get industry from profile
+      const { data: { user } } = await supabase.auth.getUser();
+      let industry = 'Service Provider';
+      
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('industry')
+          .eq('id', user.id)
+          .single();
+        if (profile?.industry) industry = profile.industry;
+      }
+
+      // 2. Insert into queue
       const { error: queueError } = await supabase
         .from('outbound_queue')
         .insert([{
@@ -50,8 +62,9 @@ const CustomerTable = ({ customers, onRefresh }: CustomerTableProps) => {
 
       if (queueError) throw queueError;
 
-      // 2. Trigger Edge Function with industry context
-      const { error: funcError } = await supabase.functions.invoke('send-outreach', {
+      // 3. Trigger Edge Function using full URL
+      const functionUrl = 'https://uqqzyqgypljxvmnguhky.supabase.co/functions/v1/send-outreach';
+      const { error: funcError } = await supabase.functions.invoke(functionUrl, {
         body: { 
           customerId: customer.id,
           industry: industry

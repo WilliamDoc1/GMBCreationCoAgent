@@ -12,20 +12,50 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Settings2 } from "lucide-react";
-import { showSuccess } from '@/utils/toast';
+import { Settings2, Loader2 } from "lucide-react";
+import { supabase } from '@/lib/supabase';
+import { showSuccess, showError } from '@/utils/toast';
 
 const SettingsDialog = () => {
-  const [industry, setIndustry] = useState('Service Provider');
+  const [industry, setIndustry] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    const saved = localStorage.getItem('outreach_industry');
-    if (saved) setIndustry(saved);
+    const fetchProfile = async () => {
+      setLoading(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('industry')
+          .eq('id', user.id)
+          .single();
+        
+        if (data) setIndustry(data.industry || '');
+      }
+      setLoading(false);
+    };
+
+    fetchProfile();
   }, []);
 
-  const handleSave = () => {
-    localStorage.setItem('outreach_industry', industry);
-    showSuccess("Settings saved locally");
+  const handleSave = async () => {
+    setSaving(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ industry, updated_at: new Date().toISOString() })
+        .eq('id', user.id);
+
+      if (error) {
+        showError("Failed to save settings");
+      } else {
+        showSuccess("Settings saved to profile");
+      }
+    }
+    setSaving(false);
   };
 
   return (
@@ -42,19 +72,27 @@ const SettingsDialog = () => {
         <div className="space-y-4 py-4">
           <div className="space-y-2">
             <Label htmlFor="industry">Business Industry</Label>
-            <Input 
-              id="industry" 
-              value={industry} 
-              onChange={(e) => setIndustry(e.target.value)}
-              placeholder="e.g. Plumber, Coffee Shop, Law Firm"
-            />
+            {loading ? (
+              <div className="flex items-center gap-2 text-sm text-slate-500">
+                <Loader2 size={14} className="animate-spin" /> Loading...
+              </div>
+            ) : (
+              <Input 
+                id="industry" 
+                value={industry} 
+                onChange={(e) => setIndustry(e.target.value)}
+                placeholder="e.g. Plumber, Coffee Shop, Law Firm"
+              />
+            )}
             <p className="text-xs text-slate-500">
               This context is sent to Gemini to personalize the SMS tone.
             </p>
           </div>
         </div>
         <DialogFooter>
-          <Button onClick={handleSave}>Save Changes</Button>
+          <Button onClick={handleSave} disabled={saving || loading}>
+            {saving ? "Saving..." : "Save Changes"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
