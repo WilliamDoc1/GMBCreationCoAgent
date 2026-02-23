@@ -19,22 +19,29 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // 1. Get customer and queue data
+    // 1. Get customer and their owner's profile
     const { data: customer, error: customerError } = await supabase
       .from('customers')
-      .select('*')
+      .select('*, profiles(*)')
       .eq('id', customerId)
       .single()
 
     if (customerError || !customer) throw new Error('Customer not found')
 
+    const profile = customer.profiles
+    const industry = profile?.industry || 'Service Provider'
+    const reviewLink = profile?.review_link || ''
+
     // 2. Generate AI Message using Gemini
     const geminiKey = Deno.env.get('GEMINI_API_KEY')
     const prompt = `Generate a friendly, professional SMS review request for a South African business. 
+    Business Industry: ${industry}.
     Customer Name: ${customer.full_name}. 
+    Review Link: ${reviewLink}.
     Context: They recently used our services. 
-    Tone: Warm, local South African English. 
-    Keep it under 160 characters.`
+    Tone: Warm, local South African English (e.g., use "Lekker" or "Cheers" if appropriate but keep it professional). 
+    Requirement: Must include the review link if provided.
+    Constraint: Keep the entire message under 160 characters.`
 
     const geminiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
       method: 'POST',
@@ -65,7 +72,10 @@ serve(async (req) => {
       })
     })
 
-    if (!twilioResponse.ok) throw new Error('Twilio failed to send')
+    if (!twilioResponse.ok) {
+      const twilioError = await twilioResponse.json()
+      throw new Error(`Twilio failed: ${twilioError.message}`)
+    }
 
     // 4. Update status
     await supabase
@@ -87,6 +97,7 @@ serve(async (req) => {
     })
 
   } catch (error) {
+    console.error('Error in send-outreach:', error)
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400,
