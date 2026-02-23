@@ -22,6 +22,7 @@ import {
 import { Send, Loader2, Trash2, Search, Filter } from "lucide-react";
 import { supabase } from '@/lib/supabase';
 import { showError, showSuccess } from '@/utils/toast';
+import MessageHistoryDialog from './MessageHistoryDialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -64,18 +65,6 @@ const CustomerTable = ({ customers, onRefresh }: CustomerTableProps) => {
     setLoadingId(customer.id);
     
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      let industry = 'Service Provider';
-      
-      if (user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('industry')
-          .eq('id', user.id)
-          .single();
-        if (profile?.industry) industry = profile.industry;
-      }
-
       const functionUrl = 'https://uqqzyqgypljxvmnguhky.supabase.co/functions/v1/send-outreach';
       const { error: funcError } = await supabase.functions.invoke(functionUrl, {
         body: { customerId: customer.id }
@@ -182,6 +171,11 @@ const CustomerTable = ({ customers, onRefresh }: CustomerTableProps) => {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
+                      <MessageHistoryDialog 
+                        customerId={customer.id} 
+                        customerName={customer.full_name} 
+                      />
+                      
                       <Button
                         size="sm"
                         variant="ghost"

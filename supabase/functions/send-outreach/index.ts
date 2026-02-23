@@ -77,7 +77,16 @@ serve(async (req) => {
       throw new Error(`Twilio failed: ${twilioError.message}`)
     }
 
-    // 4. Update status
+    // 4. Log the message in history
+    await supabase
+      .from('messages')
+      .insert({
+        customer_id: customerId,
+        content: message,
+        status: 'sent'
+      })
+
+    // 5. Update customer status
     await supabase
       .from('customers')
       .update({ 
@@ -85,11 +94,6 @@ serve(async (req) => {
         last_contacted_at: new Date().toISOString() 
       })
       .eq('id', customerId)
-
-    await supabase
-      .from('outbound_queue')
-      .update({ status: 'completed' })
-      .eq('customer_id', customerId)
 
     return new Response(JSON.stringify({ success: true, message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
