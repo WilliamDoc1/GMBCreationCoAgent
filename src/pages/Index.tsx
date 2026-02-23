@@ -11,6 +11,7 @@ import BulkUpload from '@/components/BulkUpload';
 import CustomerTable from '@/components/CustomerTable';
 import SystemStatus from '@/components/SystemStatus';
 import SettingsDialog from '@/components/SettingsDialog';
+import DashboardStats from '@/components/DashboardStats';
 import { MadeWithDyad } from "@/components/made-with-dyad";
 
 const Index = () => {
@@ -78,6 +79,8 @@ const Index = () => {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <DashboardStats customers={customers} />
+
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div>
             <h2 className="text-2xl font-semibold text-slate-900">Customer List</h2>

@@ -33,6 +33,8 @@ const CustomerTable = ({ customers, onRefresh }: CustomerTableProps) => {
 
   const triggerOutreach = async (customer: Customer) => {
     setLoadingId(customer.id);
+    const industry = localStorage.getItem('outreach_industry') || 'Service Provider';
+    
     try {
       // 1. Insert into queue
       const { error: queueError } = await supabase
@@ -42,15 +44,18 @@ const CustomerTable = ({ customers, onRefresh }: CustomerTableProps) => {
           payload: { 
             name: customer.full_name, 
             phone: customer.phone_number,
-            industry: "Service Provider" // This could be dynamic
+            industry: industry
           }
         }]);
 
       if (queueError) throw queueError;
 
-      // 2. Trigger Edge Function
+      // 2. Trigger Edge Function with industry context
       const { error: funcError } = await supabase.functions.invoke('send-outreach', {
-        body: { customerId: customer.id }
+        body: { 
+          customerId: customer.id,
+          industry: industry
+        }
       });
 
       if (funcError) throw funcError;
