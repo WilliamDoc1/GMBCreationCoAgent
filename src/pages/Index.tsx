@@ -4,14 +4,10 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
-import { Button } from "@/components/ui/button";
-import { Plus, LogOut, Users, Play, Loader2 } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import AddCustomerForm from '@/components/AddCustomerForm';
-import BulkUpload from '@/components/BulkUpload';
+import { Loader2 } from "lucide-react";
 import CustomerTable from '@/components/CustomerTable';
-import SystemStatus from '@/components/SystemStatus';
-import SettingsDialog from '@/components/SettingsDialog';
+import DashboardHeader from '@/components/DashboardHeader';
+import CustomerActionBar from '@/components/CustomerActionBar';
 import DashboardStats from '@/components/DashboardStats';
 import ActivityFeed from '@/components/ActivityFeed';
 import { MadeWithDyad } from "@/components/made-with-dyad";
@@ -72,7 +68,6 @@ const Index = () => {
     setIsBulkProcessing(true);
     
     try {
-      // Get industry from profile
       const { data: profile } = await supabase
         .from('profiles')
         .select('industry')
@@ -95,11 +90,6 @@ const Index = () => {
     }
   };
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate('/login');
-  };
-
   if (authLoading || !session) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
@@ -110,24 +100,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 pb-12">
-      <header className="bg-white border-b sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <Users className="text-primary h-6 w-6" />
-              <h1 className="text-xl font-bold">Outreach Agent</h1>
-            </div>
-            <SystemStatus />
-          </div>
-          <div className="flex items-center gap-2">
-            <SettingsDialog />
-            <Button variant="ghost" size="sm" onClick={handleLogout} className="flex items-center gap-2">
-              <LogOut size={16} />
-              Logout
-            </Button>
-          </div>
-        </div>
-      </header>
+      <DashboardHeader />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 mb-8">
@@ -139,41 +112,14 @@ const Index = () => {
           </div>
         </div>
 
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-          <div>
-            <h2 className="text-2xl font-semibold text-slate-900">Customer List</h2>
-            <p className="text-slate-500">Manage your review requests and outreach status.</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <Button 
-              variant="default" 
-              className="bg-green-600 hover:bg-green-700 flex items-center gap-2"
-              onClick={handleBulkProcess}
-              disabled={isBulkProcessing || customers.filter(c => c.status === 'new').length === 0}
-            >
-              {isBulkProcessing ? <Loader2 className="animate-spin" size={16} /> : <Play size={16} />}
-              Process All New
-            </Button>
-            <BulkUpload onSuccess={fetchCustomers} />
-            <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-              <DialogTrigger asChild>
-                <Button className="flex items-center gap-2">
-                  <Plus size={16} />
-                  Add Customer
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Add New Customer</DialogTitle>
-                </DialogHeader>
-                <AddCustomerForm onSuccess={() => {
-                  setIsAddOpen(false);
-                  fetchCustomers();
-                }} />
-              </DialogContent>
-            </Dialog>
-          </div>
-        </div>
+        <CustomerActionBar 
+          isBulkProcessing={isBulkProcessing}
+          newCustomersCount={customers.filter(c => c.status === 'new').length}
+          onBulkProcess={handleBulkProcess}
+          onRefresh={fetchCustomers}
+          isAddOpen={isAddOpen}
+          setIsAddOpen={setIsAddOpen}
+        />
 
         <div className="bg-white rounded-xl shadow-sm overflow-hidden">
           {loading && customers.length === 0 ? (
