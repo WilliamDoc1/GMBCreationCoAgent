@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { supabase } from '@/lib/supabase';
 import { useTenant } from '@/hooks/use-tenant';
 import { showSuccess, showError } from '@/utils/toast';
+import { Loader2 } from 'lucide-react';
 
 const formSchema = z.object({
   full_name: z.string().min(2, "Name is too short"),
@@ -29,6 +30,8 @@ interface AddCustomerFormProps {
 
 const AddCustomerForm = ({ onSuccess }: AddCustomerFormProps) => {
   const { tenant } = useTenant();
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -38,20 +41,33 @@ const AddCustomerForm = ({ onSuccess }: AddCustomerFormProps) => {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    if (!tenant) return;
-
-    const { error } = await supabase
-      .from('customers')
-      .insert([{ ...values, tenant_id: tenant.id }]);
-
-    if (error) {
-      showError("Failed to add customer");
+    if (!tenant) {
+      showError("Business profile not loaded. Please refresh.");
       return;
     }
 
-    showSuccess("Customer added successfully");
-    form.reset();
-    onSuccess();
+    setIsSubmitting(true);
+    try {
+      const { error } = await supabase
+        .from('customers')
+        .insert([{ 
+          full_name: values.full_name,
+          phone_number: values.phone_number,
+          tenant_id: tenant.id,
+          status: 'new'
+        }]);
+
+      if (error) throw error;
+
+      showSuccess("Customer added successfully");
+      form.reset();
+      onSuccess();
+    } catch (error: any) {
+      console.error("Error adding customer:", error);
+      showError(error.message || "Failed to add customer");
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -83,7 +99,10 @@ const AddCustomerForm = ({ onSuccess }: AddCustomerFormProps) => {
             </FormItem>
           )}
         />
-        <Button type="submit" className="w-full">Add Customer</Button>
+        <Button type="submit" className="w-full" disabled={isSubmitting}>
+          {isSubmitting ? <Loader2 className="animate-spin mr-2" size={16} /> : null}
+          Add Customer
+        </Button>
       </form>
     </Form>
   );

@@ -33,9 +33,14 @@ const OnboardingChecklist = () => {
       description: "Identify your brand to customers."
     },
     {
+      label: "Configure Industry",
+      completed: !!tenant.industry && tenant.industry !== 'Service Provider',
+      description: "Helps Gemini personalize the tone."
+    },
+    {
       label: "Configure Review Link",
       completed: !!tenant.gmb_review_link,
-      description: "Where customers will leave their 5-star reviews."
+      description: "Where customers will leave their reviews."
     },
     {
       label: "Twilio Number",

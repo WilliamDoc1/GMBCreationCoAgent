@@ -4,7 +4,6 @@ import React from 'react';
 import { Users, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SystemStatus from './SystemStatus';
-import SettingsDialog from './SettingsDialog';
 import { supabase } from '@/lib/supabase';
 import { useNavigate } from 'react-router-dom';
 
@@ -27,7 +26,6 @@ const DashboardHeader = () => {
           <SystemStatus />
         </div>
         <div className="flex items-center gap-2">
-          <SettingsDialog />
           <Button variant="ghost" size="sm" onClick={handleLogout} className="flex items-center gap-2">
             <LogOut size={16} />
             Logout
