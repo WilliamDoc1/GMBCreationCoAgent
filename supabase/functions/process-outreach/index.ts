@@ -10,12 +10,11 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
   try {
-    // Use system environment variables for security
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     const supabase = createClient(supabaseUrl, supabaseKey)
 
-    // 1. Fetch pending items from the queue
+    // 1. Fetch pending items
     const { data: queueItems, error: queueError } = await supabase
       .from('outreach_queue')
       .select(`
@@ -33,14 +32,13 @@ serve(async (req) => {
     for (const item of queueItems) {
       const { customers: customer, tenants: tenant } = item
       
-      // IDEMPOTENCY CHECK: Skip if already contacted or opted out
       if (customer.status !== 'new') {
         await supabase.from('outreach_queue').update({ status: 'skipped', last_error: 'Customer already contacted' }).eq('id', item.id)
         continue
       }
 
       try {
-        // 2. Generate Personalized Message via Gemini
+        // 2. Generate Message
         const geminiKey = Deno.env.get('GEMINI_API_KEY')
         const prompt = `Draft a short, friendly SMS for ${customer.full_name} from ${tenant.business_name}. 
         Industry: ${tenant.industry}.
@@ -69,7 +67,7 @@ serve(async (req) => {
         const twilioResponse = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`, {
           method: 'POST',
           headers: {
-            'Authorization': 'Basic ' + btoa(`\${accountSid}:\${authToken}`),
+            'Authorization': 'Basic ' + btoa(`${accountSid}:${authToken}`),
             'Content-Type': 'application/x-www-form-urlencoded',
           },
           body: new URLSearchParams({
@@ -80,7 +78,6 @@ serve(async (req) => {
         })
 
         if (twilioResponse.ok) {
-          // 4. FEEDBACK LOOP: Update status and log
           await supabase.from('outreach_queue').update({ status: 'completed', step: 'initial_sent' }).eq('id', item.id)
           await supabase.from('customers').update({ status: 'contacted', last_contacted_at: new Date().toISOString() }).eq('id', customer.id)
           
