@@ -1,76 +1,91 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Clock, Send, UserPlus, CheckCircle2 } from "lucide-react";
+import { Clock, Send, MessageSquare, CheckCircle2, AlertCircle } from "lucide-react";
+import { supabase } from '@/lib/supabase';
+import { useTenant } from '@/hooks/use-tenant';
 
 interface Activity {
   id: string;
-  type: 'outreach' | 'signup' | 'review';
-  message: string;
-  timestamp: string;
+  action: string;
+  message_content: string;
+  created_at: string;
+  customers?: { full_name: string };
 }
 
-interface ActivityFeedProps {
-  customers: any[];
-}
+const ActivityFeed = () => {
+  const { tenant } = useTenant();
+  const [activities, setActivities] = useState<Activity[]>([]);
+  const [loading, setLoading] = useState(true);
 
-const ActivityFeed = ({ customers }: ActivityFeedProps) => {
-  // Derive activity from customer data for now
-  const activities: Activity[] = customers
-    .filter(c => c.last_contacted_at || c.created_at)
-    .map(c => {
-      if (c.status === 'contacted') {
-        return {
-          id: `outreach-${c.id}`,
-          type: 'outreach',
-          message: `Outreach sent to ${c.full_name}`,
-          timestamp: c.last_contacted_at
-        };
-      }
-      return {
-        id: `signup-${c.id}`,
-        type: 'signup',
-        message: `New customer ${c.full_name} added`,
-        timestamp: c.created_at
-      };
-    })
-    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-    .slice(0, 10);
+  useEffect(() => {
+    const fetchActivities = async () => {
+      if (!tenant) return;
+      const { data, error } = await supabase
+        .from('audit_log')
+        .select('*, customers(full_name)')
+        .eq('tenant_id', tenant.id)
+        .order('created_at', { ascending: false })
+        .limit(10);
+      
+      if (!error && data) setActivities(data);
+      setLoading(false);
+    };
 
-  const getIcon = (type: string) => {
-    switch (type) {
-      case 'outreach': return <Send size={14} className="text-yellow-500" />;
-      case 'signup': return <UserPlus size={14} className="text-blue-500" />;
-      case 'review': return <CheckCircle2 size={14} className="text-green-500" />;
-      default: return <Clock size={14} />;
-    }
+    fetchActivities();
+
+    // Subscribe to new logs
+    const channel = supabase
+      .channel('audit-logs-feed')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'audit_log', filter: `tenant_id=eq.${tenant?.id}` },
+        () => fetchActivities()
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [tenant]);
+
+  const getIcon = (action: string) => {
+    if (action.includes('sent')) return <Send size={14} className="text-blue-500" />;
+    if (action.includes('reply')) return <MessageSquare size={14} className="text-green-500" />;
+    if (action.includes('error')) return <AlertCircle size={14} className="text-red-500" />;
+    return <Clock size={14} className="text-slate-400" />;
   };
 
   return (
     <Card className="h-full">
-      <CardHeader>
+      <CardHeader className="pb-3">
         <CardTitle className="text-sm font-medium flex items-center gap-2">
           <Clock size={16} />
-          Recent Activity
+          Live Activity
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <ScrollArea className="h-[300px] pr-4">
+        <ScrollArea className="h-[350px] pr-4">
           <div className="space-y-4">
-            {activities.length === 0 ? (
+            {loading ? (
+              <p className="text-xs text-slate-500 text-center py-4">Loading activity...</p>
+            ) : activities.length === 0 ? (
               <p className="text-xs text-slate-500 text-center py-4">No recent activity</p>
             ) : (
               activities.map((activity) => (
-                <div key={activity.id} className="flex gap-3 items-start">
-                  <div className="mt-1 p-1 bg-slate-50 rounded-full border">
-                    {getIcon(activity.type)}
+                <div key={activity.id} className="flex gap-3 items-start border-l-2 border-slate-100 pl-3 pb-1">
+                  <div className="mt-0.5 p-1 bg-white rounded-full border shadow-sm">
+                    {getIcon(activity.action)}
                   </div>
                   <div className="space-y-1">
-                    <p className="text-xs font-medium leading-none">{activity.message}</p>
-                    <p className="text-[10px] text-slate-500">
-                      {new Date(activity.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    <p className="text-xs font-semibold leading-none">
+                      {activity.customers?.full_name || 'System'}
+                    </p>
+                    <p className="text-[11px] text-slate-600 line-clamp-2">
+                      {activity.message_content}
+                    </p>
+                    <p className="text-[10px] text-slate-400">
+                      {new Date(activity.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </p>
                   </div>
                 </div>

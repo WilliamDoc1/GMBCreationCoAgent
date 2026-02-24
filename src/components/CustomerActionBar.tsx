@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { Plus, Play, Loader2 } from "lucide-react";
+import { Plus, Play, Loader2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import AddCustomerForm from './AddCustomerForm';
@@ -24,6 +24,14 @@ const CustomerActionBar = ({
   isAddOpen,
   setIsAddOpen
 }: CustomerActionBarProps) => {
+  const [isRefreshing, setIsRefreshing] = React.useState(false);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await onRefresh();
+    setTimeout(() => setIsRefreshing(false), 500);
+  };
+
   return (
     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
       <div>
@@ -31,6 +39,16 @@ const CustomerActionBar = ({
         <p className="text-slate-500">Manage your review requests and outreach status.</p>
       </div>
       <div className="flex items-center gap-3">
+        <Button 
+          variant="outline" 
+          size="icon" 
+          onClick={handleRefresh}
+          disabled={isRefreshing}
+          title="Refresh Data"
+        >
+          <RefreshCw size={16} className={isRefreshing ? "animate-spin" : ""} />
+        </Button>
+        
         <Button 
           variant="default" 
           className="bg-green-600 hover:bg-green-700 flex items-center gap-2"
@@ -40,7 +58,9 @@ const CustomerActionBar = ({
           {isBulkProcessing ? <Loader2 className="animate-spin" size={16} /> : <Play size={16} />}
           Process All New
         </Button>
+        
         <BulkUpload onSuccess={onRefresh} />
+        
         <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
           <DialogTrigger asChild>
             <Button className="flex items-center gap-2">
