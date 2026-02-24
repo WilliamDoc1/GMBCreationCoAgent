@@ -9,7 +9,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/componen
 import { useTenant } from '@/hooks/use-tenant';
 import { supabase } from '@/lib/supabase';
 import { showSuccess, showError } from '@/utils/toast';
-import { Building2, Link as LinkIcon, Phone, MessageSquareText, Sparkles, Loader2 } from 'lucide-react';
+import { Building2, Link as LinkIcon, Phone, MessageSquareText, Sparkles, Loader2, Info } from 'lucide-react';
 
 const TenantSettings = () => {
   const { tenant, refreshTenant } = useTenant();
@@ -57,7 +57,6 @@ const TenantSettings = () => {
     setTesting(true);
     setPreview('');
     try {
-      // Using full hardcoded URL as per Supabase requirements
       const functionUrl = 'https://uqqzyqgypljxvmnguhky.supabase.co/functions/v1/test-ai-prompt';
       const { data, error } = await supabase.functions.invoke(functionUrl, {
         body: {
@@ -132,14 +131,17 @@ const TenantSettings = () => {
           <div className="space-y-2">
             <Label>Instructions for Gemini</Label>
             <Textarea 
-              className="min-h-[100px]"
+              className="min-h-[120px]"
               value={formData.message_template} 
               onChange={(e) => setFormData({...formData, message_template: e.target.value})}
               placeholder="e.g. Draft a short, friendly SMS. Mention their recent service and ask for a rating from 1 to 5."
             />
-            <p className="text-xs text-slate-500">
-              These instructions guide the AI when drafting messages for your customers.
-            </p>
+            <div className="flex items-start gap-2 p-2 bg-blue-50 rounded border border-blue-100">
+              <Info size={14} className="text-blue-500 mt-0.5 shrink-0" />
+              <p className="text-[10px] text-blue-700">
+                <strong>Pro Tip:</strong> You can tell Gemini to use the customer's name. The system automatically provides the name to the AI for every message.
+              </p>
+            </div>
           </div>
 
           <div className="pt-2">

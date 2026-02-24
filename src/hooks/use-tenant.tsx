@@ -32,14 +32,36 @@ export const TenantProvider = ({ children }: { children: React.ReactNode }) => {
     }
     
     setLoading(true);
-    const { data, error } = await supabase
-      .from('tenants')
-      .select('*')
-      .eq('owner_id', session.user.id)
-      .single();
-    
-    if (!error && data) setTenant(data);
-    setLoading(false);
+    try {
+      const { data, error } = await supabase
+        .from('tenants')
+        .select('*')
+        .eq('owner_id', session.user.id)
+        .maybeSingle();
+      
+      if (error) throw error;
+
+      if (data) {
+        setTenant(data);
+      } else {
+        // Safety net: Create a default tenant if the trigger didn't run
+        const { data: newTenant, error: createError } = await supabase
+          .from('tenants')
+          .insert([{ 
+            owner_id: session.user.id, 
+            business_name: 'My Business', 
+            industry: 'Service Provider' 
+          }])
+          .select()
+          .single();
+        
+        if (!createError && newTenant) setTenant(newTenant);
+      }
+    } catch (err) {
+      console.error("Error in useTenant:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -49,9 +71,11 @@ export const TenantProvider = ({ children }: { children: React.ReactNode }) => {
   }, [session, authLoading]);
 
   return (
-    <TenantContext.Provider value={{ tenant, loading, refreshTenant: fetchTenant }}>
-      {children}
-    </TenantContext.Provider>
+    <Tabs defaultValue="overview" className="space-y-8">
+      <TenantContext.Provider value={{ tenant, loading, refreshTenant: fetchTenant }}>
+        {children}
+      </TenantContext.Provider>
+    </Tabs>
   );
 };
 
