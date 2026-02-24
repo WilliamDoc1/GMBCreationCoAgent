@@ -40,7 +40,8 @@ serve(async (req) => {
       await supabase.from('outreach_queue').update({ status: 'completed', step: 'gmb_link_sent' }).eq('customer_id', customer.id)
     } else if (rating >= 1 && rating <= 3) {
       // Negative/Neutral Sentiment: Send Feedback Form
-      responseMessage = `We're sorry to hear that. Please let us know how we can improve here: [Feedback Form Link]`
+      const feedbackUrl = `https://uqqzyqgypljxvmnguhky.supabase.co/feedback?name=${encodeURIComponent(customer.full_name)}`
+      responseMessage = `We're sorry to hear that. Please let us know how we can improve here: ${feedbackUrl}`
       
       await supabase.from('outreach_queue').update({ status: 'completed', step: 'feedback_requested' }).eq('customer_id', customer.id)
     } else {
