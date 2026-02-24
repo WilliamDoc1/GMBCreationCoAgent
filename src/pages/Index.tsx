@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
 import { TenantProvider, useTenant } from '@/hooks/use-tenant';
@@ -18,13 +19,20 @@ import { MadeWithDyad } from "@/components/made-with-dyad";
 import { showSuccess, showError } from '@/utils/toast';
 
 const DashboardContent = () => {
-  const { session } = useAuth();
+  const { session, loading: authLoading } = useAuth();
   const { tenant, loading: tenantLoading } = useTenant();
+  const navigate = useNavigate();
   const [customers, setCustomers] = useState([]);
   const [userRole, setUserRole] = useState('client');
   const [loading, setLoading] = useState(true);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isBulkProcessing, setIsBulkProcessing] = useState(false);
+
+  useEffect(() => {
+    if (!authLoading && !session) {
+      navigate('/login');
+    }
+  }, [session, authLoading, navigate]);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -80,13 +88,15 @@ const DashboardContent = () => {
     }
   };
 
-  if (tenantLoading) {
+  if (authLoading || tenantLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <Loader2 className="animate-spin text-primary" size={32} />
       </div>
     );
   }
+
+  if (!session) return null;
 
   return (
     <div className="min-h-screen bg-slate-50 pb-12">

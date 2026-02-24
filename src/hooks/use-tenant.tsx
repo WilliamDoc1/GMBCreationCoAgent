@@ -21,12 +21,16 @@ interface TenantContextType {
 const TenantContext = createContext<TenantContextType>({ tenant: null, loading: true, refreshTenant: async () => {} });
 
 export const TenantProvider = ({ children }: { children: React.ReactNode }) => {
-  const { session } = useAuth();
+  const { session, loading: authLoading } = useAuth();
   const [tenant, setTenant] = useState<Tenant | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchTenant = async () => {
-    if (!session?.user) return;
+    if (!session?.user) {
+      setLoading(false);
+      return;
+    }
+    
     setLoading(true);
     const { data, error } = await supabase
       .from('tenants')
@@ -39,8 +43,10 @@ export const TenantProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   useEffect(() => {
-    fetchTenant();
-  }, [session]);
+    if (!authLoading) {
+      fetchTenant();
+    }
+  }, [session, authLoading]);
 
   return (
     <TenantContext.Provider value={{ tenant, loading, refreshTenant: fetchTenant }}>
