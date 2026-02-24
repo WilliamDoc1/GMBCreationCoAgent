@@ -1,12 +1,28 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle2, Circle, AlertCircle } from "lucide-react";
 import { useTenant } from '@/hooks/use-tenant';
+import { supabase } from '@/lib/supabase';
 
 const OnboardingChecklist = () => {
   const { tenant } = useTenant();
+  const [hasCustomers, setHasCustomers] = useState(false);
+
+  useEffect(() => {
+    const checkCustomers = async () => {
+      if (!tenant) return;
+      const { count } = await supabase
+        .from('customers')
+        .select('*', { count: 'exact', head: true })
+        .eq('tenant_id', tenant.id);
+      
+      setHasCustomers(!!count && count > 0);
+    };
+
+    checkCustomers();
+  }, [tenant]);
 
   if (!tenant) return null;
 
@@ -28,7 +44,7 @@ const OnboardingChecklist = () => {
     },
     {
       label: "Add First Customer",
-      completed: false, // We'll handle this via a prop or separate check if needed
+      completed: hasCustomers,
       description: "Upload a CSV or add manually."
     }
   ];
