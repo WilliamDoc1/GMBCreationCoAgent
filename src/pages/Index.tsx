@@ -11,6 +11,7 @@ import DashboardHeader from '@/components/DashboardHeader';
 import CustomerActionBar from '@/components/CustomerActionBar';
 import DashboardStats from '@/components/DashboardStats';
 import ActivityFeed from '@/components/ActivityFeed';
+import ReviewFeed from '@/components/ReviewFeed';
 import TenantSettings from '@/components/TenantSettings';
 import AdminTenantsTable from '@/components/AdminTenantsTable';
 import AuditLogTable from '@/components/AuditLogTable';
@@ -158,12 +159,15 @@ const DashboardContent = () => {
 
           <TabsContent value="overview" className="space-y-8">
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-              <div className="lg:col-span-3">
+              <div className="lg:col-span-3 space-y-8">
                 <DashboardStats customers={customers} />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <ReviewFeed />
+                  <ActivityFeed />
+                </div>
               </div>
               <div className="lg:col-span-1 space-y-6">
                 <OnboardingChecklist />
-                <ActivityFeed />
               </div>
             </div>
           </TabsContent>

@@ -9,7 +9,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/componen
 import { useTenant } from '@/hooks/use-tenant';
 import { supabase } from '@/lib/supabase';
 import { showSuccess, showError } from '@/utils/toast';
-import { Building2, Link as LinkIcon, Phone, MessageSquareText, Sparkles, Loader2, Info } from 'lucide-react';
+import { Building2, Link as LinkIcon, Phone, MessageSquareText, Sparkles, Loader2, Info, BookOpen } from 'lucide-react';
 
 const TenantSettings = () => {
   const { tenant, refreshTenant } = useTenant();
@@ -18,7 +18,8 @@ const TenantSettings = () => {
     industry: '',
     gmb_review_link: '',
     twilio_number: '',
-    message_template: ''
+    message_template: '',
+    business_context: ''
   });
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
@@ -31,7 +32,8 @@ const TenantSettings = () => {
         industry: tenant.industry || '',
         gmb_review_link: tenant.gmb_review_link || '',
         twilio_number: tenant.twilio_number || '',
-        message_template: (tenant as any).message_template || ''
+        message_template: (tenant as any).message_template || '',
+        business_context: (tenant as any).business_context || ''
       });
     }
   }, [tenant]);
@@ -62,7 +64,8 @@ const TenantSettings = () => {
         body: {
           businessName: formData.business_name,
           industry: formData.industry,
-          instructions: formData.message_template
+          instructions: formData.message_template,
+          context: formData.business_context
         }
       });
 
@@ -102,6 +105,15 @@ const TenantSettings = () => {
             </div>
           </div>
           <div className="space-y-2">
+            <Label className="flex items-center gap-2"><BookOpen size={14} /> Business Context (Optional)</Label>
+            <Textarea 
+              value={formData.business_context} 
+              onChange={(e) => setFormData({...formData, business_context: e.target.value})}
+              placeholder="e.g. We are a family-owned plumbing business in Cape Town since 1995. We pride ourselves on 24/7 emergency service."
+              className="text-xs"
+            />
+          </div>
+          <div className="space-y-2">
             <Label className="flex items-center gap-2"><LinkIcon size={14} /> GMB Review Link</Label>
             <Input 
               value={formData.gmb_review_link} 
@@ -139,7 +151,7 @@ const TenantSettings = () => {
             <div className="flex items-start gap-2 p-2 bg-blue-50 rounded border border-blue-100">
               <Info size={14} className="text-blue-500 mt-0.5 shrink-0" />
               <p className="text-[10px] text-blue-700">
-                <strong>Pro Tip:</strong> You can tell Gemini to use the customer's name. The system automatically provides the name to the AI for every message.
+                <strong>Pro Tip:</strong> You can tell Gemini to use the customer's name. The system automatically provides the name and business context to the AI.
               </p>
             </div>
           </div>
