@@ -57,7 +57,9 @@ const TenantSettings = () => {
     setTesting(true);
     setPreview('');
     try {
-      const { data, error } = await supabase.functions.invoke('test-ai-prompt', {
+      // Using full hardcoded URL as per Supabase requirements
+      const functionUrl = 'https://uqqzyqgypljxvmnguhky.supabase.co/functions/v1/test-ai-prompt';
+      const { data, error } = await supabase.functions.invoke(functionUrl, {
         body: {
           businessName: formData.business_name,
           industry: formData.industry,

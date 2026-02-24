@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
 import { TenantProvider, useTenant } from '@/hooks/use-tenant';
-import { Loader2, LayoutDashboard, Settings, Users, ShieldCheck, History } from "lucide-react";
+import { Loader2, LayoutDashboard, Settings, Users, ShieldCheck, History } from "lucide-resource";
 import CustomerTable from '@/components/CustomerTable';
 import DashboardHeader from '@/components/DashboardHeader';
 import CustomerActionBar from '@/components/CustomerActionBar';
@@ -47,21 +47,27 @@ const DashboardContent = () => {
   const fetchCustomers = async () => {
     if (!tenant) return;
     setLoading(true);
-    const { data, error } = await supabase
-      .from('customers')
-      .select('*')
-      .eq('tenant_id', tenant.id)
-      .order('created_at', { ascending: false });
-    
-    if (!error && data) setCustomers(data);
-    setLoading(false);
+    try {
+      const { data, error } = await supabase
+        .from('customers')
+        .select('*')
+        .eq('tenant_id', tenant.id)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      if (data) setCustomers(data);
+    } catch (err: any) {
+      console.error("Error fetching customers:", err);
+      showError("Failed to load customers");
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     if (tenant) {
       fetchCustomers();
 
-      // Set up real-time subscription for customers
       const channel = supabase
         .channel('schema-db-changes')
         .on(
@@ -102,7 +108,8 @@ const DashboardContent = () => {
       const { error } = await supabase.from('outreach_queue').insert(queueItems);
       if (error) throw error;
 
-      await supabase.functions.invoke('process-outreach');
+      const functionUrl = 'https://uqqzyqgypljxvmnguhky.supabase.co/functions/v1/process-outreach';
+      await supabase.functions.invoke(functionUrl);
       showSuccess(`Queued ${newCustomers.length} customers for outreach`);
     } catch (err) {
       showError("Failed to queue outreach");
