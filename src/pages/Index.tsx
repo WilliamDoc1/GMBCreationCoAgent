@@ -163,15 +163,15 @@ const DashboardContent = () => {
               </div>
               <div className="lg:col-span-1 space-y-6">
                 <OnboardingChecklist />
-                <ActivityFeed customers={customers} />
+                <ActivityFeed />
               </div>
             </div>
           </TabsContent>
 
           <TabsContent value="customers" className="space-y-6">
             <CustomerActionBar 
+              customers={customers}
               isBulkProcessing={isBulkProcessing}
-              newCustomersCount={customers.filter((c: any) => c.status === 'new').length}
               onBulkProcess={handleBulkProcess}
               onRefresh={fetchCustomers}
               isAddOpen={isAddOpen}

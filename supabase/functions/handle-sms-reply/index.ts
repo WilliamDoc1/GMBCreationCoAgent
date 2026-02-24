@@ -11,9 +11,11 @@ serve(async (req) => {
 
   try {
     const formData = await req.formData()
-    const from = formData.get('From')
+    const from = formData.get('From')?.toString()
     const body = formData.get('Body')?.toString().trim()
     
+    if (!from) throw new Error('Missing From number')
+
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -28,11 +30,18 @@ serve(async (req) => {
 
     if (customerError || !customer) throw new Error('Customer not found')
 
+    const lowerBody = body?.toLowerCase() || ''
+    const isOptOut = ['stop', 'unsubscribe', 'cancel', 'quit'].includes(lowerBody)
     const rating = parseInt(body || '0')
     const tenant = customer.tenants
     let responseMessage = ""
 
-    if (rating >= 4) {
+    if (isOptOut) {
+      // Handle Opt-out
+      responseMessage = "You have been unsubscribed. You will no longer receive messages from us."
+      await supabase.from('customers').update({ status: 'opted_out' }).eq('id', customer.id)
+      await supabase.from('outreach_queue').update({ status: 'cancelled' }).eq('customer_id', customer.id)
+    } else if (rating >= 4) {
       // Positive Sentiment: Send GMB Link
       responseMessage = `Thanks for the ${rating}-star rating! We'd love it if you could share this on Google: ${tenant.gmb_review_link}`
       
@@ -70,7 +79,7 @@ serve(async (req) => {
     await supabase.from('audit_log').insert({
       tenant_id: tenant.id,
       customer_id: customer.id,
-      action: 'sentiment_reply_sent',
+      action: isOptOut ? 'customer_opted_out' : 'sentiment_reply_sent',
       message_content: responseMessage,
       status: 'success'
     })
