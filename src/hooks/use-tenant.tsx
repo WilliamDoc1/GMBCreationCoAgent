@@ -73,11 +73,9 @@ export const TenantProvider = ({ children }: { children: React.ReactNode }) => {
   }, [authLoading, fetchTenant]);
 
   return (
-    <Tabs defaultValue="overview" className="space-y-8">
     <TenantContext.Provider value={{ tenant, loading, refreshTenant: () => fetchTenant(false) }}>
       {children}
     </TenantContext.Provider>
-    </Tabs>
   );
 };
 
