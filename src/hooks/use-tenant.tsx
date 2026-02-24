@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, createContext, useContext } from 'react';
+import { useState, useEffect, createContext, useContext, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
 
@@ -10,6 +10,8 @@ interface Tenant {
   industry: string;
   gmb_review_link: string;
   twilio_number: string;
+  message_template?: string;
+  business_context?: string;
 }
 
 interface TenantContextType {
@@ -25,13 +27,14 @@ export const TenantProvider = ({ children }: { children: React.ReactNode }) => {
   const [tenant, setTenant] = useState<Tenant | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchTenant = async () => {
+  const fetchTenant = useCallback(async (isInitial = false) => {
     if (!session?.user) {
       setLoading(false);
       return;
     }
     
-    setLoading(true);
+    if (isInitial) setLoading(true);
+    
     try {
       const { data, error } = await supabase
         .from('tenants')
@@ -44,7 +47,6 @@ export const TenantProvider = ({ children }: { children: React.ReactNode }) => {
       if (data) {
         setTenant(data);
       } else {
-        // Safety net: Create a default tenant if the trigger didn't run
         const { data: newTenant, error: createError } = await supabase
           .from('tenants')
           .insert([{ 
@@ -62,18 +64,20 @@ export const TenantProvider = ({ children }: { children: React.ReactNode }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [session]);
 
   useEffect(() => {
     if (!authLoading) {
-      fetchTenant();
+      fetchTenant(true);
     }
-  }, [session, authLoading]);
+  }, [authLoading, fetchTenant]);
 
   return (
-    <TenantContext.Provider value={{ tenant, loading, refreshTenant: fetchTenant }}>
+    <Tabs defaultValue="overview" className="space-y-8">
+    <TenantContext.Provider value={{ tenant, loading, refreshTenant: () => fetchTenant(false) }}>
       {children}
     </TenantContext.Provider>
+    </Tabs>
   );
 };
 

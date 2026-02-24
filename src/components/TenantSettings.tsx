@@ -24,35 +24,41 @@ const TenantSettings = () => {
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
   const [preview, setPreview] = useState('');
+  const [isInitialized, setIsInitialized] = useState(false);
 
+  // Only initialize once to prevent overwriting user's unsaved typing
   useEffect(() => {
-    if (tenant) {
+    if (tenant && !isInitialized) {
       setFormData({
         business_name: tenant.business_name || '',
         industry: tenant.industry || '',
         gmb_review_link: tenant.gmb_review_link || '',
         twilio_number: tenant.twilio_number || '',
-        message_template: (tenant as any).message_template || '',
-        business_context: (tenant as any).business_context || ''
+        message_template: tenant.message_template || '',
+        business_context: tenant.business_context || ''
       });
+      setIsInitialized(true);
     }
-  }, [tenant]);
+  }, [tenant, isInitialized]);
 
   const handleSave = async () => {
     if (!tenant) return;
     setSaving(true);
-    const { error } = await supabase
-      .from('tenants')
-      .update(formData)
-      .eq('id', tenant.id);
+    try {
+      const { error } = await supabase
+        .from('tenants')
+        .update(formData)
+        .eq('id', tenant.id);
 
-    if (error) {
-      showError("Failed to update settings");
-    } else {
+      if (error) throw error;
+      
       showSuccess("Business settings updated");
-      refreshTenant();
+      await refreshTenant();
+    } catch (err: any) {
+      showError("Failed to update settings: " + err.message);
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
   };
 
   const handleTestAI = async () => {
