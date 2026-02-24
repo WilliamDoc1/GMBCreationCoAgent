@@ -14,6 +14,7 @@ import ActivityFeed from '@/components/ActivityFeed';
 import TenantSettings from '@/components/TenantSettings';
 import AdminTenantsTable from '@/components/AdminTenantsTable';
 import AuditLogTable from '@/components/AuditLogTable';
+import OnboardingChecklist from '@/components/OnboardingChecklist';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { showSuccess, showError } from '@/utils/toast';
@@ -131,7 +132,8 @@ const DashboardContent = () => {
               <div className="lg:col-span-3">
                 <DashboardStats customers={customers} />
               </div>
-              <div className="lg:col-span-1">
+              <div className="lg:col-span-1 space-y-6">
+                <OnboardingChecklist />
                 <ActivityFeed customers={customers} />
               </div>
             </div>
