@@ -69,7 +69,7 @@ const AuditLogTable = () => {
             <SelectContent>
               <SelectItem value="all">All Actions</SelectItem>
               <SelectItem value="manual_outreach_sent">Manual Outreach</SelectItem>
-              <SelectItem value="initial_outreach_sent">Auto Outreach</SelectItem>
+              <SelectItem value="auto_outreach_sent">Auto Outreach</SelectItem>
               <SelectItem value="sentiment_reply_sent">Sentiment Reply</SelectItem>
               <SelectItem value="customer_opted_out">Opt-Outs</SelectItem>
             </SelectContent>
