@@ -58,7 +58,30 @@ const DashboardContent = () => {
   };
 
   useEffect(() => {
-    if (tenant) fetchCustomers();
+    if (tenant) {
+      fetchCustomers();
+
+      // Set up real-time subscription for customers
+      const channel = supabase
+        .channel('schema-db-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'customers',
+            filter: `tenant_id=eq.${tenant.id}`
+          },
+          () => {
+            fetchCustomers();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
   }, [tenant]);
 
   const handleBulkProcess = async () => {
@@ -81,7 +104,6 @@ const DashboardContent = () => {
 
       await supabase.functions.invoke('process-outreach');
       showSuccess(`Queued ${newCustomers.length} customers for outreach`);
-      fetchCustomers();
     } catch (err) {
       showError("Failed to queue outreach");
     } finally {

@@ -9,7 +9,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/componen
 import { useTenant } from '@/hooks/use-tenant';
 import { supabase } from '@/lib/supabase';
 import { showSuccess, showError } from '@/utils/toast';
-import { Building2, Link as LinkIcon, Phone, MessageSquareText } from 'lucide-react';
+import { Building2, Link as LinkIcon, Phone, MessageSquareText, Sparkles, Loader2 } from 'lucide-react';
 
 const TenantSettings = () => {
   const { tenant, refreshTenant } = useTenant();
@@ -21,6 +21,8 @@ const TenantSettings = () => {
     message_template: ''
   });
   const [saving, setSaving] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [preview, setPreview] = useState('');
 
   useEffect(() => {
     if (tenant) {
@@ -49,6 +51,27 @@ const TenantSettings = () => {
       refreshTenant();
     }
     setSaving(false);
+  };
+
+  const handleTestAI = async () => {
+    setTesting(true);
+    setPreview('');
+    try {
+      const { data, error } = await supabase.functions.invoke('test-ai-prompt', {
+        body: {
+          businessName: formData.business_name,
+          industry: formData.industry,
+          instructions: formData.message_template
+        }
+      });
+
+      if (error) throw error;
+      setPreview(data.preview);
+    } catch (err: any) {
+      showError("Failed to generate preview: " + err.message);
+    } finally {
+      setTesting(false);
+    }
   };
 
   return (
@@ -116,6 +139,27 @@ const TenantSettings = () => {
               These instructions guide the AI when drafting messages for your customers.
             </p>
           </div>
+
+          <div className="pt-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex items-center gap-2"
+              onClick={handleTestAI}
+              disabled={testing}
+            >
+              {testing ? <Loader2 className="animate-spin" size={14} /> : <Sparkles size={14} />}
+              Preview AI Message
+            </Button>
+          </div>
+
+          {preview && (
+            <div className="mt-4 p-3 bg-slate-50 rounded-lg border border-dashed border-slate-300">
+              <p className="text-[10px] font-bold uppercase text-slate-400 mb-1">Sample Preview:</p>
+              <p className="text-sm text-slate-700 italic">"{preview}"</p>
+              <p className="text-[10px] text-slate-400 mt-2 text-right">{preview.length}/160 characters</p>
+            </div>
+          )}
         </CardContent>
         <CardFooter>
           <Button onClick={handleSave} disabled={saving} className="w-full">
