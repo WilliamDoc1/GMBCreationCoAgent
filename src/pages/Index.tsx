@@ -1,17 +1,18 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
 import { TenantProvider, useTenant } from '@/hooks/use-tenant';
-import { Loader2, LayoutDashboard, Settings, Users } from "lucide-react";
+import { Loader2, LayoutDashboard, Settings, Users, ShieldCheck, History } from "lucide-react";
 import CustomerTable from '@/components/CustomerTable';
 import DashboardHeader from '@/components/DashboardHeader';
 import CustomerActionBar from '@/components/CustomerActionBar';
 import DashboardStats from '@/components/DashboardStats';
 import ActivityFeed from '@/components/ActivityFeed';
 import TenantSettings from '@/components/TenantSettings';
+import AdminTenantsTable from '@/components/AdminTenantsTable';
+import AuditLogTable from '@/components/AuditLogTable';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { showSuccess, showError } from '@/utils/toast';
@@ -20,9 +21,19 @@ const DashboardContent = () => {
   const { session } = useAuth();
   const { tenant, loading: tenantLoading } = useTenant();
   const [customers, setCustomers] = useState([]);
+  const [userRole, setUserRole] = useState('client');
   const [loading, setLoading] = useState(true);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isBulkProcessing, setIsBulkProcessing] = useState(false);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!session?.user) return;
+      const { data } = await supabase.from('profiles').select('role').eq('id', session.user.id).single();
+      if (data) setUserRole(data.role);
+    };
+    fetchProfile();
+  }, [session]);
 
   const fetchCustomers = async () => {
     if (!tenant) return;
@@ -38,13 +49,11 @@ const DashboardContent = () => {
   };
 
   useEffect(() => {
-    if (tenant) {
-      fetchCustomers();
-    }
+    if (tenant) fetchCustomers();
   }, [tenant]);
 
   const handleBulkProcess = async () => {
-    const newCustomers = customers.filter(c => c.status === 'new');
+    const newCustomers = customers.filter((c: any) => c.status === 'new');
     if (newCustomers.length === 0) {
       showError("No new customers to process");
       return;
@@ -52,8 +61,7 @@ const DashboardContent = () => {
 
     setIsBulkProcessing(true);
     try {
-      // Add to queue
-      const queueItems = newCustomers.map(c => ({
+      const queueItems = newCustomers.map((c: any) => ({
         tenant_id: tenant?.id,
         customer_id: c.id,
         status: 'pending'
@@ -62,9 +70,7 @@ const DashboardContent = () => {
       const { error } = await supabase.from('outreach_queue').insert(queueItems);
       if (error) throw error;
 
-      // Trigger edge function
       await supabase.functions.invoke('process-outreach');
-      
       showSuccess(`Queued ${newCustomers.length} customers for outreach`);
       fetchCustomers();
     } catch (err) {
@@ -96,9 +102,17 @@ const DashboardContent = () => {
               <TabsTrigger value="customers" className="flex items-center gap-2">
                 <Users size={16} /> Customers
               </TabsTrigger>
+              <TabsTrigger value="logs" className="flex items-center gap-2">
+                <History size={16} /> Audit Logs
+              </TabsTrigger>
               <TabsTrigger value="settings" className="flex items-center gap-2">
                 <Settings size={16} /> Settings
               </TabsTrigger>
+              {userRole === 'admin' && (
+                <TabsTrigger value="admin" className="flex items-center gap-2 text-purple-600">
+                  <ShieldCheck size={16} /> Admin
+                </TabsTrigger>
+              )}
             </TabsList>
           </div>
 
@@ -116,19 +130,19 @@ const DashboardContent = () => {
           <TabsContent value="customers" className="space-y-6">
             <CustomerActionBar 
               isBulkProcessing={isBulkProcessing}
-              newCustomersCount={customers.filter(c => c.status === 'new').length}
+              newCustomersCount={customers.filter((c: any) => c.status === 'new').length}
               onBulkProcess={handleBulkProcess}
               onRefresh={fetchCustomers}
               isAddOpen={isAddOpen}
               setIsAddOpen={setIsAddOpen}
             />
             <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-              {loading && customers.length === 0 ? (
-                <div className="p-12 text-center text-slate-500">Loading customers...</div>
-              ) : (
-                <CustomerTable customers={customers} onRefresh={fetchCustomers} />
-              )}
+              <CustomerTable customers={customers} onRefresh={fetchCustomers} />
             </div>
+          </TabsContent>
+
+          <TabsContent value="logs">
+            <AuditLogTable />
           </TabsContent>
 
           <TabsContent value="settings">
@@ -136,6 +150,15 @@ const DashboardContent = () => {
               <TenantSettings />
             </div>
           </TabsContent>
+
+          {userRole === 'admin' && (
+            <TabsContent value="admin">
+              <div className="space-y-4">
+                <h2 className="text-xl font-bold">SaaS Administration</h2>
+                <AdminTenantsTable />
+              </div>
+            </TabsContent>
+          )}
         </Tabs>
       </main>
       <MadeWithDyad />

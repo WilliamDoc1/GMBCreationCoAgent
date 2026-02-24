@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Send, CheckCircle, XCircle, TrendingUp } from "lucide-react";
+import { Users, Send, CheckCircle, TrendingUp, Percent } from "lucide-react";
 import { 
   BarChart, 
   Bar, 
@@ -20,23 +20,22 @@ interface StatsProps {
 
 const DashboardStats = ({ customers }: StatsProps) => {
   const total = customers.length;
-  const contacted = customers.filter(c => c.status === 'contacted').length;
+  const contacted = customers.filter(c => c.status === 'contacted' || c.status === 'reviewed').length;
   const reviewed = customers.filter(c => c.status === 'reviewed').length;
-  const optedOut = customers.filter(c => c.status === 'opted_out').length;
-  const newCount = customers.filter(c => c.status === 'new').length;
+  
+  const conversionRate = contacted > 0 ? ((reviewed / contacted) * 100).toFixed(1) : "0";
 
   const stats = [
     { title: "Total Customers", value: total, icon: Users, color: "text-blue-600" },
     { title: "Outreach Sent", value: contacted, icon: Send, color: "text-yellow-600" },
     { title: "Reviews Received", value: reviewed, icon: CheckCircle, color: "text-green-600" },
-    { title: "Opted Out", value: optedOut, icon: XCircle, color: "text-red-600" },
+    { title: "Conversion Rate", value: `${conversionRate}%`, icon: Percent, color: "text-purple-600" },
   ];
 
   const chartData = [
-    { name: 'New', value: newCount, color: '#3b82f6' },
-    { name: 'Contacted', value: contacted, color: '#eab308' },
+    { name: 'New', value: customers.filter(c => c.status === 'new').length, color: '#3b82f6' },
+    { name: 'Contacted', value: customers.filter(c => c.status === 'contacted').length, color: '#eab308' },
     { name: 'Reviewed', value: reviewed, color: '#22c55e' },
-    { name: 'Opted Out', value: optedOut, color: '#ef4444' },
   ];
 
   return (
@@ -55,11 +54,11 @@ const DashboardStats = ({ customers }: StatsProps) => {
         ))}
       </div>
 
-      <Card className="col-span-4">
+      <Card>
         <CardHeader>
           <CardTitle className="text-sm font-medium flex items-center gap-2">
             <TrendingUp size={16} className="text-primary" />
-            Status Distribution
+            Outreach Performance
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -67,17 +66,9 @@ const DashboardStats = ({ customers }: StatsProps) => {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis 
-                  dataKey="name" 
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{ fontSize: 12, fill: '#64748b' }}
-                />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} />
                 <YAxis hide />
-                <Tooltip 
-                  cursor={{ fill: '#f8fafc' }}
-                  contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                />
+                <Tooltip />
                 <Bar dataKey="value" radius={[4, 4, 0, 0]} barSize={40}>
                   {chartData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
