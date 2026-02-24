@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
 import { TenantProvider, useTenant } from '@/hooks/use-tenant';
-import { Loader2, LayoutDashboard, Settings, Users, ShieldCheck, History } from "lucide-resource";
+import { Loader2, LayoutDashboard, Settings, Users, ShieldCheck, History } from "lucide-react";
 import CustomerTable from '@/components/CustomerTable';
 import DashboardHeader from '@/components/DashboardHeader';
 import CustomerActionBar from '@/components/CustomerActionBar';
