@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { supabase } from '@/lib/supabase';
+import { useTenant } from '@/hooks/use-tenant';
 import { showSuccess, showError } from '@/utils/toast';
 
 const formSchema = z.object({
@@ -27,6 +28,7 @@ interface AddCustomerFormProps {
 }
 
 const AddCustomerForm = ({ onSuccess }: AddCustomerFormProps) => {
+  const { tenant } = useTenant();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -36,9 +38,11 @@ const AddCustomerForm = ({ onSuccess }: AddCustomerFormProps) => {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (!tenant) return;
+
     const { error } = await supabase
       .from('customers')
-      .insert([values]);
+      .insert([{ ...values, tenant_id: tenant.id }]);
 
     if (error) {
       showError("Failed to add customer");

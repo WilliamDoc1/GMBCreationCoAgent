@@ -4,35 +4,33 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
-import { Loader2 } from "lucide-react";
+import { TenantProvider, useTenant } from '@/hooks/use-tenant';
+import { Loader2, LayoutDashboard, Settings, Users } from "lucide-react";
 import CustomerTable from '@/components/CustomerTable';
 import DashboardHeader from '@/components/DashboardHeader';
 import CustomerActionBar from '@/components/CustomerActionBar';
 import DashboardStats from '@/components/DashboardStats';
 import ActivityFeed from '@/components/ActivityFeed';
+import TenantSettings from '@/components/TenantSettings';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { showSuccess, showError } from '@/utils/toast';
 
-const Index = () => {
-  const { session, loading: authLoading } = useAuth();
+const DashboardContent = () => {
+  const { session } = useAuth();
+  const { tenant, loading: tenantLoading } = useTenant();
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isBulkProcessing, setIsBulkProcessing] = useState(false);
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!authLoading && !session) {
-      navigate('/login');
-    }
-  }, [session, authLoading, navigate]);
 
   const fetchCustomers = async () => {
-    if (!session) return;
+    if (!tenant) return;
     setLoading(true);
     const { data, error } = await supabase
       .from('customers')
       .select('*')
+      .eq('tenant_id', tenant.id)
       .order('created_at', { ascending: false });
     
     if (!error && data) setCustomers(data);
@@ -40,23 +38,10 @@ const Index = () => {
   };
 
   useEffect(() => {
-    if (session) {
+    if (tenant) {
       fetchCustomers();
-
-      const channel = supabase
-        .channel('schema-db-changes')
-        .on(
-          'postgres_changes',
-          { event: '*', schema: 'public', table: 'customers' },
-          () => fetchCustomers()
-        )
-        .subscribe();
-
-      return () => {
-        supabase.removeChannel(channel);
-      };
     }
-  }, [session]);
+  }, [tenant]);
 
   const handleBulkProcess = async () => {
     const newCustomers = customers.filter(c => c.status === 'new');
@@ -66,31 +51,30 @@ const Index = () => {
     }
 
     setIsBulkProcessing(true);
-    
     try {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('industry')
-        .eq('id', session?.user.id)
-        .single();
-      
-      const industry = profile?.industry || 'Service Provider';
+      // Add to queue
+      const queueItems = newCustomers.map(c => ({
+        tenant_id: tenant?.id,
+        customer_id: c.id,
+        status: 'pending'
+      }));
 
-      for (const customer of newCustomers) {
-        await supabase.functions.invoke('send-outreach', {
-          body: { customerId: customer.id, industry }
-        });
-      }
-      showSuccess(`Processed ${newCustomers.length} customers`);
+      const { error } = await supabase.from('outreach_queue').insert(queueItems);
+      if (error) throw error;
+
+      // Trigger edge function
+      await supabase.functions.invoke('process-outreach');
+      
+      showSuccess(`Queued ${newCustomers.length} customers for outreach`);
       fetchCustomers();
     } catch (err) {
-      showError("Bulk processing encountered errors");
+      showError("Failed to queue outreach");
     } finally {
       setIsBulkProcessing(false);
     }
   };
 
-  if (authLoading || !session) {
+  if (tenantLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <Loader2 className="animate-spin text-primary" size={32} />
@@ -103,35 +87,66 @@ const Index = () => {
       <DashboardHeader />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 mb-8">
-          <div className="lg:col-span-3">
-            <DashboardStats customers={customers} />
+        <Tabs defaultValue="overview" className="space-y-8">
+          <div className="flex items-center justify-between">
+            <TabsList>
+              <TabsTrigger value="overview" className="flex items-center gap-2">
+                <LayoutDashboard size={16} /> Overview
+              </TabsTrigger>
+              <TabsTrigger value="customers" className="flex items-center gap-2">
+                <Users size={16} /> Customers
+              </TabsTrigger>
+              <TabsTrigger value="settings" className="flex items-center gap-2">
+                <Settings size={16} /> Settings
+              </TabsTrigger>
+            </TabsList>
           </div>
-          <div className="lg:col-span-1">
-            <ActivityFeed customers={customers} />
-          </div>
-        </div>
 
-        <CustomerActionBar 
-          isBulkProcessing={isBulkProcessing}
-          newCustomersCount={customers.filter(c => c.status === 'new').length}
-          onBulkProcess={handleBulkProcess}
-          onRefresh={fetchCustomers}
-          isAddOpen={isAddOpen}
-          setIsAddOpen={setIsAddOpen}
-        />
+          <TabsContent value="overview" className="space-y-8">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+              <div className="lg:col-span-3">
+                <DashboardStats customers={customers} />
+              </div>
+              <div className="lg:col-span-1">
+                <ActivityFeed customers={customers} />
+              </div>
+            </div>
+          </TabsContent>
 
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-          {loading && customers.length === 0 ? (
-            <div className="p-12 text-center text-slate-500">Loading customers...</div>
-          ) : (
-            <CustomerTable customers={customers} onRefresh={fetchCustomers} />
-          )}
-        </div>
+          <TabsContent value="customers" className="space-y-6">
+            <CustomerActionBar 
+              isBulkProcessing={isBulkProcessing}
+              newCustomersCount={customers.filter(c => c.status === 'new').length}
+              onBulkProcess={handleBulkProcess}
+              onRefresh={fetchCustomers}
+              isAddOpen={isAddOpen}
+              setIsAddOpen={setIsAddOpen}
+            />
+            <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+              {loading && customers.length === 0 ? (
+                <div className="p-12 text-center text-slate-500">Loading customers...</div>
+              ) : (
+                <CustomerTable customers={customers} onRefresh={fetchCustomers} />
+              )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="settings">
+            <div className="max-w-2xl">
+              <TenantSettings />
+            </div>
+          </TabsContent>
+        </Tabs>
       </main>
       <MadeWithDyad />
     </div>
   );
 };
+
+const Index = () => (
+  <TenantProvider>
+    <DashboardContent />
+  </TenantProvider>
+);
 
 export default Index;
