@@ -30,25 +30,27 @@ const TenantSettings = () => {
 
   useEffect(() => {
     if (tenant && !isInitialized) {
-      // Check for draft first
-      const savedDraft = localStorage.getItem(DRAFT_KEY);
-      if (savedDraft) {
-        setFormData(JSON.parse(savedDraft));
-      } else {
-        setFormData({
-          business_name: tenant.business_name || '',
-          industry: tenant.industry || '',
-          gmb_review_link: tenant.gmb_review_link || '',
-          twilio_number: tenant.twilio_number || '',
-          message_template: tenant.message_template || '',
-          business_context: tenant.business_context || ''
-        });
+      try {
+        const savedDraft = localStorage.getItem(DRAFT_KEY);
+        if (savedDraft) {
+          setFormData(JSON.parse(savedDraft));
+        } else {
+          setFormData({
+            business_name: tenant.business_name || '',
+            industry: tenant.industry || '',
+            gmb_review_link: tenant.gmb_review_link || '',
+            twilio_number: tenant.twilio_number || '',
+            message_template: tenant.message_template || '',
+            business_context: tenant.business_context || ''
+          });
+        }
+      } catch (e) {
+        console.error("Failed to load draft", e);
       }
       setIsInitialized(true);
     }
   }, [tenant, isInitialized]);
 
-  // Sync draft to localStorage
   useEffect(() => {
     if (isInitialized) {
       localStorage.setItem(DRAFT_KEY, JSON.stringify(formData));
@@ -67,7 +69,7 @@ const TenantSettings = () => {
       if (error) throw error;
       
       showSuccess("Business settings updated");
-      localStorage.removeItem(DRAFT_KEY); // Clear draft on success
+      localStorage.removeItem(DRAFT_KEY);
       await refreshTenant();
     } catch (err: any) {
       showError("Failed to update settings: " + err.message);
@@ -129,7 +131,7 @@ const TenantSettings = () => {
             <Textarea 
               value={formData.business_context} 
               onChange={(e) => setFormData({...formData, business_context: e.target.value})}
-              placeholder="e.g. We are a family-owned plumbing business in Cape Town since 1995. We pride ourselves on 24/7 emergency service."
+              placeholder="e.g. We are a family-owned plumbing business in Cape Town since 1995."
               className="text-xs"
             />
           </div>
@@ -168,12 +170,6 @@ const TenantSettings = () => {
               onChange={(e) => setFormData({...formData, message_template: e.target.value})}
               placeholder="e.g. Draft a short, friendly SMS. Mention their recent service and ask for a rating from 1 to 5."
             />
-            <div className="flex items-start gap-2 p-2 bg-blue-50 rounded border border-blue-100">
-              <Info size={14} className="text-blue-500 mt-0.5 shrink-0" />
-              <p className="text-[10px] text-blue-700">
-                <strong>Pro Tip:</strong> You can tell Gemini to use the customer's name. The system automatically provides the name and business context to the AI.
-              </p>
-            </div>
           </div>
 
           <div className="pt-2">
@@ -193,7 +189,6 @@ const TenantSettings = () => {
             <div className="mt-4 p-3 bg-slate-50 rounded-lg border border-dashed border-slate-300">
               <p className="text-[10px] font-bold uppercase text-slate-400 mb-1">Sample Preview:</p>
               <p className="text-sm text-slate-700 italic">"{preview}"</p>
-              <p className="text-[10px] text-slate-400 mt-2 text-right">{preview.length}/160 characters</p>
             </div>
           )}
         </CardContent>

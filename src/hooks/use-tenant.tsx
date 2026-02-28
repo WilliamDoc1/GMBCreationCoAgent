@@ -27,18 +27,20 @@ const TENANT_STORAGE_KEY = 'outreach_agent_active_tenant';
 export const TenantProvider = ({ children }: { children: React.ReactNode }) => {
   const { session, loading: authLoading } = useAuth();
   const [tenant, setTenant] = useState<Tenant | null>(() => {
-    const saved = localStorage.getItem(TENANT_STORAGE_KEY);
-    return saved ? JSON.parse(saved) : null;
+    try {
+      const saved = localStorage.getItem(TENANT_STORAGE_KEY);
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
   });
   const [loading, setLoading] = useState(true);
 
-  const fetchTenant = useCallback(async (isInitial = false) => {
+  const fetchTenant = useCallback(async () => {
     if (!session?.user) {
       if (!authLoading) setLoading(false);
       return;
     }
-    
-    if (isInitial && !tenant) setLoading(true);
     
     try {
       const { data, error } = await supabase
@@ -53,7 +55,6 @@ export const TenantProvider = ({ children }: { children: React.ReactNode }) => {
         setTenant(data);
         localStorage.setItem(TENANT_STORAGE_KEY, JSON.stringify(data));
       } else {
-        // Only create if we are sure no tenant exists
         const { data: newTenant, error: createError } = await supabase
           .from('tenants')
           .insert([{ 
@@ -74,20 +75,18 @@ export const TenantProvider = ({ children }: { children: React.ReactNode }) => {
     } finally {
       setLoading(false);
     }
-  }, [session, authLoading, tenant]);
+  }, [session?.user?.id, authLoading]); // Only depend on user ID and auth loading state
 
   useEffect(() => {
     if (!authLoading) {
-      fetchTenant(true);
+      fetchTenant();
     }
   }, [authLoading, fetchTenant]);
 
   return (
-    <div id="tenant-provider-root">
-      <TenantContext.Provider value={{ tenant, loading, refreshTenant: () => fetchTenant(false) }}>
-        {children}
-      </TenantContext.Provider>
-    </div>
+    <TenantContext.Provider value={{ tenant, loading, refreshTenant: fetchTenant }}>
+      {children}
+    </TenantContext.Provider>
   );
 };
 
