@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   Table,
   TableBody,
@@ -55,10 +56,25 @@ interface CustomerTableProps {
 }
 
 const CustomerTable = ({ customers, onRefresh }: CustomerTableProps) => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+
+  // Sync state with URL
+  const searchTerm = searchParams.get('search') || "";
+  const statusFilter = searchParams.get('status') || "all";
+
+  const updateFilters = (updates: Record<string, string>) => {
+    const newParams = new URLSearchParams(searchParams);
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value && value !== 'all') {
+        newParams.set(key, value);
+      } else {
+        newParams.delete(key);
+      }
+    });
+    setSearchParams(newParams);
+  };
 
   const filteredCustomers = customers.filter(customer => {
     const matchesSearch = customer.full_name.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -69,14 +85,11 @@ const CustomerTable = ({ customers, onRefresh }: CustomerTableProps) => {
 
   const triggerOutreach = async (customer: Customer) => {
     setLoadingId(customer.id);
-    
     try {
       const { error: funcError } = await supabase.functions.invoke('send-outreach', {
         body: { customerId: customer.id }
       });
-
       if (funcError) throw funcError;
-
       showSuccess(`Outreach triggered for ${customer.full_name}`);
       onRefresh();
     } catch (error: any) {
@@ -88,11 +101,7 @@ const CustomerTable = ({ customers, onRefresh }: CustomerTableProps) => {
 
   const deleteCustomer = async (id: string) => {
     setDeletingId(id);
-    const { error } = await supabase
-      .from('customers')
-      .delete()
-      .eq('id', id);
-
+    const { error } = await supabase.from('customers').delete().eq('id', id);
     if (error) {
       showError("Failed to delete customer");
     } else {
@@ -121,12 +130,12 @@ const CustomerTable = ({ customers, onRefresh }: CustomerTableProps) => {
             placeholder="Search by name or phone..." 
             className="pl-9 bg-white"
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => updateFilters({ search: e.target.value })}
           />
         </div>
         <div className="flex items-center gap-2">
           <Filter size={16} className="text-slate-400" />
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <Select value={statusFilter} onValueChange={(v) => updateFilters({ status: v })}>
             <SelectTrigger className="w-[150px] bg-white">
               <SelectValue placeholder="Filter Status" />
             </SelectTrigger>
@@ -156,7 +165,7 @@ const CustomerTable = ({ customers, onRefresh }: CustomerTableProps) => {
             {filteredCustomers.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                  {searchTerm || statusFilter !== "all" ? "No matching customers found." : "No customers found. Add some to get started!"}
+                  No matching customers found.
                 </TableCell>
               </TableRow>
             ) : (
@@ -169,18 +178,6 @@ const CustomerTable = ({ customers, onRefresh }: CustomerTableProps) => {
                       <Badge variant="secondary" className={getStatusColor(customer.status)}>
                         {customer.status}
                       </Badge>
-                      {customer.status === 'contacted' && (
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger>
-                              <Info size={12} className="text-slate-400" />
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p className="text-xs">The agent sent this because a new customer was added 24 hours ago.</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      )}
                     </div>
                   </TableCell>
                   <TableCell>
@@ -190,55 +187,29 @@ const CustomerTable = ({ customers, onRefresh }: CustomerTableProps) => {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
-                      <MessageHistoryDialog 
-                        customerId={customer.id} 
-                        customerName={customer.full_name} 
-                      />
-                      
+                      <MessageHistoryDialog customerId={customer.id} customerName={customer.full_name} />
                       <Button
                         size="sm"
                         variant="ghost"
                         disabled={loadingId === customer.id || customer.status === 'opted_out'}
                         onClick={() => triggerOutreach(customer)}
-                        title="Send Request"
                       >
-                        {loadingId === customer.id ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Send className="h-4 w-4" />
-                        )}
+                        {loadingId === customer.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                       </Button>
-
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                            disabled={deletingId === customer.id}
-                          >
-                            {deletingId === customer.id ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <Trash2 className="h-4 w-4" />
-                            )}
+                          <Button size="sm" variant="ghost" className="text-red-500">
+                            <Trash2 className="h-4 w-4" />
                           </Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
                             <AlertDialogTitle>Delete Customer</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Are you sure you want to delete {customer.full_name}? This action cannot be undone.
-                            </AlertDialogDescription>
+                            <AlertDialogDescription>Are you sure you want to delete {customer.full_name}?</AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction 
-                              onClick={() => deleteCustomer(customer.id)}
-                              className="bg-red-600 hover:bg-red-700"
-                            >
-                              Delete
-                            </AlertDialogAction>
+                            <AlertDialogAction onClick={() => deleteCustomer(customer.id)} className="bg-red-600">Delete</AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>
