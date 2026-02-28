@@ -21,7 +21,6 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // 1. Find the customer by phone number
     const { data: customer, error: customerError } = await supabase
       .from('customers')
       .select('*, tenants(*)')
@@ -34,30 +33,50 @@ serve(async (req) => {
     const isOptOut = ['stop', 'unsubscribe', 'cancel', 'quit'].includes(lowerBody)
     const rating = parseInt(body || '0')
     const tenant = customer.tenants
+    const geminiKey = Deno.env.get('GEMINI_API_KEY')
     let responseMessage = ""
 
     if (isOptOut) {
-      // Handle Opt-out
       responseMessage = "You have been unsubscribed. You will no longer receive messages from us."
       await supabase.from('customers').update({ status: 'opted_out' }).eq('id', customer.id)
-      await supabase.from('outreach_queue').update({ status: 'cancelled' }).eq('customer_id', customer.id)
     } else if (rating >= 4) {
-      // Positive Sentiment: Send GMB Link
-      responseMessage = `Thanks for the ${rating}-star rating! We'd love it if you could share this on Google: ${tenant.gmb_review_link}`
+      // AI Generated Keyword-Rich Response
+      const prompt = `Generate a professional, keyword-rich "Thank You" response for a ${rating}-star review for ${tenant.business_name} (${tenant.industry}).
+      Customer: ${customer.full_name}.
+      Context: ${tenant.business_context || ''}
+      Constraint: Under 160 characters. Include the GMB link: ${tenant.gmb_review_link}`
+
+      const geminiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+      })
+      
+      const geminiData = await geminiResponse.json()
+      responseMessage = geminiData.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || `Thanks for the ${rating}-star rating! Share it here: ${tenant.gmb_review_link}`
       
       await supabase.from('customers').update({ status: 'reviewed' }).eq('id', customer.id)
-      await supabase.from('outreach_queue').update({ status: 'completed', step: 'gmb_link_sent' }).eq('customer_id', customer.id)
+      await supabase.from('reviews').insert({
+        tenant_id: tenant.id,
+        customer_id: customer.id,
+        rating,
+        comment: body
+      })
     } else if (rating >= 1 && rating <= 3) {
-      // Negative/Neutral Sentiment: Send Feedback Form
       const feedbackUrl = `https://uqqzyqgypljxvmnguhky.supabase.co/feedback?name=${encodeURIComponent(customer.full_name)}`
       responseMessage = `We're sorry to hear that. Please let us know how we can improve here: ${feedbackUrl}`
       
-      await supabase.from('outreach_queue').update({ status: 'completed', step: 'feedback_requested' }).eq('customer_id', customer.id)
+      await supabase.from('reviews').insert({
+        tenant_id: tenant.id,
+        customer_id: customer.id,
+        rating,
+        comment: body
+      })
     } else {
       responseMessage = "Thanks for your reply! Please rate us from 1 to 5."
     }
 
-    // 2. Send Reply via Twilio
+    // Send Reply via Twilio
     const accountSid = Deno.env.get('TWILIO_ACCOUNT_SID')
     const authToken = Deno.env.get('TWILIO_AUTH_TOKEN')
     const fromNumber = tenant.twilio_number || Deno.env.get('TWILIO_PHONE_NUMBER')
@@ -68,14 +87,9 @@ serve(async (req) => {
         'Authorization': 'Basic ' + btoa(`${accountSid}:${authToken}`),
         'Content-Type': 'application/x-www-form-urlencoded',
       },
-      body: new URLSearchParams({
-        To: from,
-        From: fromNumber,
-        Body: responseMessage,
-      })
+      body: new URLSearchParams({ To: from, From: fromNumber, Body: responseMessage })
     })
 
-    // 3. Log the interaction
     await supabase.from('audit_log').insert({
       tenant_id: tenant.id,
       customer_id: customer.id,
@@ -84,9 +98,7 @@ serve(async (req) => {
       status: 'success'
     })
 
-    return new Response('<Response></Response>', {
-      headers: { 'Content-Type': 'text/xml' },
-    })
+    return new Response('<Response></Response>', { headers: { 'Content-Type': 'text/xml' } })
 
   } catch (error) {
     return new Response(JSON.stringify({ error: error.message }), { status: 400 })

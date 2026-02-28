@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
 import { TenantProvider, useTenant } from '@/hooks/use-tenant';
-import { Loader2, LayoutDashboard, Settings, Users, ShieldCheck, History, BrainCircuit } from "lucide-react";
+import { Loader2, LayoutDashboard, Settings, Users, ShieldCheck, History, TrendingUp } from "lucide-react";
 import CustomerTable from '@/components/CustomerTable';
 import DashboardHeader from '@/components/DashboardHeader';
 import CustomerActionBar from '@/components/CustomerActionBar';
@@ -17,6 +17,7 @@ import AdminTenantsTable from '@/components/AdminTenantsTable';
 import AuditLogTable from '@/components/AuditLogTable';
 import OnboardingChecklist from '@/components/OnboardingChecklist';
 import AgentMonitoring from '@/components/AgentMonitoring';
+import SEOInsights from '@/components/SEOInsights';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { showSuccess, showError } from '@/utils/toast';
@@ -110,7 +111,6 @@ const DashboardContent = () => {
       const { error } = await supabase.from('outreach_queue').insert(queueItems);
       if (error) throw error;
 
-      // Trigger the worker
       await supabase.functions.invoke('process-outreach');
       showSuccess(`Queued ${newCustomers.length} customers for outreach`);
     } catch (err) {
@@ -143,6 +143,9 @@ const DashboardContent = () => {
               </TabsTrigger>
               <TabsTrigger value="customers" className="flex items-center gap-2">
                 <Users size={16} /> Customers
+              </TabsTrigger>
+              <TabsTrigger value="seo" className="flex items-center gap-2">
+                <TrendingUp size={16} /> SEO Insights
               </TabsTrigger>
               <TabsTrigger value="logs" className="flex items-center gap-2">
                 <History size={16} /> Audit Logs
@@ -185,6 +188,12 @@ const DashboardContent = () => {
             />
             <div className="bg-white rounded-xl shadow-sm overflow-hidden">
               <CustomerTable customers={customers} onRefresh={fetchCustomers} />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="seo">
+            <div className="max-w-3xl">
+              <SEOInsights />
             </div>
           </TabsContent>
 

@@ -13,6 +13,7 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     const supabase = createClient(supabaseUrl, supabaseKey)
+    const geminiKey = Deno.env.get('GEMINI_API_KEY')
 
     // --- LOOP 1: REVIEW REQUESTS ---
     const { data: queueItems } = await supabase
@@ -24,7 +25,6 @@ serve(async (req) => {
     for (const item of queueItems || []) {
       const { customers: customer, tenants: tenant } = item
       try {
-        const geminiKey = Deno.env.get('GEMINI_API_KEY')
         const prompt = `Draft a short, friendly SMS for ${customer.full_name} from ${tenant.business_name}. 
         Industry: ${tenant.industry}. Context: ${tenant.business_context || ''}
         Instructions: ${tenant.message_template || 'Ask for a rating from 1 to 5.'}
@@ -61,7 +61,53 @@ serve(async (req) => {
       }
     }
 
-    // --- LOOP 2: GBP CONTENT POSTING ---
+    // --- LOOP 2: GBP CONTENT GENERATION & POSTING ---
+    // Check for tenants with low post queues
+    const { data: tenants } = await supabase.from('tenants').select('*')
+    
+    for (const tenant of tenants || []) {
+      const { count } = await supabase
+        .from('posts')
+        .select('*', { count: 'exact', head: true })
+        .eq('tenant_id', tenant.id)
+        .eq('status', 'pending')
+
+      if ((count || 0) < 2) {
+        // Generate a new post
+        const prompt = `Generate a Google Business Profile post for ${tenant.business_name} (${tenant.industry}).
+        Context: ${tenant.business_context || ''}
+        Goal: Local SEO optimization and engagement.
+        Tone: Professional and local.
+        Constraint: Under 300 characters. No hashtags.`
+
+        const geminiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+        })
+        
+        const geminiData = await geminiResponse.json()
+        const content = geminiData.candidates?.[0]?.content?.parts?.[0]?.text?.trim()
+
+        if (content) {
+          await supabase.from('posts').insert({
+            tenant_id: tenant.id,
+            content,
+            status: 'pending',
+            scheduled_for: new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString() // Schedule for tomorrow
+          })
+          
+          await supabase.from('audit_log').insert({
+            tenant_id: tenant.id,
+            action: 'gbp_post_generated',
+            message_content: `AI generated a new post: ${content.substring(0, 50)}...`,
+            status: 'success'
+          })
+        }
+      }
+    }
+
+    // Publish due posts
     const { data: pendingPosts } = await supabase
       .from('posts')
       .select('*, tenants (*)')
@@ -71,10 +117,7 @@ serve(async (req) => {
 
     for (const post of pendingPosts || []) {
       try {
-        // In a real scenario, we would call the Google Business Profile API here.
-        // For this agent, we simulate the success and log it.
-        console.log(`Posting to GBP for ${post.tenants.business_name}: ${post.content}`)
-        
+        // Simulate GBP API call
         await supabase.from('posts').update({ 
           status: 'published', 
           published_at: new Date().toISOString() 
