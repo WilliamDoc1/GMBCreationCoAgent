@@ -7,6 +7,7 @@ import { AuthProvider } from "./components/AuthProvider";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Feedback from "./pages/Feedback";
+import Documentation from "./pages/Documentation";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,6 +23,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
             <Route path="/feedback" element={<Feedback />} />
+            <Route path="/documentation" element={<Documentation />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

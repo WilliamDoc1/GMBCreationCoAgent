@@ -19,7 +19,7 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import { Send, Loader2, Trash2, Search, Filter } from "lucide-react";
+import { Send, Loader2, Trash2, Search, Filter, Info } from "lucide-react";
 import { supabase } from '@/lib/supabase';
 import { showError, showSuccess } from '@/utils/toast';
 import MessageHistoryDialog from './MessageHistoryDialog';
@@ -34,6 +34,12 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface Customer {
   id: string;
@@ -65,7 +71,6 @@ const CustomerTable = ({ customers, onRefresh }: CustomerTableProps) => {
     setLoadingId(customer.id);
     
     try {
-      // FIXED: Use function name 'send-outreach' instead of full URL
       const { error: funcError } = await supabase.functions.invoke('send-outreach', {
         body: { customerId: customer.id }
       });
@@ -160,9 +165,23 @@ const CustomerTable = ({ customers, onRefresh }: CustomerTableProps) => {
                   <TableCell className="font-medium">{customer.full_name}</TableCell>
                   <TableCell>{customer.phone_number}</TableCell>
                   <TableCell>
-                    <Badge variant="secondary" className={getStatusColor(customer.status)}>
-                      {customer.status}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary" className={getStatusColor(customer.status)}>
+                        {customer.status}
+                      </Badge>
+                      {customer.status === 'contacted' && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <Info size={12} className="text-slate-400" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p className="text-xs">The agent sent this because a new customer was added 24 hours ago.</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell>
                     {customer.last_contacted_at 
