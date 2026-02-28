@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -28,6 +28,8 @@ interface AddCustomerFormProps {
   onSuccess: () => void;
 }
 
+const DRAFT_KEY = 'add_customer_form_draft';
+
 const AddCustomerForm = ({ onSuccess }: AddCustomerFormProps) => {
   const { tenant } = useTenant();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -39,6 +41,22 @@ const AddCustomerForm = ({ onSuccess }: AddCustomerFormProps) => {
       phone_number: "",
     },
   });
+
+  // Load draft on mount
+  useEffect(() => {
+    const savedDraft = localStorage.getItem(DRAFT_KEY);
+    if (savedDraft) {
+      form.reset(JSON.parse(savedDraft));
+    }
+  }, [form]);
+
+  // Sync draft to localStorage
+  useEffect(() => {
+    const subscription = form.watch((value) => {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(value));
+    });
+    return () => subscription.unsubscribe();
+  }, [form]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (!tenant) {
@@ -60,7 +78,8 @@ const AddCustomerForm = ({ onSuccess }: AddCustomerFormProps) => {
       if (error) throw error;
 
       showSuccess("Customer added successfully");
-      form.reset();
+      localStorage.removeItem(DRAFT_KEY); // Clear draft on success
+      form.reset({ full_name: "", phone_number: "" });
       onSuccess();
     } catch (error: any) {
       console.error("Error adding customer:", error);

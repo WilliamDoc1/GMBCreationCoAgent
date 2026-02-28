@@ -11,6 +11,8 @@ import { supabase } from '@/lib/supabase';
 import { showSuccess, showError } from '@/utils/toast';
 import { Building2, Link as LinkIcon, Phone, MessageSquareText, Sparkles, Loader2, Info, BookOpen } from 'lucide-react';
 
+const DRAFT_KEY = 'tenant_settings_draft';
+
 const TenantSettings = () => {
   const { tenant, refreshTenant } = useTenant();
   const [formData, setFormData] = useState({
@@ -28,17 +30,30 @@ const TenantSettings = () => {
 
   useEffect(() => {
     if (tenant && !isInitialized) {
-      setFormData({
-        business_name: tenant.business_name || '',
-        industry: tenant.industry || '',
-        gmb_review_link: tenant.gmb_review_link || '',
-        twilio_number: tenant.twilio_number || '',
-        message_template: tenant.message_template || '',
-        business_context: tenant.business_context || ''
-      });
+      // Check for draft first
+      const savedDraft = localStorage.getItem(DRAFT_KEY);
+      if (savedDraft) {
+        setFormData(JSON.parse(savedDraft));
+      } else {
+        setFormData({
+          business_name: tenant.business_name || '',
+          industry: tenant.industry || '',
+          gmb_review_link: tenant.gmb_review_link || '',
+          twilio_number: tenant.twilio_number || '',
+          message_template: tenant.message_template || '',
+          business_context: tenant.business_context || ''
+        });
+      }
       setIsInitialized(true);
     }
   }, [tenant, isInitialized]);
+
+  // Sync draft to localStorage
+  useEffect(() => {
+    if (isInitialized) {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(formData));
+    }
+  }, [formData, isInitialized]);
 
   const handleSave = async () => {
     if (!tenant) return;
@@ -52,6 +67,7 @@ const TenantSettings = () => {
       if (error) throw error;
       
       showSuccess("Business settings updated");
+      localStorage.removeItem(DRAFT_KEY); // Clear draft on success
       await refreshTenant();
     } catch (err: any) {
       showError("Failed to update settings: " + err.message);
@@ -64,7 +80,6 @@ const TenantSettings = () => {
     setTesting(true);
     setPreview('');
     try {
-      // FIXED: Use function name 'test-ai-prompt' instead of full URL
       const { data, error } = await supabase.functions.invoke('test-ai-prompt', {
         body: {
           businessName: formData.business_name,

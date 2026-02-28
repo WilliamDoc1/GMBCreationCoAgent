@@ -22,14 +22,14 @@ import PostQueue from '@/components/PostQueue';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { showSuccess, showError } from '@/utils/toast';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 const DashboardContent = () => {
   const { session, loading: authLoading } = useAuth();
   const { tenant, loading: tenantLoading } = useTenant();
   const navigate = useNavigate();
-  const [customers, setCustomers] = useState([]);
+  const queryClient = useQueryClient();
   const [userRole, setUserRole] = useState('client');
-  const [loading, setLoading] = useState(true);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isBulkProcessing, setIsBulkProcessing] = useState(false);
 
@@ -48,10 +48,11 @@ const DashboardContent = () => {
     fetchProfile();
   }, [session]);
 
-  const fetchCustomers = async () => {
-    if (!tenant) return;
-    setLoading(true);
-    try {
+  // Use React Query for SWR behavior
+  const { data: customers = [], refetch: fetchCustomers, isLoading: customersLoading } = useQuery({
+    queryKey: ['customers', tenant?.id],
+    queryFn: async () => {
+      if (!tenant) return [];
       const { data, error } = await supabase
         .from('customers')
         .select('*')
@@ -59,19 +60,15 @@ const DashboardContent = () => {
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      if (data) setCustomers(data);
-    } catch (err: any) {
-      console.error("Error fetching customers:", err);
-      showError("Failed to load customers");
-    } finally {
-      setLoading(false);
-    }
-  };
+      return data || [];
+    },
+    enabled: !!tenant,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
 
+  // Real-time subscription
   useEffect(() => {
     if (tenant) {
-      fetchCustomers();
-
       const channel = supabase
         .channel('schema-db-changes')
         .on(
@@ -83,7 +80,7 @@ const DashboardContent = () => {
             filter: `tenant_id=eq.${tenant.id}`
           },
           () => {
-            fetchCustomers();
+            queryClient.invalidateQueries({ queryKey: ['customers', tenant.id] });
           }
         )
         .subscribe();
@@ -92,7 +89,7 @@ const DashboardContent = () => {
         supabase.removeChannel(channel);
       };
     }
-  }, [tenant]);
+  }, [tenant, queryClient]);
 
   const handleBulkProcess = async () => {
     const newCustomers = customers.filter((c: any) => c.status === 'new');
@@ -114,6 +111,7 @@ const DashboardContent = () => {
 
       await supabase.functions.invoke('process-outreach');
       showSuccess(`Queued ${newCustomers.length} customers for outreach`);
+      queryClient.invalidateQueries({ queryKey: ['customers', tenant?.id] });
     } catch (err) {
       showError("Failed to queue outreach");
     } finally {
@@ -186,12 +184,12 @@ const DashboardContent = () => {
               customers={customers}
               isBulkProcessing={isBulkProcessing}
               onBulkProcess={handleBulkProcess}
-              onRefresh={fetchCustomers}
+              onRefresh={() => fetchCustomers()}
               isAddOpen={isAddOpen}
               setIsAddOpen={setIsAddOpen}
             />
             <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-              <CustomerTable customers={customers} onRefresh={fetchCustomers} />
+              <CustomerTable customers={customers} onRefresh={() => fetchCustomers()} />
             </div>
           </TabsContent>
 

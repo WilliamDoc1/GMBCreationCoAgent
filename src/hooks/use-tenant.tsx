@@ -22,9 +22,15 @@ interface TenantContextType {
 
 const TenantContext = createContext<TenantContextType>({ tenant: null, loading: true, refreshTenant: async () => {} });
 
+const TENANT_STORAGE_KEY = 'outreach_agent_active_tenant';
+
 export const TenantProvider = ({ children }: { children: React.ReactNode }) => {
   const { session, loading: authLoading } = useAuth();
-  const [tenant, setTenant] = useState<Tenant | null>(null);
+  const [tenant, setTenant] = useState<Tenant | null>(() => {
+    // Try to recover from localStorage on initial load
+    const saved = localStorage.getItem(TENANT_STORAGE_KEY);
+    return saved ? JSON.parse(saved) : null;
+  });
   const [loading, setLoading] = useState(true);
 
   const fetchTenant = useCallback(async (isInitial = false) => {
@@ -33,7 +39,7 @@ export const TenantProvider = ({ children }: { children: React.ReactNode }) => {
       return;
     }
     
-    if (isInitial) setLoading(true);
+    if (isInitial && !tenant) setLoading(true);
     
     try {
       const { data, error } = await supabase
@@ -46,6 +52,7 @@ export const TenantProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (data) {
         setTenant(data);
+        localStorage.setItem(TENANT_STORAGE_KEY, JSON.stringify(data));
       } else {
         const { data: newTenant, error: createError } = await supabase
           .from('tenants')
@@ -57,14 +64,17 @@ export const TenantProvider = ({ children }: { children: React.ReactNode }) => {
           .select()
           .single();
         
-        if (!createError && newTenant) setTenant(newTenant);
+        if (!createError && newTenant) {
+          setTenant(newTenant);
+          localStorage.setItem(TENANT_STORAGE_KEY, JSON.stringify(newTenant));
+        }
       }
     } catch (err) {
       console.error("Error in useTenant:", err);
     } finally {
       setLoading(false);
     }
-  }, [session]);
+  }, [session, tenant]);
 
   useEffect(() => {
     if (!authLoading) {
