@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Clock, Send, MessageSquare, CheckCircle2, AlertCircle, AlertTriangle } from "lucide-react";
+import { Clock, Send, MessageSquare, AlertCircle, AlertTriangle } from "lucide-react";
 import { supabase } from '@/lib/supabase';
 import { useTenant } from '@/hooks/use-tenant';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 interface Activity {
   id: string;
@@ -17,12 +18,12 @@ interface Activity {
 
 const ActivityFeed = () => {
   const { tenant } = useTenant();
-  const [activities, setActivities] = useState<Activity[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    const fetchActivities = async () => {
-      if (!tenant) return;
+  const { data: activities = [], isLoading } = useQuery({
+    queryKey: ['activity-feed', tenant?.id],
+    queryFn: async () => {
+      if (!tenant) return [];
       const { data, error } = await supabase
         .from('audit_log')
         .select('*, customers(full_name)')
@@ -30,23 +31,26 @@ const ActivityFeed = () => {
         .order('created_at', { ascending: false })
         .limit(10);
       
-      if (!error && data) setActivities(data);
-      setLoading(false);
-    };
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!tenant,
+  });
 
-    fetchActivities();
+  useEffect(() => {
+    if (tenant) {
+      const channel = supabase
+        .channel('audit-logs-feed')
+        .on(
+          'postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'audit_log', filter: `tenant_id=eq.${tenant.id}` },
+          () => queryClient.invalidateQueries({ queryKey: ['activity-feed', tenant.id] })
+        )
+        .subscribe();
 
-    const channel = supabase
-      .channel('audit-logs-feed')
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'audit_log', filter: `tenant_id=eq.${tenant?.id}` },
-        () => fetchActivities()
-      )
-      .subscribe();
-
-    return () => { supabase.removeChannel(channel); };
-  }, [tenant]);
+      return () => { supabase.removeChannel(channel); };
+    }
+  }, [tenant, queryClient]);
 
   const getIcon = (action: string) => {
     if (action.includes('sent')) return <Send size={14} className="text-blue-500" />;
@@ -67,12 +71,12 @@ const ActivityFeed = () => {
       <CardContent>
         <ScrollArea className="h-[350px] pr-4">
           <div className="space-y-4">
-            {loading ? (
+            {isLoading ? (
               <p className="text-xs text-slate-500 text-center py-4">Loading activity...</p>
             ) : activities.length === 0 ? (
               <p className="text-xs text-slate-500 text-center py-4">No recent activity</p>
             ) : (
-              activities.map((activity) => (
+              activities.map((activity: Activity) => (
                 <div 
                   key={activity.id} 
                   className={`flex gap-3 items-start border-l-2 pl-3 pb-1 ${
