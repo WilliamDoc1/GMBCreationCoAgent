@@ -26,39 +26,43 @@ const TenantSettings = () => {
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
   const [preview, setPreview] = useState('');
-  const [isInitialized, setIsInitialized] = useState(false);
 
+  // Initialize form data when tenant loads or changes
   useEffect(() => {
-    if (tenant && !isInitialized) {
-      try {
-        const savedDraft = localStorage.getItem(DRAFT_KEY);
-        if (savedDraft) {
+    if (tenant) {
+      const savedDraft = localStorage.getItem(DRAFT_KEY);
+      if (savedDraft) {
+        try {
           setFormData(JSON.parse(savedDraft));
-        } else {
-          setFormData({
-            business_name: tenant.business_name || '',
-            industry: tenant.industry || '',
-            gmb_review_link: tenant.gmb_review_link || '',
-            twilio_number: tenant.twilio_number || '',
-            message_template: tenant.message_template || '',
-            business_context: tenant.business_context || ''
-          });
+        } catch (e) {
+          console.error("Failed to parse draft", e);
         }
-      } catch (e) {
-        console.error("Failed to load draft", e);
+      } else {
+        setFormData({
+          business_name: tenant.business_name || '',
+          industry: tenant.industry || '',
+          gmb_review_link: tenant.gmb_review_link || '',
+          twilio_number: tenant.twilio_number || '',
+          message_template: tenant.message_template || '',
+          business_context: tenant.business_context || ''
+        });
       }
-      setIsInitialized(true);
     }
-  }, [tenant, isInitialized]);
+  }, [tenant]);
 
-  useEffect(() => {
-    if (isInitialized) {
-      localStorage.setItem(DRAFT_KEY, JSON.stringify(formData));
-    }
-  }, [formData, isInitialized]);
+  // Save draft to localStorage as user types
+  const updateField = (field: string, value: string) => {
+    const newData = { ...formData, [field]: value };
+    setFormData(newData);
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(newData));
+  };
 
   const handleSave = async () => {
-    if (!tenant) return;
+    if (!tenant?.id) {
+      showError("No active business profile found to update.");
+      return;
+    }
+    
     setSaving(true);
     try {
       const { error } = await supabase
@@ -72,7 +76,8 @@ const TenantSettings = () => {
       localStorage.removeItem(DRAFT_KEY);
       await refreshTenant();
     } catch (err: any) {
-      showError("Failed to save settings: " + err.message);
+      console.error("Save error:", err);
+      showError("Failed to save settings: " + (err.message || "Unknown error"));
     } finally {
       setSaving(false);
     }
@@ -106,9 +111,13 @@ const TenantSettings = () => {
       });
 
       if (error) throw error;
+      if (data.error) throw new Error(data.error);
+      
       setPreview(data.preview);
+      showSuccess("AI Preview generated");
     } catch (err: any) {
-      showError("AI Preview failed: " + err.message);
+      console.error("AI Preview error:", err);
+      showError("AI Preview failed: " + (err.message || "Check your Gemini API key"));
     } finally {
       setTesting(false);
     }
@@ -132,14 +141,14 @@ const TenantSettings = () => {
               <Label>Business Name</Label>
               <Input 
                 value={formData.business_name} 
-                onChange={(e) => setFormData({...formData, business_name: e.target.value})}
+                onChange={(e) => updateField('business_name', e.target.value)}
               />
             </div>
             <div className="space-y-2">
               <Label>Industry</Label>
               <Input 
                 value={formData.industry} 
-                onChange={(e) => setFormData({...formData, industry: e.target.value})}
+                onChange={(e) => updateField('industry', e.target.value)}
               />
             </div>
           </div>
@@ -147,7 +156,7 @@ const TenantSettings = () => {
             <Label className="flex items-center gap-2"><BookOpen size={14} /> Business Context</Label>
             <Textarea 
               value={formData.business_context} 
-              onChange={(e) => setFormData({...formData, business_context: e.target.value})}
+              onChange={(e) => updateField('business_context', e.target.value)}
               placeholder="Describe your services, location, and unique selling points..."
               className="min-h-[80px] text-sm"
             />
@@ -156,7 +165,7 @@ const TenantSettings = () => {
             <Label className="flex items-center gap-2"><LinkIcon size={14} /> GMB Review Link</Label>
             <Input 
               value={formData.gmb_review_link} 
-              onChange={(e) => setFormData({...formData, gmb_review_link: e.target.value})}
+              onChange={(e) => updateField('gmb_review_link', e.target.value)}
               placeholder="https://g.page/r/..."
             />
           </div>
@@ -164,7 +173,7 @@ const TenantSettings = () => {
             <Label className="flex items-center gap-2"><Phone size={14} /> Twilio Number</Label>
             <Input 
               value={formData.twilio_number} 
-              onChange={(e) => setFormData({...formData, twilio_number: e.target.value})}
+              onChange={(e) => updateField('twilio_number', e.target.value)}
               placeholder="+27..."
             />
           </div>
@@ -184,7 +193,7 @@ const TenantSettings = () => {
             <Textarea 
               className="min-h-[120px]"
               value={formData.message_template} 
-              onChange={(e) => setFormData({...formData, message_template: e.target.value})}
+              onChange={(e) => updateField('message_template', e.target.value)}
               placeholder="e.g. Draft a short, friendly SMS. Mention their recent service and ask for a rating from 1 to 5."
             />
           </div>

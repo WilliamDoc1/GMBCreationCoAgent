@@ -12,12 +12,19 @@ serve(async (req) => {
     const { businessName, industry, instructions, context } = await req.json()
     
     const geminiKey = Deno.env.get('GEMINI_API_KEY')
+    if (!geminiKey) {
+      return new Response(JSON.stringify({ error: "GEMINI_API_KEY is not set in Supabase secrets." }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200, // Return 200 so the client can handle the error message gracefully
+      })
+    }
+
     const prompt = `
       Business Name: ${businessName}
       Industry: ${industry}
       Business Context: ${context || 'Not provided'}
       
-      Task: ${instructions}
+      Task: ${instructions || 'Draft a friendly greeting.'}
       
       Tone: Professional and friendly.
       Constraint: If generating a message, keep it under 160 characters. 
@@ -32,6 +39,11 @@ serve(async (req) => {
       })
     })
     
+    if (!geminiResponse.ok) {
+      const errorData = await geminiResponse.json();
+      throw new Error(`Gemini API error: ${errorData.error?.message || geminiResponse.statusText}`);
+    }
+
     const geminiData = await geminiResponse.json()
     const preview = geminiData.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "AI failed to generate a response."
 
@@ -41,6 +53,7 @@ serve(async (req) => {
     })
 
   } catch (error) {
+    console.error("Edge Function Error:", error);
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400,

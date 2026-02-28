@@ -46,7 +46,11 @@ const AddCustomerForm = ({ onSuccess }: AddCustomerFormProps) => {
   useEffect(() => {
     const savedDraft = localStorage.getItem(DRAFT_KEY);
     if (savedDraft) {
-      form.reset(JSON.parse(savedDraft));
+      try {
+        form.reset(JSON.parse(savedDraft));
+      } catch (e) {
+        console.error("Failed to load draft", e);
+      }
     }
   }, [form]);
 
@@ -59,8 +63,8 @@ const AddCustomerForm = ({ onSuccess }: AddCustomerFormProps) => {
   }, [form]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    if (!tenant) {
-      showError("Business profile not loaded. Please refresh.");
+    if (!tenant?.id) {
+      showError("Business profile not loaded. Please refresh the page.");
       return;
     }
 
@@ -83,7 +87,7 @@ const AddCustomerForm = ({ onSuccess }: AddCustomerFormProps) => {
       onSuccess();
     } catch (error: any) {
       console.error("Error adding customer:", error);
-      showError(error.message || "Failed to add customer");
+      showError("Failed to add customer: " + (error.message || "Check your database permissions"));
     } finally {
       setIsSubmitting(false);
     }
