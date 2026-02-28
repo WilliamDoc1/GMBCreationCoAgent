@@ -9,18 +9,18 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
   try {
-    const { businessName, industry, instructions } = await req.json()
+    const { businessName, industry, instructions, context } = await req.json()
     
     const geminiKey = Deno.env.get('GEMINI_API_KEY')
     const prompt = `
       Business Name: ${businessName}
       Industry: ${industry}
-      Customer Name: John Doe (Sample)
+      Business Context: ${context || 'Not provided'}
       
-      Instructions: ${instructions}
+      Task: ${instructions}
       
       Tone: Professional and friendly.
-      Constraint: Keep the entire message under 160 characters. 
+      Constraint: If generating a message, keep it under 160 characters. 
       Do NOT include placeholders like [Link] - just write the text.
     `
 
@@ -33,7 +33,7 @@ serve(async (req) => {
     })
     
     const geminiData = await geminiResponse.json()
-    const preview = geminiData.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "AI failed to generate a preview."
+    const preview = geminiData.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "AI failed to generate a response."
 
     return new Response(JSON.stringify({ preview }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

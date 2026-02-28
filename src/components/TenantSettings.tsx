@@ -9,7 +9,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/componen
 import { useTenant } from '@/hooks/use-tenant';
 import { supabase } from '@/lib/supabase';
 import { showSuccess, showError } from '@/utils/toast';
-import { Building2, Link as LinkIcon, Phone, MessageSquareText, Sparkles, Loader2, Info, BookOpen } from 'lucide-react';
+import { Building2, Link as LinkIcon, Phone, MessageSquareText, Sparkles, Loader2, BookOpen, RotateCcw } from 'lucide-react';
 
 const DRAFT_KEY = 'tenant_settings_draft';
 
@@ -68,14 +68,28 @@ const TenantSettings = () => {
 
       if (error) throw error;
       
-      showSuccess("Business settings updated");
+      showSuccess("Settings permanently saved to database");
       localStorage.removeItem(DRAFT_KEY);
       await refreshTenant();
     } catch (err: any) {
-      showError("Failed to update settings: " + err.message);
+      showError("Failed to save settings: " + err.message);
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleReset = () => {
+    if (!tenant) return;
+    setFormData({
+      business_name: tenant.business_name || '',
+      industry: tenant.industry || '',
+      gmb_review_link: tenant.gmb_review_link || '',
+      twilio_number: tenant.twilio_number || '',
+      message_template: tenant.message_template || '',
+      business_context: tenant.business_context || ''
+    });
+    localStorage.removeItem(DRAFT_KEY);
+    showSuccess("Draft cleared. Reverted to saved settings.");
   };
 
   const handleTestAI = async () => {
@@ -94,7 +108,7 @@ const TenantSettings = () => {
       if (error) throw error;
       setPreview(data.preview);
     } catch (err: any) {
-      showError("Failed to generate preview: " + err.message);
+      showError("AI Preview failed: " + err.message);
     } finally {
       setTesting(false);
     }
@@ -103,11 +117,14 @@ const TenantSettings = () => {
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-lg flex items-center gap-2">
             <Building2 size={20} />
             Business Profile
           </CardTitle>
+          <Button variant="ghost" size="sm" onClick={handleReset} className="text-slate-400 hover:text-slate-600">
+            <RotateCcw size={14} className="mr-1" /> Reset
+          </Button>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -127,12 +144,12 @@ const TenantSettings = () => {
             </div>
           </div>
           <div className="space-y-2">
-            <Label className="flex items-center gap-2"><BookOpen size={14} /> Business Context (Optional)</Label>
+            <Label className="flex items-center gap-2"><BookOpen size={14} /> Business Context</Label>
             <Textarea 
               value={formData.business_context} 
               onChange={(e) => setFormData({...formData, business_context: e.target.value})}
-              placeholder="e.g. We are a family-owned plumbing business in Cape Town since 1995."
-              className="text-xs"
+              placeholder="Describe your services, location, and unique selling points..."
+              className="min-h-[80px] text-sm"
             />
           </div>
           <div className="space-y-2">
@@ -193,8 +210,9 @@ const TenantSettings = () => {
           )}
         </CardContent>
         <CardFooter>
-          <Button onClick={handleSave} disabled={saving} className="w-full">
-            {saving ? "Saving..." : "Save All Settings"}
+          <Button onClick={handleSave} disabled={saving} className="w-full bg-primary hover:bg-primary/90">
+            {saving ? <Loader2 className="animate-spin mr-2" size={16} /> : null}
+            Save All Settings
           </Button>
         </CardFooter>
       </Card>

@@ -12,7 +12,7 @@ import { showSuccess, showError } from '@/utils/toast';
 const SEOInsights = () => {
   const { tenant } = useTenant();
   const [loading, setLoading] = useState(false);
-  const [insights, setInsights] = useState<any>(null);
+  const [insights, setInsights] = useState<string | null>(null);
 
   const generateInsights = async () => {
     if (!tenant) return;
@@ -69,8 +69,8 @@ const SEOInsights = () => {
         ) : (
           <div className="space-y-4">
             <div className="p-3 bg-white rounded-lg border border-blue-100 shadow-sm">
-              <p className="text-[10px] font-bold uppercase text-blue-400 mb-2">Optimized Description Suggestion:</p>
-              <p className="text-sm text-slate-700 italic leading-relaxed">"{insights}"</p>
+              <p className="text-[10px] font-bold uppercase text-blue-400 mb-2">AI Analysis & Suggestions:</p>
+              <p className="text-sm text-slate-700 italic leading-relaxed whitespace-pre-wrap">{insights}</p>
             </div>
             <div className="flex flex-wrap gap-2">
               <Badge variant="secondary" className="bg-blue-100 text-blue-700">#LocalExpert</Badge>
@@ -79,7 +79,7 @@ const SEOInsights = () => {
             </div>
             <div className="flex items-center gap-2 text-[10px] text-green-600 font-medium">
               <CheckCircle2 size={12} />
-              Freshness signals active: 3 posts scheduled this week.
+              Freshness signals active: AI is monitoring your GBP queue.
             </div>
           </div>
         )}
