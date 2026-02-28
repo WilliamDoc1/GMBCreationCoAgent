@@ -26,7 +26,6 @@ const TenantSettings = () => {
   const [preview, setPreview] = useState('');
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // Only initialize once to prevent overwriting user's unsaved typing
   useEffect(() => {
     if (tenant && !isInitialized) {
       setFormData({
@@ -65,8 +64,8 @@ const TenantSettings = () => {
     setTesting(true);
     setPreview('');
     try {
-      const functionUrl = 'https://uqqzyqgypljxvmnguhky.supabase.co/functions/v1/test-ai-prompt';
-      const { data, error } = await supabase.functions.invoke(functionUrl, {
+      // FIXED: Use function name 'test-ai-prompt' instead of full URL
+      const { data, error } = await supabase.functions.invoke('test-ai-prompt', {
         body: {
           businessName: formData.business_name,
           industry: formData.industry,

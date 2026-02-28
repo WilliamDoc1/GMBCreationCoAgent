@@ -65,8 +65,8 @@ const CustomerTable = ({ customers, onRefresh }: CustomerTableProps) => {
     setLoadingId(customer.id);
     
     try {
-      const functionUrl = 'https://uqqzyqgypljxvmnguhky.supabase.co/functions/v1/send-outreach';
-      const { error: funcError } = await supabase.functions.invoke(functionUrl, {
+      // FIXED: Use function name 'send-outreach' instead of full URL
+      const { error: funcError } = await supabase.functions.invoke('send-outreach', {
         body: { customerId: customer.id }
       });
 

@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
 import { TenantProvider, useTenant } from '@/hooks/use-tenant';
-import { Loader2, LayoutDashboard, Settings, Users, ShieldCheck, History } from "lucide-react";
+import { Loader2, LayoutDashboard, Settings, Users, ShieldCheck, History, BrainCircuit } from "lucide-react";
 import CustomerTable from '@/components/CustomerTable';
 import DashboardHeader from '@/components/DashboardHeader';
 import CustomerActionBar from '@/components/CustomerActionBar';
@@ -16,6 +16,7 @@ import TenantSettings from '@/components/TenantSettings';
 import AdminTenantsTable from '@/components/AdminTenantsTable';
 import AuditLogTable from '@/components/AuditLogTable';
 import OnboardingChecklist from '@/components/OnboardingChecklist';
+import AgentMonitoring from '@/components/AgentMonitoring';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { showSuccess, showError } from '@/utils/toast';
@@ -109,8 +110,8 @@ const DashboardContent = () => {
       const { error } = await supabase.from('outreach_queue').insert(queueItems);
       if (error) throw error;
 
-      const functionUrl = 'https://uqqzyqgypljxvmnguhky.supabase.co/functions/v1/process-outreach';
-      await supabase.functions.invoke(functionUrl);
+      // Trigger the worker
+      await supabase.functions.invoke('process-outreach');
       showSuccess(`Queued ${newCustomers.length} customers for outreach`);
     } catch (err) {
       showError("Failed to queue outreach");
@@ -167,6 +168,7 @@ const DashboardContent = () => {
                 </div>
               </div>
               <div className="lg:col-span-1 space-y-6">
+                <AgentMonitoring />
                 <OnboardingChecklist />
               </div>
             </div>
