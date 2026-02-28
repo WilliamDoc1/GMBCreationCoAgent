@@ -54,13 +54,13 @@ const OnboardingChecklist = () => {
       label: "Google Auth",
       completed: !!tenant.gmb_review_link, // Simplified check for now
       description: "Link your GBP account to enable posting.",
-      action: () => navigate('/settings')
+      action: () => navigate('/?tab=settings')
     },
     {
       label: "Business Identity",
       completed: !!tenant.business_context && tenant.business_name !== 'My Business',
       description: "Fill out services and description.",
-      action: () => navigate('/settings')
+      action: () => navigate('/?tab=settings')
     },
     {
       label: "Seed Content",

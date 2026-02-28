@@ -103,9 +103,14 @@ const Index = () => {
       const { error } = await supabase.from('outreach_queue').insert(queueItems);
       if (error) throw error;
 
+      // Trigger the worker immediately
       await supabase.functions.invoke('process-outreach');
+      
       showSuccess(`Queued ${newCustomers.length} customers for outreach`);
+      
+      // Force refresh all related data
       queryClient.invalidateQueries({ queryKey: ['customers', tenant?.id] });
+      queryClient.invalidateQueries({ queryKey: ['activity-feed', tenant?.id] });
     } catch (err) {
       showError("Failed to queue outreach");
     } finally {
