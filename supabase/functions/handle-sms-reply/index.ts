@@ -35,12 +35,13 @@ serve(async (req) => {
     const tenant = customer.tenants
     const geminiKey = Deno.env.get('GEMINI_API_KEY')
     let responseMessage = ""
+    let action = 'sentiment_reply_sent'
 
     if (isOptOut) {
       responseMessage = "You have been unsubscribed. You will no longer receive messages from us."
       await supabase.from('customers').update({ status: 'opted_out' }).eq('id', customer.id)
+      action = 'customer_opted_out'
     } else if (rating >= 4) {
-      // AI Generated Keyword-Rich Response
       const prompt = `Generate a professional, keyword-rich "Thank You" response for a ${rating}-star review for ${tenant.business_name} (${tenant.industry}).
       Customer: ${customer.full_name}.
       Context: ${tenant.business_context || ''}
@@ -65,6 +66,7 @@ serve(async (req) => {
     } else if (rating >= 1 && rating <= 3) {
       const feedbackUrl = `https://uqqzyqgypljxvmnguhky.supabase.co/feedback?name=${encodeURIComponent(customer.full_name)}`
       responseMessage = `We're sorry to hear that. Please let us know how we can improve here: ${feedbackUrl}`
+      action = 'negative_sentiment_detected'
       
       await supabase.from('reviews').insert({
         tenant_id: tenant.id,
@@ -93,7 +95,7 @@ serve(async (req) => {
     await supabase.from('audit_log').insert({
       tenant_id: tenant.id,
       customer_id: customer.id,
-      action: isOptOut ? 'customer_opted_out' : 'sentiment_reply_sent',
+      action: action,
       message_content: responseMessage,
       status: 'success'
     })
