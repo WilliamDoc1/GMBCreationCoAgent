@@ -1,19 +1,41 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Brain, Zap, ShieldCheck, Activity, RefreshCw } from "lucide-react";
+import { Brain, Zap, ShieldCheck, Activity, RefreshCw, MessageSquare, Calendar } from "lucide-react";
 import { useTenant } from '@/hooks/use-tenant';
+import { supabase } from '@/lib/supabase';
 
 const AgentMonitoring = () => {
   const { tenant } = useTenant();
+  const [queueCount, setQueueCount] = useState(0);
+  const [pendingPosts, setPendingPosts] = useState(0);
 
-  const healthMetrics = [
-    { label: "Cognitive Engine", status: "Active", icon: Brain, color: "text-purple-500" },
-    { label: "GBP API Sync", status: "Connected", icon: ShieldCheck, color: "text-green-500" },
-    { label: "Outreach Loop", status: "Monitoring", icon: Zap, color: "text-yellow-500" },
-  ];
+  useEffect(() => {
+    const fetchStats = async () => {
+      if (!tenant) return;
+      
+      const { count: qCount } = await supabase
+        .from('outreach_queue')
+        .select('*', { count: 'exact', head: true })
+        .eq('tenant_id', tenant.id)
+        .eq('status', 'pending');
+      
+      const { count: pCount } = await supabase
+        .from('posts')
+        .select('*', { count: 'exact', head: true })
+        .eq('tenant_id', tenant.id)
+        .eq('status', 'pending');
+
+      setQueueCount(qCount || 0);
+      setPendingPosts(pCount || 0);
+    };
+
+    fetchStats();
+    const interval = setInterval(fetchStats, 10000);
+    return () => clearInterval(interval);
+  }, [tenant]);
 
   return (
     <Card className="border-purple-100 bg-purple-50/10">
@@ -28,22 +50,33 @@ const AgentMonitoring = () => {
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-1 gap-3">
-          {healthMetrics.map((m, i) => (
-            <div key={i} className="flex items-center justify-between p-2 bg-white rounded-lg border border-purple-50 shadow-sm">
-              <div className="flex items-center gap-2">
-                <m.icon size={14} className={m.color} />
-                <span className="text-[11px] font-medium text-slate-700">{m.label}</span>
-              </div>
-              <Badge variant="outline" className="text-[9px] h-5 bg-green-50 text-green-700 border-green-100">
-                {m.status}
-              </Badge>
+          <div className="flex items-center justify-between p-2 bg-white rounded-lg border border-purple-50 shadow-sm">
+            <div className="flex items-center gap-2">
+              <MessageSquare size={14} className="text-blue-500" />
+              <span className="text-[11px] font-medium text-slate-700">Outreach Queue</span>
             </div>
-          ))}
+            <Badge variant="outline" className="text-[10px] h-5 bg-blue-50 text-blue-700 border-blue-100">
+              {queueCount} Pending
+            </Badge>
+          </div>
+          <div className="flex items-center justify-between p-2 bg-white rounded-lg border border-purple-50 shadow-sm">
+            <div className="flex items-center gap-2">
+              <Calendar size={14} className="text-purple-500" />
+              <span className="text-[11px] font-medium text-slate-700">Scheduled Posts</span>
+            </div>
+            <Badge variant="outline" className="text-[10px] h-5 bg-purple-50 text-purple-700 border-purple-100">
+              {pendingPosts} Active
+            </Badge>
+          </div>
         </div>
         
         <div className="p-2 bg-slate-900 rounded-lg">
-          <p className="text-[9px] font-mono text-green-400 mb-1">{">"} AGENT_LOG: Scanning queue...</p>
-          <p className="text-[9px] font-mono text-slate-400">{">"} Status: Autonomous loops operational.</p>
+          <p className="text-[9px] font-mono text-green-400 mb-1">
+            {">"} AGENT_LOG: {queueCount > 0 ? `Processing ${queueCount} outreach items...` : 'Scanning for new customers...'}
+          </p>
+          <p className="text-[9px] font-mono text-slate-400">
+            {">"} Status: {pendingPosts < 2 ? 'Low content detected. Generating posts...' : 'Content queue healthy.'}
+          </p>
         </div>
       </CardContent>
     </Card>

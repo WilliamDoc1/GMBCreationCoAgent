@@ -1,26 +1,65 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { showSuccess } from '@/utils/toast';
-import { MessageSquareHeart, CheckCircle2 } from 'lucide-react';
+import { showSuccess, showError } from '@/utils/toast';
+import { MessageSquareHeart, CheckCircle2, Loader2 } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 const Feedback = () => {
   const [searchParams] = useSearchParams();
   const customerName = searchParams.get('name') || 'Valued Customer';
   const [feedback, setFeedback] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [customerId, setCustomerId] = useState<string | null>(null);
+  const [tenantId, setTenantId] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    // In a real scenario, we'd pass a secure token, but for this demo we'll look up by name
+    const findCustomer = async () => {
+      const { data } = await supabase
+        .from('customers')
+        .select('id, tenant_id')
+        .ilike('full_name', customerName)
+        .limit(1)
+        .single();
+      
+      if (data) {
+        setCustomerId(data.id);
+        setTenantId(data.tenant_id);
+      }
+    };
+    findCustomer();
+  }, [customerName]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real app, we'd save this to a 'feedback' table
-    console.log("Feedback submitted:", feedback);
-    setSubmitted(true);
-    showSuccess("Thank you for your feedback!");
+    if (!feedback.trim()) return;
+
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from('feedback')
+        .insert([{
+          tenant_id: tenantId,
+          customer_id: customerId,
+          content: feedback
+        }]);
+
+      if (error) throw error;
+
+      setSubmitted(true);
+      showSuccess("Thank you for your feedback!");
+    } catch (err: any) {
+      showError("Failed to submit feedback. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (submitted) {
@@ -68,7 +107,10 @@ const Feedback = () => {
             </div>
           </CardContent>
           <CardFooter>
-            <Button type="submit" className="w-full">Submit Feedback</Button>
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? <Loader2 className="animate-spin mr-2" size={16} /> : null}
+              Submit Feedback
+            </Button>
           </CardFooter>
         </form>
       </Card>
