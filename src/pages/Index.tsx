@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
 import { TenantProvider, useTenant } from '@/hooks/use-tenant';
@@ -28,7 +28,10 @@ const DashboardContent = () => {
   const { session, loading: authLoading } = useAuth();
   const { tenant, loading: tenantLoading } = useTenant();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const queryClient = useQueryClient();
+  
+  const activeTab = searchParams.get('tab') || 'overview';
   const [userRole, setUserRole] = useState('client');
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isBulkProcessing, setIsBulkProcessing] = useState(false);
@@ -48,8 +51,7 @@ const DashboardContent = () => {
     fetchProfile();
   }, [session]);
 
-  // Use React Query for SWR behavior
-  const { data: customers = [], refetch: fetchCustomers, isLoading: customersLoading } = useQuery({
+  const { data: customers = [], refetch: fetchCustomers } = useQuery({
     queryKey: ['customers', tenant?.id],
     queryFn: async () => {
       if (!tenant) return [];
@@ -63,33 +65,26 @@ const DashboardContent = () => {
       return data || [];
     },
     enabled: !!tenant,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 60 * 5,
   });
 
-  // Real-time subscription
   useEffect(() => {
     if (tenant) {
       const channel = supabase
         .channel('schema-db-changes')
         .on(
           'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'customers',
-            filter: `tenant_id=eq.${tenant.id}`
-          },
-          () => {
-            queryClient.invalidateQueries({ queryKey: ['customers', tenant.id] });
-          }
+          { event: '*', schema: 'public', table: 'customers', filter: `tenant_id=eq.${tenant.id}` },
+          () => queryClient.invalidateQueries({ queryKey: ['customers', tenant.id] })
         )
         .subscribe();
-
-      return () => {
-        supabase.removeChannel(channel);
-      };
+      return () => { supabase.removeChannel(channel); };
     }
   }, [tenant, queryClient]);
+
+  const handleTabChange = (value: string) => {
+    setSearchParams({ tab: value });
+  };
 
   const handleBulkProcess = async () => {
     const newCustomers = customers.filter((c: any) => c.status === 'new');
@@ -134,7 +129,7 @@ const DashboardContent = () => {
       <DashboardHeader />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Tabs defaultValue="overview" className="space-y-8">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-8">
           <div className="flex items-center justify-between">
             <TabsList>
               <TabsTrigger value="overview" className="flex items-center gap-2">

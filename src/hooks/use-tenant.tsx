@@ -27,7 +27,6 @@ const TENANT_STORAGE_KEY = 'outreach_agent_active_tenant';
 export const TenantProvider = ({ children }: { children: React.ReactNode }) => {
   const { session, loading: authLoading } = useAuth();
   const [tenant, setTenant] = useState<Tenant | null>(() => {
-    // Try to recover from localStorage on initial load
     const saved = localStorage.getItem(TENANT_STORAGE_KEY);
     return saved ? JSON.parse(saved) : null;
   });
@@ -35,7 +34,7 @@ export const TenantProvider = ({ children }: { children: React.ReactNode }) => {
 
   const fetchTenant = useCallback(async (isInitial = false) => {
     if (!session?.user) {
-      setLoading(false);
+      if (!authLoading) setLoading(false);
       return;
     }
     
@@ -54,6 +53,7 @@ export const TenantProvider = ({ children }: { children: React.ReactNode }) => {
         setTenant(data);
         localStorage.setItem(TENANT_STORAGE_KEY, JSON.stringify(data));
       } else {
+        // Only create if we are sure no tenant exists
         const { data: newTenant, error: createError } = await supabase
           .from('tenants')
           .insert([{ 
@@ -74,7 +74,7 @@ export const TenantProvider = ({ children }: { children: React.ReactNode }) => {
     } finally {
       setLoading(false);
     }
-  }, [session, tenant]);
+  }, [session, authLoading, tenant]);
 
   useEffect(() => {
     if (!authLoading) {
@@ -83,9 +83,11 @@ export const TenantProvider = ({ children }: { children: React.ReactNode }) => {
   }, [authLoading, fetchTenant]);
 
   return (
-    <TenantContext.Provider value={{ tenant, loading, refreshTenant: () => fetchTenant(false) }}>
-      {children}
-    </TenantContext.Provider>
+    <div id="tenant-provider-root">
+      <TenantContext.Provider value={{ tenant, loading, refreshTenant: () => fetchTenant(false) }}>
+        {children}
+      </TenantContext.Provider>
+    </div>
   );
 };
 
