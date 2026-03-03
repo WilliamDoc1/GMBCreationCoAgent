@@ -21,14 +21,13 @@ import { Loader2 } from 'lucide-react';
 
 const formSchema = z.object({
   full_name: z.string().min(2, "Name is too short"),
-  phone_number: z.string().min(10, "Invalid phone number"),
+  email: z.string().email("Invalid email address"),
+  phone_number: z.string().optional(),
 });
 
 interface AddCustomerFormProps {
   onSuccess: () => void;
 }
-
-const DRAFT_KEY = 'add_customer_form_draft';
 
 const AddCustomerForm = ({ onSuccess }: AddCustomerFormProps) => {
   const { tenant } = useTenant();
@@ -38,35 +37,13 @@ const AddCustomerForm = ({ onSuccess }: AddCustomerFormProps) => {
     resolver: zodResolver(formSchema),
     defaultValues: {
       full_name: "",
+      email: "",
       phone_number: "",
     },
   });
 
-  // Load draft on mount
-  useEffect(() => {
-    const savedDraft = localStorage.getItem(DRAFT_KEY);
-    if (savedDraft) {
-      try {
-        form.reset(JSON.parse(savedDraft));
-      } catch (e) {
-        console.error("Failed to load draft", e);
-      }
-    }
-  }, [form]);
-
-  // Sync draft to localStorage
-  useEffect(() => {
-    const subscription = form.watch((value) => {
-      localStorage.setItem(DRAFT_KEY, JSON.stringify(value));
-    });
-    return () => subscription.unsubscribe();
-  }, [form]);
-
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    if (!tenant?.id) {
-      showError("Business profile not loaded. Please refresh the page.");
-      return;
-    }
+    if (!tenant?.id) return;
 
     setIsSubmitting(true);
     try {
@@ -74,20 +51,19 @@ const AddCustomerForm = ({ onSuccess }: AddCustomerFormProps) => {
         .from('customers')
         .insert([{ 
           full_name: values.full_name,
-          phone_number: values.phone_number,
+          email: values.email,
+          phone_number: values.phone_number || 'N/A',
           tenant_id: tenant.id,
           status: 'new'
         }]);
 
       if (error) throw error;
 
-      showSuccess("Customer added successfully");
-      localStorage.removeItem(DRAFT_KEY); // Clear draft on success
-      form.reset({ full_name: "", phone_number: "" });
+      showSuccess("Customer added for email outreach");
+      form.reset();
       onSuccess();
     } catch (error: any) {
-      console.error("Error adding customer:", error);
-      showError("Failed to add customer: " + (error.message || "Check your database permissions"));
+      showError("Failed to add customer: " + error.message);
     } finally {
       setIsSubmitting(false);
     }
@@ -102,22 +78,18 @@ const AddCustomerForm = ({ onSuccess }: AddCustomerFormProps) => {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Full Name</FormLabel>
-              <FormControl>
-                <Input placeholder="John Doe" {...field} />
-              </FormControl>
+              <FormControl><Input placeholder="John Doe" {...field} /></FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
         <FormField
           control={form.control}
-          name="phone_number"
+          name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Phone Number</FormLabel>
-              <FormControl>
-                <Input placeholder="+27..." {...field} />
-              </FormControl>
+              <FormLabel>Email Address</FormLabel>
+              <FormControl><Input type="email" placeholder="john@example.com" {...field} /></FormControl>
               <FormMessage />
             </FormItem>
           )}

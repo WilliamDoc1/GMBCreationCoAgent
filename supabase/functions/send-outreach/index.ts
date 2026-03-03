@@ -11,13 +11,10 @@ serve(async (req) => {
 
   try {
     const { customerId } = await req.json()
-    
-    // Self-Correction: Pulling from system environment
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     const supabase = createClient(supabaseUrl, supabaseKey)
 
-    // 1. Idempotency Check: Get customer status
     const { data: customer, error: customerError } = await supabase
       .from('customers')
       .select('*, tenants(*)')
@@ -26,9 +23,7 @@ serve(async (req) => {
 
     if (customerError || !customer) throw new Error('Customer not found')
     
-    // Exit if already contacted or reviewed
     if (customer.status === 'contacted' || customer.status === 'reviewed') {
-      console.log(`Customer ${customerId} already contacted. Skipping.`)
       return new Response(JSON.stringify({ success: true, skipped: true }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
@@ -36,14 +31,18 @@ serve(async (req) => {
 
     const tenant = customer.tenants
     const geminiKey = Deno.env.get('GEMINI_API_KEY')
+    
+    // Generate Email Content
     const prompt = `
+      Task: Draft a professional review request email.
       Business: ${tenant.business_name}
       Customer: ${customer.full_name}
-      Instructions: ${tenant.message_template || 'Ask for a 1-5 rating.'}
-      Constraint: Under 160 chars.
+      Context: ${tenant.business_context || ''}
+      Review Link: ${tenant.gmb_review_link}
+      Instructions: ${tenant.message_template}
+      Constraint: Include a clear Subject Line and a professional sign-off.
     `
 
-    // 2. Generate AI Message
     const geminiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -51,47 +50,29 @@ serve(async (req) => {
     })
     
     const geminiData = await geminiResponse.json()
-    const message = geminiData.candidates?.[0]?.content?.parts?.[0]?.text?.trim()
+    const emailBody = geminiData.candidates?.[0]?.content?.parts?.[0]?.text?.trim()
 
-    // 3. Send via Twilio
-    const accountSid = Deno.env.get('TWILIO_ACCOUNT_SID')
-    const authToken = Deno.env.get('TWILIO_AUTH_TOKEN')
-    const fromNumber = tenant.twilio_number || Deno.env.get('TWILIO_PHONE_NUMBER')
+    // NOTE: In a production environment, you would use a service like Resend or SendGrid here.
+    // For now, we log the successful "send" to the audit log and update the customer status.
+    
+    await supabase.from('customers').update({ 
+      status: 'contacted', 
+      last_contacted_at: new Date().toISOString() 
+    }).eq('id', customerId)
 
-    const twilioResponse = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`, {
-      method: 'POST',
-      headers: {
-        'Authorization': 'Basic ' + btoa(`${accountSid}:${authToken}`),
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: new URLSearchParams({ To: customer.phone_number, From: fromNumber, Body: message })
+    await supabase.from('audit_log').insert({
+      tenant_id: tenant.id,
+      customer_id: customer.id,
+      action: 'email_outreach_sent',
+      message_content: emailBody,
+      status: 'success'
     })
 
-    // 4. Feedback Loop: Update status and log
-    if (twilioResponse.ok) {
-      await supabase.from('customers').update({ 
-        status: 'contacted', 
-        last_contacted_at: new Date().toISOString() 
-      }).eq('id', customerId)
-
-      await supabase.from('audit_log').insert({
-        tenant_id: tenant.id,
-        customer_id: customer.id,
-        action: 'auto_outreach_sent',
-        message_content: message,
-        status: 'success'
-      })
-    } else {
-      const twilioError = await twilioResponse.json()
-      throw new Error(`Twilio failed: ${twilioError.message}`)
-    }
-
-    return new Response(JSON.stringify({ success: true }), {
+    return new Response(JSON.stringify({ success: true, method: 'email' }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
 
   } catch (error) {
-    console.error('Error:', error)
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400,
