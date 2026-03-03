@@ -16,6 +16,8 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey)
     const geminiKey = Deno.env.get('GEMINI_API_KEY')
 
+    if (!geminiKey) throw new Error('GEMINI_API_KEY not found')
+
     const { data: tenant } = await supabase
       .from('tenants')
       .select('*')
@@ -34,7 +36,7 @@ serve(async (req) => {
       Constraint: Each post under 300 characters. Return as a JSON array of strings.
     `
 
-    const geminiRes = await fetch(\`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=\${geminiKey}\`, {
+    const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -43,6 +45,11 @@ serve(async (req) => {
       })
     })
     
+    if (!geminiRes.ok) {
+      const error = await geminiRes.json()
+      throw new Error(`Gemini API error: ${JSON.stringify(error)}`)
+    }
+
     const geminiData = await geminiRes.json()
     const contentText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text
     const postContents = JSON.parse(contentText)
@@ -51,7 +58,7 @@ serve(async (req) => {
       tenant_id: tenantId,
       content,
       status: 'pending',
-      scheduled_for: new Date(Date.now() + (i * 2 * 24 * 60 * 60 * 1000)).toISOString() // Spread over the week
+      scheduled_for: new Date(Date.now() + (i * 2 * 24 * 60 * 60 * 1000)).toISOString()
     }))
 
     const { data, error } = await supabase.from('posts').insert(postsToInsert).select()
@@ -62,6 +69,7 @@ serve(async (req) => {
     })
 
   } catch (error) {
+    console.error("Function error:", error.message)
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400,
