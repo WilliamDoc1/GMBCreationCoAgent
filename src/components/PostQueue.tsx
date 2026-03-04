@@ -11,8 +11,8 @@ import {
   Loader2, 
   Sparkles, 
   Trash2,
-  ExternalLink,
-  Image as ImageIcon
+  Send,
+  ExternalLink
 } from "lucide-react";
 import { supabase } from '@/lib/supabase';
 import { useTenant } from '@/hooks/use-tenant';
@@ -24,7 +24,6 @@ interface Post {
   status: string;
   scheduled_for: string;
   published_at: string | null;
-  media_url: string | null;
 }
 
 const PostQueue = () => {
@@ -32,6 +31,7 @@ const PostQueue = () => {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
+  const [publishingId, setPublishingId] = useState<string | null>(null);
 
   const fetchPosts = async () => {
     if (!tenant) return;
@@ -54,16 +54,59 @@ const PostQueue = () => {
     if (!tenant) return;
     setGenerating(true);
     try {
-      const { error } = await supabase.functions.invoke('gbp-content-generator', {
-        body: { tenantId: tenant.id }
+      // Local Supabase Function URL
+      const response = await fetch('http://localhost:54321/functions/v1/gbp-content-generator', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY || ''}`
+        },
+        body: JSON.stringify({ 
+          tenantId: tenant.id,
+          industry: tenant.industry,
+          business_context: tenant.business_context
+        })
       });
-      if (error) throw error;
+
+      if (!response.ok) throw new Error('Failed to generate posts');
+      
       showSuccess("AI is generating 3 weekly posts...");
       setTimeout(fetchPosts, 3000);
     } catch (err: any) {
       showError("Failed to trigger post generation");
     } finally {
       setGenerating(false);
+    }
+  };
+
+  const handlePublishToGMB = async (post: Post) => {
+    setPublishingId(post.id);
+    try {
+      // n8n Webhook Trigger
+      const response = await fetch('http://localhost:5678/webhook/gbp-post-trigger', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          post_id: post.id,
+          content: post.content,
+          business_name: tenant?.business_name,
+          timestamp: new Date().toISOString()
+        })
+      });
+
+      if (!response.ok) throw new Error('n8n bridge failed');
+
+      await supabase.from('posts').update({ 
+        status: 'published', 
+        published_at: new Date().toISOString() 
+      }).eq('id', post.id);
+
+      showSuccess("Post sent to n8n for GMB publishing!");
+      fetchPosts();
+    } catch (err: any) {
+      showError("Failed to publish: " + err.message);
+    } finally {
+      setPublishingId(null);
     }
   };
 
@@ -139,6 +182,17 @@ const PostQueue = () => {
                     "{post.content}"
                   </p>
                 </div>
+                {post.status !== 'published' && (
+                  <Button 
+                    className="w-full flex items-center gap-2" 
+                    size="sm"
+                    onClick={() => handlePublishToGMB(post)}
+                    disabled={publishingId === post.id}
+                  >
+                    {publishingId === post.id ? <Loader2 className="animate-spin" size={14} /> : <Send size={14} />}
+                    Publish to GMB
+                  </Button>
+                )}
               </CardContent>
             </Card>
           ))

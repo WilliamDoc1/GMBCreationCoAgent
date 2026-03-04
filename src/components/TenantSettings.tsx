@@ -13,6 +13,7 @@ import { showSuccess, showError } from '@/utils/toast';
 import { Building2, Link as LinkIcon, Phone, MessageSquareText, Sparkles, Loader2, BookOpen, RotateCcw } from 'lucide-react';
 
 const DRAFT_KEY = 'tenant_settings_draft';
+const TARGET_TENANT_ID = '01265238-1635-47a1-873e-1ef6b7dbba9e';
 
 const TenantSettings = () => {
   const { tenant, refreshTenant } = useTenant();
@@ -58,18 +59,17 @@ const TenantSettings = () => {
   };
 
   const handleSave = async () => {
-    if (!tenant?.id || !session?.user?.id) {
-      showError("Authentication error: Could not identify business profile.");
+    if (!session?.user?.id) {
+      showError("Authentication error: No active session.");
       return;
     }
     
     setSaving(true);
     try {
-      // Using upsert with the existing ID ensures we update the correct record
       const { error } = await supabase
         .from('tenants')
         .upsert({
-          id: tenant.id,
+          id: TARGET_TENANT_ID,
           owner_id: session.user.id,
           ...formData,
           updated_at: new Date().toISOString()
@@ -77,7 +77,7 @@ const TenantSettings = () => {
 
       if (error) throw error;
       
-      showSuccess("Settings permanently saved to database");
+      showSuccess("Settings permanently saved to GMB Creation Co. profile");
       localStorage.removeItem(DRAFT_KEY);
       await refreshTenant();
     } catch (err: any) {
