@@ -28,13 +28,14 @@ const BulkUpload = ({ onSuccess }: BulkUploadProps) => {
       complete: async (results) => {
         const customers = results.data.map((row: any) => ({
           full_name: row.full_name || row.Name || row.name,
-          phone_number: row.phone_number || row.Phone || row.phone,
+          email: row.email || row.Email || row.mail,
+          phone_number: row.phone_number || row.Phone || row.phone || 'N/A',
           tenant_id: tenant.id,
           status: 'new'
-        })).filter(c => c.full_name && c.phone_number);
+        })).filter(c => c.full_name && c.email);
 
         if (customers.length === 0) {
-          showError("No valid customer data found in CSV. Ensure columns are named 'name' and 'phone'.");
+          showError("No valid customer data found. Ensure columns are named 'name' and 'email'.");
           setUploading(false);
           return;
         }
@@ -46,7 +47,7 @@ const BulkUpload = ({ onSuccess }: BulkUploadProps) => {
         if (error) {
           showError("Failed to upload customers: " + error.message);
         } else {
-          showSuccess(`Successfully uploaded ${customers.length} customers`);
+          showSuccess(`Successfully uploaded ${customers.length} customers for email outreach`);
           onSuccess();
         }
         
