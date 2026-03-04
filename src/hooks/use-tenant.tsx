@@ -43,6 +43,7 @@ export const TenantProvider = ({ children }: { children: React.ReactNode }) => {
     }
     
     try {
+      // Fetch tenant where owner_id matches the current user
       const { data, error } = await supabase
         .from('tenants')
         .select('*')
@@ -55,6 +56,7 @@ export const TenantProvider = ({ children }: { children: React.ReactNode }) => {
         setTenant(data);
         localStorage.setItem(TENANT_STORAGE_KEY, JSON.stringify(data));
       } else {
+        // Auto-create a default tenant if none exists for this user
         const { data: newTenant, error: createError } = await supabase
           .from('tenants')
           .insert([{ 
@@ -75,7 +77,7 @@ export const TenantProvider = ({ children }: { children: React.ReactNode }) => {
     } finally {
       setLoading(false);
     }
-  }, [session?.user?.id, authLoading]); // Only depend on user ID and auth loading state
+  }, [session?.user?.id, authLoading]);
 
   useEffect(() => {
     if (!authLoading) {
@@ -84,9 +86,11 @@ export const TenantProvider = ({ children }: { children: React.ReactNode }) => {
   }, [authLoading, fetchTenant]);
 
   return (
-    <TenantContext.Provider value={{ tenant, loading, refreshTenant: fetchTenant }}>
-      {children}
-    </TenantContext.Provider>
+    <div className="tenant-provider">
+      <TenantContext.Provider value={{ tenant, loading, refreshTenant: fetchTenant }}>
+        {children}
+      </TenantContext.Provider>
+    </div>
   );
 };
 

@@ -103,14 +103,9 @@ const Index = () => {
       const { error } = await supabase.from('outreach_queue').insert(queueItems);
       if (error) throw error;
 
-      // Trigger the worker immediately
       await supabase.functions.invoke('process-outreach');
-      
       showSuccess(`Queued ${newCustomers.length} customers for outreach`);
-      
-      // Force refresh all related data
       queryClient.invalidateQueries({ queryKey: ['customers', tenant?.id] });
-      queryClient.invalidateQueries({ queryKey: ['activity-feed', tenant?.id] });
     } catch (err) {
       showError("Failed to queue outreach");
     } finally {
@@ -139,25 +134,27 @@ const Index = () => {
               <TabsTrigger value="overview" className="flex items-center gap-2">
                 <LayoutDashboard size={16} /> Overview
               </TabsTrigger>
+              <TabsTrigger value="posts" className="flex items-center gap-2">
+                <Calendar size={16} /> Content Queue
+              </TabsTrigger>
               <TabsTrigger value="customers" className="flex items-center gap-2">
                 <Users size={16} /> Customers
               </TabsTrigger>
-              <TabsTrigger value="posts" className="flex items-center gap-2">
-                <Calendar size={16} /> Posts
-              </TabsTrigger>
-              <TabsTrigger value="seo" className="flex items-center gap-2">
-                <TrendingUp size={16} /> SEO Insights
-              </TabsTrigger>
-              <TabsTrigger value="logs" className="flex items-center gap-2">
-                <History size={16} /> Audit Logs
-              </TabsTrigger>
               <TabsTrigger value="settings" className="flex items-center gap-2">
-                <Settings size={16} /> Settings
+                <Settings size={16} /> Business Profile
               </TabsTrigger>
               {userRole === 'admin' && (
-                <TabsTrigger value="admin" className="flex items-center gap-2 text-purple-600">
-                  <ShieldCheck size={16} /> Admin
-                </TabsTrigger>
+                <>
+                  <TabsTrigger value="seo" className="flex items-center gap-2">
+                    <TrendingUp size={16} /> SEO Insights
+                  </TabsTrigger>
+                  <TabsTrigger value="logs" className="flex items-center gap-2">
+                    <History size={16} /> Audit Logs
+                  </TabsTrigger>
+                  <TabsTrigger value="admin" className="flex items-center gap-2 text-purple-600">
+                    <ShieldCheck size={16} /> Admin
+                  </TabsTrigger>
+                </>
               )}
             </TabsList>
           </div>
@@ -178,6 +175,10 @@ const Index = () => {
             </div>
           </TabsContent>
 
+          <TabsContent value="posts">
+            <PostQueue />
+          </TabsContent>
+
           <TabsContent value="customers" className="space-y-6">
             <CustomerActionBar 
               customers={customers}
@@ -192,20 +193,6 @@ const Index = () => {
             </div>
           </TabsContent>
 
-          <TabsContent value="posts">
-            <PostQueue />
-          </TabsContent>
-
-          <TabsContent value="seo">
-            <div className="max-w-3xl">
-              <SEOInsights />
-            </div>
-          </TabsContent>
-
-          <TabsContent value="logs">
-            <AuditLogTable />
-          </TabsContent>
-
           <TabsContent value="settings">
             <div className="max-w-2xl">
               <TenantSettings />
@@ -213,12 +200,22 @@ const Index = () => {
           </TabsContent>
 
           {userRole === 'admin' && (
-            <TabsContent value="admin">
-              <div className="space-y-4">
-                <h2 className="text-xl font-bold">SaaS Administration</h2>
-                <AdminTenantsTable />
-              </div>
-            </TabsContent>
+            <>
+              <TabsContent value="seo">
+                <div className="max-w-3xl">
+                  <SEOInsights />
+                </div>
+              </TabsContent>
+              <TabsContent value="logs">
+                <AuditLogTable />
+              </TabsContent>
+              <TabsContent value="admin">
+                <div className="space-y-4">
+                  <h2 className="text-xl font-bold">SaaS Administration</h2>
+                  <AdminTenantsTable />
+                </div>
+              </TabsContent>
+            </>
           )}
         </Tabs>
       </main>

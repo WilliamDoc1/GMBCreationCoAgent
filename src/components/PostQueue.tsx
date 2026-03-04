@@ -6,13 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
   Calendar, 
-  CheckCircle2, 
-  Clock, 
   Loader2, 
   Sparkles, 
   Trash2,
-  Send,
-  ExternalLink
+  Send
 } from "lucide-react";
 import { supabase } from '@/lib/supabase';
 import { useTenant } from '@/hooks/use-tenant';
@@ -54,7 +51,6 @@ const PostQueue = () => {
     if (!tenant) return;
     setGenerating(true);
     try {
-      // Local Supabase Function URL
       const response = await fetch('http://localhost:54321/functions/v1/gbp-content-generator', {
         method: 'POST',
         headers: {
@@ -70,7 +66,7 @@ const PostQueue = () => {
 
       if (!response.ok) throw new Error('Failed to generate posts');
       
-      showSuccess("AI is generating 3 weekly posts...");
+      showSuccess("AI is generating 3 weekly posts for your business...");
       setTimeout(fetchPosts, 3000);
     } catch (err: any) {
       showError("Failed to trigger post generation");
@@ -82,7 +78,6 @@ const PostQueue = () => {
   const handlePublishToGMB = async (post: Post) => {
     setPublishingId(post.id);
     try {
-      // n8n Webhook Trigger
       const response = await fetch('http://localhost:5678/webhook/gbp-post-trigger', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -125,7 +120,7 @@ const PostQueue = () => {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-semibold text-slate-900">Content Queue</h2>
-          <p className="text-slate-500">3x Weekly GBP posts for {tenant?.business_name || 'GMB Creation Co.'}</p>
+          <p className="text-slate-500">3x Weekly GBP posts for {tenant?.business_name}</p>
         </div>
         <Button 
           onClick={handleGeneratePost} 

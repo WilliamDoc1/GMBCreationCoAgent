@@ -10,10 +10,9 @@ import { useTenant } from '@/hooks/use-tenant';
 import { useAuth } from '@/components/AuthProvider';
 import { supabase } from '@/lib/supabase';
 import { showSuccess, showError } from '@/utils/toast';
-import { Building2, Link as LinkIcon, Phone, MessageSquareText, Sparkles, Loader2, BookOpen, RotateCcw } from 'lucide-react';
+import { Building2, Link as LinkIcon, Loader2, BookOpen, RotateCcw } from 'lucide-react';
 
 const DRAFT_KEY = 'tenant_settings_draft';
-const TARGET_TENANT_ID = '01265238-1635-47a1-873e-1ef6b7dbba9e';
 
 const TenantSettings = () => {
   const { tenant, refreshTenant } = useTenant();
@@ -22,13 +21,9 @@ const TenantSettings = () => {
     business_name: '',
     industry: '',
     gmb_review_link: '',
-    twilio_number: '',
-    message_template: '',
     business_context: ''
   });
   const [saving, setSaving] = useState(false);
-  const [testing, setTesting] = useState(false);
-  const [preview, setPreview] = useState('');
 
   useEffect(() => {
     if (tenant) {
@@ -44,8 +39,6 @@ const TenantSettings = () => {
           business_name: tenant.business_name || '',
           industry: tenant.industry || '',
           gmb_review_link: tenant.gmb_review_link || '',
-          twilio_number: tenant.twilio_number || '',
-          message_template: tenant.message_template || '',
           business_context: tenant.business_context || ''
         });
       }
@@ -59,7 +52,7 @@ const TenantSettings = () => {
   };
 
   const handleSave = async () => {
-    if (!session?.user?.id) {
+    if (!tenant?.id || !session?.user?.id) {
       showError("Authentication error: No active session.");
       return;
     }
@@ -69,7 +62,7 @@ const TenantSettings = () => {
       const { error } = await supabase
         .from('tenants')
         .upsert({
-          id: TARGET_TENANT_ID,
+          id: tenant.id,
           owner_id: session.user.id,
           ...formData,
           updated_at: new Date().toISOString()
@@ -77,11 +70,10 @@ const TenantSettings = () => {
 
       if (error) throw error;
       
-      showSuccess("Settings permanently saved to GMB Creation Co. profile");
+      showSuccess("Business profile updated successfully");
       localStorage.removeItem(DRAFT_KEY);
       await refreshTenant();
     } catch (err: any) {
-      console.error("Save error:", err);
       showError("Failed to save settings: " + (err.message || "Unknown error"));
     } finally {
       setSaving(false);
@@ -94,38 +86,10 @@ const TenantSettings = () => {
       business_name: tenant.business_name || '',
       industry: tenant.industry || '',
       gmb_review_link: tenant.gmb_review_link || '',
-      twilio_number: tenant.twilio_number || '',
-      message_template: tenant.message_template || '',
       business_context: tenant.business_context || ''
     });
     localStorage.removeItem(DRAFT_KEY);
-    showSuccess("Draft cleared. Reverted to saved settings.");
-  };
-
-  const handleTestAI = async () => {
-    setTesting(true);
-    setPreview('');
-    try {
-      const { data, error } = await supabase.functions.invoke('test-ai-prompt', {
-        body: {
-          businessName: formData.business_name,
-          industry: formData.industry,
-          instructions: formData.message_template,
-          context: formData.business_context
-        }
-      });
-
-      if (error) throw error;
-      if (data.error) throw new Error(data.error);
-      
-      setPreview(data.preview);
-      showSuccess("AI Preview generated");
-    } catch (err: any) {
-      console.error("AI Preview error:", err);
-      showError("AI Preview failed: " + (err.message || "Check your Gemini API key"));
-    } finally {
-      setTesting(false);
-    }
+    showSuccess("Draft cleared.");
   };
 
   return (
@@ -162,8 +126,8 @@ const TenantSettings = () => {
             <Textarea 
               value={formData.business_context} 
               onChange={(e) => updateField('business_context', e.target.value)}
-              placeholder="Describe your services, location, and unique selling points..."
-              className="min-h-[80px] text-sm"
+              placeholder="Describe your services, location, and unique selling points for the AI..."
+              className="min-h-[120px] text-sm"
             />
           </div>
           <div className="space-y-2">
@@ -174,59 +138,11 @@ const TenantSettings = () => {
               placeholder="https://g.page/r/..."
             />
           </div>
-          <div className="space-y-2">
-            <Label className="flex items-center gap-2"><Phone size={14} /> Twilio Number</Label>
-            <Input 
-              value={formData.twilio_number} 
-              onChange={(e) => updateField('twilio_number', e.target.value)}
-              placeholder="+27..."
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <MessageSquareText size={20} />
-            AI Outreach Template
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label>Instructions for Gemini</Label>
-            <Textarea 
-              className="min-h-[120px]"
-              value={formData.message_template} 
-              onChange={(e) => updateField('message_template', e.target.value)}
-              placeholder="e.g. Draft a short, friendly SMS. Mention their recent service and ask for a rating from 1 to 5."
-            />
-          </div>
-
-          <div className="pt-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="flex items-center gap-2"
-              onClick={handleTestAI}
-              disabled={testing}
-            >
-              {testing ? <Loader2 className="animate-spin" size={14} /> : <Sparkles size={14} />}
-              Preview AI Message
-            </Button>
-          </div>
-
-          {preview && (
-            <div className="mt-4 p-3 bg-slate-50 rounded-lg border border-dashed border-slate-300">
-              <p className="text-[10px] font-bold uppercase text-slate-400 mb-1">Sample Preview:</p>
-              <p className="text-sm text-slate-700 italic">"{preview}"</p>
-            </div>
-          )}
         </CardContent>
         <CardFooter>
           <Button onClick={handleSave} disabled={saving} className="w-full bg-primary hover:bg-primary/90">
             {saving ? <Loader2 className="animate-spin mr-2" size={16} /> : null}
-            Save All Settings
+            Save Profile Changes
           </Button>
         </CardFooter>
       </Card>
