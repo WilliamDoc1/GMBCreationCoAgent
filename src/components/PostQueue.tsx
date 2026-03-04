@@ -51,20 +51,20 @@ const PostQueue = () => {
     if (!tenant) return;
     setGenerating(true);
     try {
-      const { error } = await supabase.functions.invoke('gbp-content-generator', {
-        body: { 
-          tenantId: tenant.id,
-          industry: tenant.industry,
-          business_context: tenant.business_context
-        }
+      const { data, error } = await supabase.functions.invoke('gbp-content-generator', {
+        body: { tenantId: tenant.id }
       });
 
-      if (error) throw error;
+      if (error) {
+        // Extract the actual error message from the function response if possible
+        const errorMsg = data?.error || error.message || "Check your Gemini API Key";
+        throw new Error(errorMsg);
+      }
       
       showSuccess("AI is generating 3 weekly posts for your business...");
       setTimeout(fetchPosts, 3000);
     } catch (err: any) {
-      showError("Failed to trigger post generation");
+      showError("Generation failed: " + err.message);
     } finally {
       setGenerating(false);
     }
@@ -73,7 +73,6 @@ const PostQueue = () => {
   const handlePublishToGMB = async (post: Post) => {
     setPublishingId(post.id);
     try {
-      // Handshake with local n8n instance as per technical standards
       const response = await fetch('http://localhost:5678/webhook/gbp-post-trigger', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -85,7 +84,7 @@ const PostQueue = () => {
         })
       });
 
-      if (!response.ok) throw new Error('n8n bridge failed');
+      if (!response.ok) throw new Error('n8n bridge failed - ensure n8n is running on port 5678');
 
       await supabase.from('posts').update({ 
         status: 'published', 
@@ -95,7 +94,7 @@ const PostQueue = () => {
       showSuccess("Post sent to n8n for GMB publishing!");
       fetchPosts();
     } catch (err: any) {
-      showError("Failed to publish: " + err.message);
+      showError("Publishing failed: " + err.message);
     } finally {
       setPublishingId(null);
     }

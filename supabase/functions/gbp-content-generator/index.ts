@@ -16,7 +16,7 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey)
     const geminiKey = Deno.env.get('GEMINI_API_KEY')
 
-    if (!geminiKey) throw new Error('GEMINI_API_KEY not found')
+    if (!geminiKey) throw new Error('GEMINI_API_KEY not found in Supabase secrets')
 
     const { data: tenant } = await supabase
       .from('tenants')
@@ -24,35 +24,43 @@ serve(async (req) => {
       .eq('id', tenantId)
       .single()
 
-    if (!tenant) throw new Error('Tenant not found')
+    if (!tenant) throw new Error('Business profile not found')
 
     const prompt = `
-      Business: ${tenant.business_name} (GMB Creation Co.)
-      Location: Cape Town, South Africa
-      Mission: Automate review requests and rank #1 for "Digital Marketing Agency Cape Town".
-      Task: Generate 3 distinct Google Business Profile posts for this week.
-      Keywords to include: "Local SEO", "Google Maps Ranking", "Cape Town", "Digital Marketing".
-      Tone: Professional, Authoritative, ZA English (optimise, centre).
-      Constraint: Each post under 300 characters. Return as a JSON array of strings.
+      Business: ${tenant.business_name}
+      Industry: ${tenant.industry}
+      Context: ${tenant.business_context || 'Local service provider'}
+      Location: South Africa (Use ZA English: optimise, centre)
+      
+      Task: Generate 3 distinct Google Business Profile posts for this week to improve local SEO ranking.
+      Tone: Professional, Authoritative, and Helpful.
+      Constraint: Each post must be under 300 characters. 
+      Format: Return ONLY a raw JSON array of strings. No markdown formatting, no "json" labels.
+      Example: ["Post 1 text", "Post 2 text", "Post 3 text"]
     `
 
     const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { response_mime_type: "application/json" }
+        contents: [{ parts: [{ text: prompt }] }]
       })
     })
     
     if (!geminiRes.ok) {
       const error = await geminiRes.json()
-      throw new Error(`Gemini API error: ${JSON.stringify(error)}`)
+      throw new Error(`Gemini API error: ${error.error?.message || 'Unknown error'}`)
     }
 
     const geminiData = await geminiRes.json()
-    const contentText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text
+    let contentText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || ""
+    
+    // Clean up potential markdown formatting from AI
+    contentText = contentText.replace(/```json/g, '').replace(/```/g, '').trim()
+    
     const postContents = JSON.parse(contentText)
+
+    if (!Array.isArray(postContents)) throw new Error('AI did not return an array of posts')
 
     const postsToInsert = postContents.map((content: string, i: number) => ({
       tenant_id: tenantId,
