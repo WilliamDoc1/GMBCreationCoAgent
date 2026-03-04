@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { useTenant } from '@/hooks/use-tenant';
+import { useAuth } from '@/components/AuthProvider';
 import { supabase } from '@/lib/supabase';
 import { showSuccess, showError } from '@/utils/toast';
 import { Building2, Link as LinkIcon, Phone, MessageSquareText, Sparkles, Loader2, BookOpen, RotateCcw } from 'lucide-react';
@@ -15,6 +16,7 @@ const DRAFT_KEY = 'tenant_settings_draft';
 
 const TenantSettings = () => {
   const { tenant, refreshTenant } = useTenant();
+  const { session } = useAuth();
   const [formData, setFormData] = useState({
     business_name: '',
     industry: '',
@@ -27,7 +29,6 @@ const TenantSettings = () => {
   const [testing, setTesting] = useState(false);
   const [preview, setPreview] = useState('');
 
-  // Initialize form data when tenant loads or changes
   useEffect(() => {
     if (tenant) {
       const savedDraft = localStorage.getItem(DRAFT_KEY);
@@ -50,7 +51,6 @@ const TenantSettings = () => {
     }
   }, [tenant]);
 
-  // Save draft to localStorage as user types
   const updateField = (field: string, value: string) => {
     const newData = { ...formData, [field]: value };
     setFormData(newData);
@@ -58,17 +58,22 @@ const TenantSettings = () => {
   };
 
   const handleSave = async () => {
-    if (!tenant?.id) {
-      showError("No active business profile found to update.");
+    if (!tenant?.id || !session?.user?.id) {
+      showError("Authentication error: Could not identify business profile.");
       return;
     }
     
     setSaving(true);
     try {
+      // Using upsert with the existing ID ensures we update the correct record
       const { error } = await supabase
         .from('tenants')
-        .update(formData)
-        .eq('id', tenant.id);
+        .upsert({
+          id: tenant.id,
+          owner_id: session.user.id,
+          ...formData,
+          updated_at: new Date().toISOString()
+        });
 
       if (error) throw error;
       
