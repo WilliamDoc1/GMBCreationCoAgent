@@ -32,12 +32,13 @@ serve(async (req) => {
     const tenant = customer.tenants
     const method = tenant.outreach_method || 'email'
     const geminiKey = Deno.env.get('GEMINI_API_KEY')
+    const resendKey = Deno.env.get('RESEND_API_KEY')
     
     let messageContent = ""
     let action = ""
 
     if (method === 'sms') {
-      // Generate SMS Content
+      // --- SMS LOGIC (TWILIO) ---
       const prompt = `
         Task: Draft a short, friendly SMS review request.
         Business: ${tenant.business_name}
@@ -55,7 +56,6 @@ serve(async (req) => {
       messageContent = geminiData.candidates?.[0]?.content?.parts?.[0]?.text?.trim()
       action = 'sms_outreach_sent'
 
-      // Send via Twilio
       const accountSid = Deno.env.get('TWILIO_ACCOUNT_SID')
       const authToken = Deno.env.get('TWILIO_AUTH_TOKEN')
       const fromNumber = tenant.twilio_number || Deno.env.get('TWILIO_PHONE_NUMBER')
@@ -69,14 +69,17 @@ serve(async (req) => {
         body: new URLSearchParams({ To: customer.phone_number, From: fromNumber, Body: messageContent })
       })
     } else {
-      // Generate Email Content
+      // --- EMAIL LOGIC (RESEND) ---
+      if (!resendKey) throw new Error('RESEND_API_KEY not found in secrets')
+      if (!customer.email) throw new Error('Customer email is missing')
+
       const prompt = `
         Task: Draft a professional review request email.
         Business: ${tenant.business_name}
         Customer: ${customer.full_name}
         Context: ${tenant.business_context || ''}
         Review Link: ${tenant.gmb_review_link}
-        Constraint: Include a clear Subject Line and a professional sign-off.
+        Constraint: Return ONLY the email body. No subject line in the text.
       `
       const geminiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
         method: 'POST',
@@ -87,7 +90,31 @@ serve(async (req) => {
       messageContent = geminiData.candidates?.[0]?.content?.parts?.[0]?.text?.trim()
       action = 'email_outreach_sent'
       
-      // NOTE: In production, use Resend/SendGrid here.
+      // Send via Resend
+      const resendRes = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${resendKey}`
+        },
+        body: JSON.stringify({
+          from: `${tenant.business_name} <onboarding@resend.dev>`, // Use your verified domain in production
+          to: [customer.email],
+          subject: `How was your experience with ${tenant.business_name}?`,
+          html: `<div style="font-family: sans-serif; line-height: 1.5; color: #333;">
+                  ${messageContent.replace(/\n/g, '<br>')}
+                  <br><br>
+                  <a href="${tenant.gmb_review_link}" style="background-color: #000; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+                    Leave a Review
+                  </a>
+                </div>`
+        })
+      })
+
+      if (!resendRes.ok) {
+        const error = await resendRes.json()
+        throw new Error(`Resend error: ${JSON.stringify(error)}`)
+      }
     }
     
     await supabase.from('customers').update({ 
@@ -108,6 +135,7 @@ serve(async (req) => {
     })
 
   } catch (error) {
+    console.error("Outreach Error:", error.message)
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400,
