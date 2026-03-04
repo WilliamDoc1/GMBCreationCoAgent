@@ -30,30 +30,65 @@ serve(async (req) => {
     }
 
     const tenant = customer.tenants
+    const method = tenant.outreach_method || 'email'
     const geminiKey = Deno.env.get('GEMINI_API_KEY')
     
-    // Generate Email Content
-    const prompt = `
-      Task: Draft a professional review request email.
-      Business: ${tenant.business_name}
-      Customer: ${customer.full_name}
-      Context: ${tenant.business_context || ''}
-      Review Link: ${tenant.gmb_review_link}
-      Instructions: ${tenant.message_template}
-      Constraint: Include a clear Subject Line and a professional sign-off.
-    `
+    let messageContent = ""
+    let action = ""
 
-    const geminiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-    })
-    
-    const geminiData = await geminiResponse.json()
-    const emailBody = geminiData.candidates?.[0]?.content?.parts?.[0]?.text?.trim()
+    if (method === 'sms') {
+      // Generate SMS Content
+      const prompt = `
+        Task: Draft a short, friendly SMS review request.
+        Business: ${tenant.business_name}
+        Customer: ${customer.full_name}
+        Context: ${tenant.business_context || ''}
+        Review Link: ${tenant.gmb_review_link}
+        Constraint: Under 160 characters.
+      `
+      const geminiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+      })
+      const geminiData = await geminiResponse.json()
+      messageContent = geminiData.candidates?.[0]?.content?.parts?.[0]?.text?.trim()
+      action = 'sms_outreach_sent'
 
-    // NOTE: In a production environment, you would use a service like Resend or SendGrid here.
-    // For now, we log the successful "send" to the audit log and update the customer status.
+      // Send via Twilio
+      const accountSid = Deno.env.get('TWILIO_ACCOUNT_SID')
+      const authToken = Deno.env.get('TWILIO_AUTH_TOKEN')
+      const fromNumber = tenant.twilio_number || Deno.env.get('TWILIO_PHONE_NUMBER')
+
+      await fetch(`https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`, {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Basic ' + btoa(`${accountSid}:${authToken}`),
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({ To: customer.phone_number, From: fromNumber, Body: messageContent })
+      })
+    } else {
+      // Generate Email Content
+      const prompt = `
+        Task: Draft a professional review request email.
+        Business: ${tenant.business_name}
+        Customer: ${customer.full_name}
+        Context: ${tenant.business_context || ''}
+        Review Link: ${tenant.gmb_review_link}
+        Constraint: Include a clear Subject Line and a professional sign-off.
+      `
+      const geminiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+      })
+      const geminiData = await geminiResponse.json()
+      messageContent = geminiData.candidates?.[0]?.content?.parts?.[0]?.text?.trim()
+      action = 'email_outreach_sent'
+      
+      // NOTE: In production, use Resend/SendGrid here.
+    }
     
     await supabase.from('customers').update({ 
       status: 'contacted', 
@@ -63,12 +98,12 @@ serve(async (req) => {
     await supabase.from('audit_log').insert({
       tenant_id: tenant.id,
       customer_id: customer.id,
-      action: 'email_outreach_sent',
-      message_content: emailBody,
+      action: action,
+      message_content: messageContent,
       status: 'success'
     })
 
-    return new Response(JSON.stringify({ success: true, method: 'email' }), {
+    return new Response(JSON.stringify({ success: true, method }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
 

@@ -6,11 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useTenant } from '@/hooks/use-tenant';
 import { useAuth } from '@/components/AuthProvider';
 import { supabase } from '@/lib/supabase';
 import { showSuccess, showError } from '@/utils/toast';
-import { Building2, Link as LinkIcon, Loader2, BookOpen, RotateCcw, Phone, ShieldCheck } from 'lucide-react';
+import { Building2, Link as LinkIcon, Loader2, BookOpen, RotateCcw, Phone, ShieldCheck, Mail } from 'lucide-react';
 
 const DRAFT_KEY = 'tenant_settings_draft';
 
@@ -23,7 +24,8 @@ const TenantSettings = () => {
     industry: '',
     gmb_review_link: '',
     business_context: '',
-    twilio_number: ''
+    twilio_number: '',
+    outreach_method: 'email'
   });
   const [saving, setSaving] = useState(false);
 
@@ -51,7 +53,8 @@ const TenantSettings = () => {
           industry: tenant.industry || '',
           gmb_review_link: tenant.gmb_review_link || '',
           business_context: tenant.business_context || '',
-          twilio_number: tenant.twilio_number || ''
+          twilio_number: tenant.twilio_number || '',
+          outreach_method: (tenant as any).outreach_method || 'email'
         });
       }
     }
@@ -99,7 +102,8 @@ const TenantSettings = () => {
       industry: tenant.industry || '',
       gmb_review_link: tenant.gmb_review_link || '',
       business_context: tenant.business_context || '',
-      twilio_number: tenant.twilio_number || ''
+      twilio_number: tenant.twilio_number || '',
+      outreach_method: (tenant as any).outreach_method || 'email'
     });
     localStorage.removeItem(DRAFT_KEY);
     showSuccess("Draft cleared.");
@@ -163,16 +167,46 @@ const TenantSettings = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label className="flex items-center gap-2"><Phone size={14} /> Twilio Phone Number</Label>
-              <Input 
-                value={formData.twilio_number} 
-                onChange={(e) => updateField('twilio_number', e.target.value)}
-                placeholder="+27..."
-                className="bg-white"
-              />
-              <p className="text-[10px] text-slate-500">This number is used to send automated review requests via SMS.</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">Outreach Method</Label>
+                <Select 
+                  value={formData.outreach_method} 
+                  onValueChange={(value) => updateField('outreach_method', value)}
+                >
+                  <SelectTrigger className="bg-white">
+                    <SelectValue placeholder="Select method" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="email">
+                      <div className="flex items-center gap-2">
+                        <Mail size={14} /> Email
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="sms">
+                      <div className="flex items-center gap-2">
+                        <Phone size={14} /> SMS (Twilio)
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2"><Phone size={14} /> Twilio Phone Number</Label>
+                <Input 
+                  value={formData.twilio_number} 
+                  onChange={(e) => updateField('twilio_number', e.target.value)}
+                  placeholder="+27..."
+                  className="bg-white"
+                  disabled={formData.outreach_method === 'email'}
+                />
+              </div>
             </div>
+            <p className="text-[10px] text-slate-500">
+              {formData.outreach_method === 'email' 
+                ? "The agent will send review requests via email." 
+                : "The agent will send review requests via SMS using the Twilio number provided."}
+            </p>
           </CardContent>
         </Card>
       )}
