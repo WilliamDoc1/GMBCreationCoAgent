@@ -51,20 +51,15 @@ const PostQueue = () => {
     if (!tenant) return;
     setGenerating(true);
     try {
-      const response = await fetch('http://localhost:54321/functions/v1/gbp-content-generator', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY || ''}`
-        },
-        body: JSON.stringify({ 
+      const { error } = await supabase.functions.invoke('gbp-content-generator', {
+        body: { 
           tenantId: tenant.id,
           industry: tenant.industry,
           business_context: tenant.business_context
-        })
+        }
       });
 
-      if (!response.ok) throw new Error('Failed to generate posts');
+      if (error) throw error;
       
       showSuccess("AI is generating 3 weekly posts for your business...");
       setTimeout(fetchPosts, 3000);
@@ -78,6 +73,7 @@ const PostQueue = () => {
   const handlePublishToGMB = async (post: Post) => {
     setPublishingId(post.id);
     try {
+      // Handshake with local n8n instance as per technical standards
       const response = await fetch('http://localhost:5678/webhook/gbp-post-trigger', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

@@ -12,40 +12,28 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    const webhookUrl = Deno.env.get('WEBHOOK_URL') // Set this in Supabase Secrets
     const supabase = createClient(supabaseUrl, supabaseKey)
     const geminiKey = Deno.env.get('GEMINI_API_KEY')
 
     const body = await req.json().catch(() => ({}))
     
     // --- WEBHOOK DISPATCHER LOGIC ---
-    if (body.event_type && webhookUrl) {
-      console.log(`Dispatching webhook for ${body.event_type}...`)
-      
-      const payload = {
-        tenant_id: body.payload.tenant_id,
-        event: body.event_type,
-        data: body.payload,
-        content: body.payload.content || body.payload.full_name, // Include content or name
-        timestamp: new Date().toISOString()
+    if (body.event_type) {
+      const webhookUrl = Deno.env.get('WEBHOOK_URL')
+      if (webhookUrl) {
+        const payload = {
+          tenant_id: body.payload.tenant_id,
+          event: body.event_type,
+          data: body.payload,
+          timestamp: new Date().toISOString()
+        }
+
+        await fetch(webhookUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        })
       }
-
-      const response = await fetch(webhookUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      })
-
-      await supabase.from('audit_log').insert({
-        tenant_id: body.payload.tenant_id,
-        action: `webhook_dispatched_${body.event_type}`,
-        message_content: `Webhook sent to ${webhookUrl}. Status: ${response.status}`,
-        status: response.ok ? 'success' : 'error'
-      })
-
-      return new Response(JSON.stringify({ success: true, dispatched: true }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
     }
 
     // --- AUTONOMOUS CONTROL LOOP LOGIC ---
@@ -54,7 +42,7 @@ serve(async (req) => {
     if (tenantError) throw tenantError
 
     for (const tenant of tenants || []) {
-      // GBP Posting Logic (3-day rule)
+      // 1. GBP Posting Logic (3-day rule)
       const { data: lastPost } = await supabase
         .from('posts')
         .select('created_at')
@@ -86,25 +74,27 @@ serve(async (req) => {
         }
       }
 
-      // Delayed Outreach Logic (24h rule)
-      const twentyFourHoursAgo = new Date()
-      twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24)
-      const { data: pendingCustomers } = await supabase
-        .from('customers')
-        .select('*')
+      // 2. Outreach Queue Processing
+      const { data: queueItems } = await supabase
+        .from('outreach_queue')
+        .select('*, customers(*)')
         .eq('tenant_id', tenant.id)
-        .eq('status', 'new')
-        .lt('created_at', twentyFourHoursAgo.toISOString())
+        .eq('status', 'pending')
+        .limit(10)
 
-      for (const customer of pendingCustomers || []) {
+      for (const item of queueItems || []) {
+        // Process outreach via the dedicated function
         await fetch(`${supabaseUrl}/functions/v1/send-outreach`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${supabaseKey}`
           },
-          body: JSON.stringify({ customerId: customer.id })
+          body: JSON.stringify({ customerId: item.customer_id })
         })
+
+        // Mark queue item as completed
+        await supabase.from('outreach_queue').update({ status: 'completed' }).eq('id', item.id)
       }
     }
 
