@@ -47,8 +47,8 @@ serve(async (req) => {
       Context: ${tenant.business_context || ''}
       Constraint: Under 160 characters. Include the GMB link: ${tenant.gmb_review_link}`
 
-      // Using gemini-1.5-pro as per AI_RULES.md
-      const geminiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${geminiKey}`, {
+      // Switching to gemini-1.5-flash
+      const geminiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })

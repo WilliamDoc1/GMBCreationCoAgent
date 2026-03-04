@@ -47,8 +47,8 @@ serve(async (req) => {
         Review Link: ${tenant.gmb_review_link}
         Constraint: Under 160 characters.
       `
-      // Using gemini-1.5-pro as per AI_RULES.md
-      const geminiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${geminiKey}`, {
+      // Switching to gemini-1.5-flash
+      const geminiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
@@ -82,8 +82,8 @@ serve(async (req) => {
         Review Link: ${tenant.gmb_review_link}
         Constraint: Return ONLY the email body. No subject line in the text.
       `
-      // Using gemini-1.5-pro as per AI_RULES.md
-      const geminiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${geminiKey}`, {
+      // Switching to gemini-1.5-flash
+      const geminiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
