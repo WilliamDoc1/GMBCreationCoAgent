@@ -16,12 +16,13 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey)
     const geminiKey = Deno.env.get('GEMINI_API_KEY')
 
-    if (!geminiKey || geminiKey === 'your_gemini_api_key_here') {
+    // 1. Check for API Key
+    if (!geminiKey || geminiKey.length < 10) {
       return new Response(JSON.stringify({ 
-        error: "Missing Gemini API Key. Please add GEMINI_API_KEY to your Supabase secrets." 
+        error: "GEMINI_API_KEY is missing or invalid in Supabase secrets. Please ensure it is set correctly." 
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400,
+        status: 200, // Return 200 so the client can read the error message
       })
     }
 
@@ -46,6 +47,7 @@ serve(async (req) => {
       Example: ["Post 1 text", "Post 2 text", "Post 3 text"]
     `
 
+    // 2. Call Gemini API
     const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -57,26 +59,41 @@ serve(async (req) => {
     if (!geminiRes.ok) {
       const errorData = await geminiRes.json()
       return new Response(JSON.stringify({ 
-        error: `Gemini API Error: ${errorData.error?.message || 'Unknown error'}` 
+        error: `Google AI Error: ${errorData.error?.message || 'Unknown API error'}. Status: ${geminiRes.status}` 
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400,
+        status: 200,
       })
     }
 
     const geminiData = await geminiRes.json()
     const contentText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || ""
     
-    // Robust JSON extraction: find the first '[' and last ']'
+    // 3. Robust JSON extraction
     const jsonStart = contentText.indexOf('[')
     const jsonEnd = contentText.lastIndexOf(']')
     
     if (jsonStart === -1 || jsonEnd === -1) {
-      throw new Error("AI failed to return a valid list of posts. Please try again.")
+      return new Response(JSON.stringify({ 
+        error: "The AI returned an invalid format. Please try again." 
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+      })
     }
     
     const cleanJson = contentText.substring(jsonStart, jsonEnd + 1)
-    const postContents = JSON.parse(cleanJson)
+    let postContents;
+    try {
+      postContents = JSON.parse(cleanJson)
+    } catch (e) {
+      return new Response(JSON.stringify({ 
+        error: "Failed to parse the AI's response. Please try again." 
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+      })
+    }
 
     if (!Array.isArray(postContents)) throw new Error('AI response was not a list')
 
@@ -99,7 +116,7 @@ serve(async (req) => {
     console.error("Function error:", error.message)
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 400,
+      status: 200,
     })
   }
 })

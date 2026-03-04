@@ -56,15 +56,17 @@ const PostQueue = () => {
       });
 
       if (error) {
-        // Extract the actual error message from the function response if possible
-        const errorMsg = data?.error || error.message || "Check your Gemini API Key";
-        throw new Error(errorMsg);
+        throw new Error(error.message || "Network error calling generator");
+      }
+
+      if (data?.error) {
+        throw new Error(data.error);
       }
       
       showSuccess("AI is generating 3 weekly posts for your business...");
       setTimeout(fetchPosts, 3000);
     } catch (err: any) {
-      showError("Generation failed: " + err.message);
+      showError(err.message);
     } finally {
       setGenerating(false);
     }
