@@ -16,7 +16,14 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey)
     const geminiKey = Deno.env.get('GEMINI_API_KEY')
 
-    if (!geminiKey) throw new Error('GEMINI_API_KEY not found in Supabase secrets')
+    if (!geminiKey || geminiKey === 'your_gemini_api_key_here') {
+      return new Response(JSON.stringify({ 
+        error: "Missing Gemini API Key. Please add GEMINI_API_KEY to your Supabase secrets." 
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      })
+    }
 
     const { data: tenant } = await supabase
       .from('tenants')
@@ -35,7 +42,7 @@ serve(async (req) => {
       Task: Generate 3 distinct Google Business Profile posts for this week to improve local SEO ranking.
       Tone: Professional, Authoritative, and Helpful.
       Constraint: Each post must be under 300 characters. 
-      Format: Return ONLY a raw JSON array of strings. No markdown formatting, no "json" labels.
+      Format: Return ONLY a raw JSON array of strings.
       Example: ["Post 1 text", "Post 2 text", "Post 3 text"]
     `
 
@@ -48,23 +55,34 @@ serve(async (req) => {
     })
     
     if (!geminiRes.ok) {
-      const error = await geminiRes.json()
-      throw new Error(`Gemini API error: ${error.error?.message || 'Unknown error'}`)
+      const errorData = await geminiRes.json()
+      return new Response(JSON.stringify({ 
+        error: `Gemini API Error: ${errorData.error?.message || 'Unknown error'}` 
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      })
     }
 
     const geminiData = await geminiRes.json()
-    let contentText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || ""
+    const contentText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || ""
     
-    // Clean up potential markdown formatting from AI
-    contentText = contentText.replace(/```json/g, '').replace(/```/g, '').trim()
+    // Robust JSON extraction: find the first '[' and last ']'
+    const jsonStart = contentText.indexOf('[')
+    const jsonEnd = contentText.lastIndexOf(']')
     
-    const postContents = JSON.parse(contentText)
+    if (jsonStart === -1 || jsonEnd === -1) {
+      throw new Error("AI failed to return a valid list of posts. Please try again.")
+    }
+    
+    const cleanJson = contentText.substring(jsonStart, jsonEnd + 1)
+    const postContents = JSON.parse(cleanJson)
 
-    if (!Array.isArray(postContents)) throw new Error('AI did not return an array of posts')
+    if (!Array.isArray(postContents)) throw new Error('AI response was not a list')
 
-    const postsToInsert = postContents.map((content: string, i: number) => ({
+    const postsToInsert = postContents.slice(0, 3).map((content: string, i: number) => ({
       tenant_id: tenantId,
-      content,
+      content: content.trim(),
       status: 'pending',
       scheduled_for: new Date(Date.now() + (i * 2 * 24 * 60 * 60 * 1000)).toISOString()
     }))
@@ -74,6 +92,7 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({ success: true, posts: data }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 200,
     })
 
   } catch (error) {
