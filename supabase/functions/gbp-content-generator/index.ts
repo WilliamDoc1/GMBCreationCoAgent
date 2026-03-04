@@ -16,13 +16,12 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey)
     const geminiKey = Deno.env.get('GEMINI_API_KEY')
 
-    // 1. Check for API Key
     if (!geminiKey || geminiKey.length < 10) {
       return new Response(JSON.stringify({ 
-        error: "GEMINI_API_KEY is missing or invalid in Supabase secrets. Please ensure it is set correctly." 
+        error: "GEMINI_API_KEY is missing or invalid in Supabase secrets." 
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200, // Return 200 so the client can read the error message
+        status: 200,
       })
     }
 
@@ -47,8 +46,8 @@ serve(async (req) => {
       Example: ["Post 1 text", "Post 2 text", "Post 3 text"]
     `
 
-    // 2. Call Gemini API
-    const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
+    // Using v1 instead of v1beta for better stability
+    const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -69,7 +68,6 @@ serve(async (req) => {
     const geminiData = await geminiRes.json()
     const contentText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || ""
     
-    // 3. Robust JSON extraction
     const jsonStart = contentText.indexOf('[')
     const jsonEnd = contentText.lastIndexOf(']')
     
@@ -95,8 +93,6 @@ serve(async (req) => {
       })
     }
 
-    if (!Array.isArray(postContents)) throw new Error('AI response was not a list')
-
     const postsToInsert = postContents.slice(0, 3).map((content: string, i: number) => ({
       tenant_id: tenantId,
       content: content.trim(),
@@ -113,7 +109,6 @@ serve(async (req) => {
     })
 
   } catch (error) {
-    console.error("Function error:", error.message)
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,

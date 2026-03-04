@@ -15,7 +15,7 @@ serve(async (req) => {
     if (!geminiKey) {
       return new Response(JSON.stringify({ error: "GEMINI_API_KEY is not set in Supabase secrets." }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200, // Return 200 so the client can handle the error message gracefully
+        status: 200,
       })
     }
 
@@ -31,7 +31,7 @@ serve(async (req) => {
       Do NOT include placeholders like [Link] - just write the text.
     `
 
-    const geminiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
+    const geminiResponse = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -53,7 +53,6 @@ serve(async (req) => {
     })
 
   } catch (error) {
-    console.error("Edge Function Error:", error);
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400,
