@@ -10,20 +10,31 @@ import { useTenant } from '@/hooks/use-tenant';
 import { useAuth } from '@/components/AuthProvider';
 import { supabase } from '@/lib/supabase';
 import { showSuccess, showError } from '@/utils/toast';
-import { Building2, Link as LinkIcon, Loader2, BookOpen, RotateCcw } from 'lucide-react';
+import { Building2, Link as LinkIcon, Loader2, BookOpen, RotateCcw, Phone, ShieldCheck } from 'lucide-react';
 
 const DRAFT_KEY = 'tenant_settings_draft';
 
 const TenantSettings = () => {
   const { tenant, refreshTenant } = useTenant();
   const { session } = useAuth();
+  const [userRole, setUserRole] = useState('client');
   const [formData, setFormData] = useState({
     business_name: '',
     industry: '',
     gmb_review_link: '',
-    business_context: ''
+    business_context: '',
+    twilio_number: ''
   });
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!session?.user) return;
+      const { data } = await supabase.from('profiles').select('role').eq('id', session.user.id).single();
+      if (data) setUserRole(data.role);
+    };
+    fetchProfile();
+  }, [session]);
 
   useEffect(() => {
     if (tenant) {
@@ -39,7 +50,8 @@ const TenantSettings = () => {
           business_name: tenant.business_name || '',
           industry: tenant.industry || '',
           gmb_review_link: tenant.gmb_review_link || '',
-          business_context: tenant.business_context || ''
+          business_context: tenant.business_context || '',
+          twilio_number: tenant.twilio_number || ''
         });
       }
     }
@@ -86,7 +98,8 @@ const TenantSettings = () => {
       business_name: tenant.business_name || '',
       industry: tenant.industry || '',
       gmb_review_link: tenant.gmb_review_link || '',
-      business_context: tenant.business_context || ''
+      business_context: tenant.business_context || '',
+      twilio_number: tenant.twilio_number || ''
     });
     localStorage.removeItem(DRAFT_KEY);
     showSuccess("Draft cleared.");
@@ -139,13 +152,37 @@ const TenantSettings = () => {
             />
           </div>
         </CardContent>
-        <CardFooter>
-          <Button onClick={handleSave} disabled={saving} className="w-full bg-primary hover:bg-primary/90">
-            {saving ? <Loader2 className="animate-spin mr-2" size={16} /> : null}
-            Save Profile Changes
-          </Button>
-        </CardFooter>
       </Card>
+
+      {userRole === 'admin' && (
+        <Card className="border-amber-100 bg-amber-50/10">
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2 text-amber-700">
+              <ShieldCheck size={20} />
+              Technical Configuration
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2"><Phone size={14} /> Twilio Phone Number</Label>
+              <Input 
+                value={formData.twilio_number} 
+                onChange={(e) => updateField('twilio_number', e.target.value)}
+                placeholder="+27..."
+                className="bg-white"
+              />
+              <p className="text-[10px] text-slate-500">This number is used to send automated review requests via SMS.</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <div className="flex justify-end">
+        <Button onClick={handleSave} disabled={saving} className="w-full md:w-auto px-8 bg-primary hover:bg-primary/90">
+          {saving ? <Loader2 className="animate-spin mr-2" size={16} /> : null}
+          Save All Changes
+        </Button>
+      </div>
     </div>
   );
 };
