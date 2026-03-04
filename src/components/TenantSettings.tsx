@@ -22,6 +22,7 @@ const TenantSettings = () => {
   const [formData, setFormData] = useState({
     business_name: '',
     industry: '',
+    email: '',
     gmb_review_link: '',
     business_context: '',
     twilio_number: '',
@@ -51,6 +52,7 @@ const TenantSettings = () => {
         setFormData({
           business_name: tenant.business_name || '',
           industry: tenant.industry || '',
+          email: (tenant as any).email || '',
           gmb_review_link: tenant.gmb_review_link || '',
           business_context: tenant.business_context || '',
           twilio_number: tenant.twilio_number || '',
@@ -76,12 +78,17 @@ const TenantSettings = () => {
     try {
       const { error } = await supabase
         .from('tenants')
-        .upsert({
-          id: tenant.id,
-          owner_id: session.user.id,
-          ...formData,
+        .update({
+          business_name: formData.business_name,
+          industry: formData.industry,
+          email: formData.email,
+          gmb_review_link: formData.gmb_review_link,
+          business_context: formData.business_context,
+          twilio_number: formData.twilio_number,
+          outreach_method: formData.outreach_method,
           updated_at: new Date().toISOString()
-        });
+        })
+        .eq('id', tenant.id);
 
       if (error) throw error;
       
@@ -100,6 +107,7 @@ const TenantSettings = () => {
     setFormData({
       business_name: tenant.business_name || '',
       industry: tenant.industry || '',
+      email: (tenant as any).email || '',
       gmb_review_link: tenant.gmb_review_link || '',
       business_context: tenant.business_context || '',
       twilio_number: tenant.twilio_number || '',
@@ -137,6 +145,15 @@ const TenantSettings = () => {
                 onChange={(e) => updateField('industry', e.target.value)}
               />
             </div>
+          </div>
+          <div className="space-y-2">
+            <Label className="flex items-center gap-2"><Mail size={14} /> Business Email</Label>
+            <Input 
+              type="email"
+              value={formData.email} 
+              onChange={(e) => updateField('email', e.target.value)}
+              placeholder="contact@yourbusiness.com"
+            />
           </div>
           <div className="space-y-2">
             <Label className="flex items-center gap-2"><BookOpen size={14} /> Business Context</Label>
