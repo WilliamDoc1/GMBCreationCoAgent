@@ -50,11 +50,11 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-4">
-      <div className="mb-8">
+      <div className="mb-10">
         <img 
           src="/logo.jpg" 
           alt="GMB Creation Co." 
-          className="h-16 w-auto object-contain mx-auto"
+          className="h-24 w-auto object-contain mx-auto"
         />
       </div>
       <Card className="w-full max-w-md">
