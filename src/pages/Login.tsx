@@ -50,9 +50,16 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-4">
+      <div className="mb-8">
+        <img 
+          src="/logo.jpg" 
+          alt="GMB Creation Co." 
+          className="h-16 w-auto object-contain mx-auto"
+        />
+      </div>
       <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold">Outreach Agent</CardTitle>
+        <CardHeader className="space-y-1 text-center">
+          <CardTitle className="text-2xl font-bold">Welcome Back</CardTitle>
           <CardDescription>Enter your credentials to access your dashboard</CardDescription>
         </CardHeader>
         <form onSubmit={handleLogin}>
