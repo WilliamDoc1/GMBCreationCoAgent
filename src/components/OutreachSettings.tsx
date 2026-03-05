@@ -20,6 +20,7 @@ const OutreachSettings = () => {
   const { session } = useAuth();
   const [formData, setFormData] = useState({
     twilio_number: '',
+    email: '',
     outreach_method: 'email',
     message_template: ''
   });
@@ -37,6 +38,7 @@ const OutreachSettings = () => {
       } else {
         setFormData({
           twilio_number: tenant.twilio_number || '',
+          email: (tenant as any).email || '',
           outreach_method: (tenant as any).outreach_method || 'email',
           message_template: (tenant as any).message_template || 'Draft a short, friendly message. Mention their recent service and ask for a rating from 1 to 5.'
         });
@@ -62,6 +64,7 @@ const OutreachSettings = () => {
         .from('tenants')
         .update({
           twilio_number: formData.twilio_number,
+          email: formData.email,
           outreach_method: formData.outreach_method,
           message_template: formData.message_template,
           updated_at: new Date().toISOString()
@@ -84,6 +87,7 @@ const OutreachSettings = () => {
     if (!tenant) return;
     setFormData({
       twilio_number: tenant.twilio_number || '',
+      email: (tenant as any).email || '',
       outreach_method: (tenant as any).outreach_method || 'email',
       message_template: (tenant as any).message_template || 'Draft a short, friendly message. Mention their recent service and ask for a rating from 1 to 5.'
     });
@@ -128,15 +132,30 @@ const OutreachSettings = () => {
                 </SelectContent>
               </Select>
             </div>
+            
             <div className="space-y-2">
-              <Label className="flex items-center gap-2"><Phone size={14} /> Twilio Phone Number</Label>
-              <Input 
-                value={formData.twilio_number} 
-                onChange={(e) => updateField('twilio_number', e.target.value)}
-                placeholder="+27..."
-                className="bg-white"
-                disabled={formData.outreach_method === 'email'}
-              />
+              {formData.outreach_method === 'email' ? (
+                <>
+                  <Label className="flex items-center gap-2"><Mail size={14} /> Business Email</Label>
+                  <Input 
+                    type="email"
+                    value={formData.email} 
+                    onChange={(e) => updateField('email', e.target.value)}
+                    placeholder="contact@yourbusiness.com"
+                    className="bg-white"
+                  />
+                </>
+              ) : (
+                <>
+                  <Label className="flex items-center gap-2"><Phone size={14} /> Twilio Phone Number</Label>
+                  <Input 
+                    value={formData.twilio_number} 
+                    onChange={(e) => updateField('twilio_number', e.target.value)}
+                    placeholder="+27..."
+                    className="bg-white"
+                  />
+                </>
+              )}
             </div>
           </div>
           
@@ -156,7 +175,7 @@ const OutreachSettings = () => {
           <div className="p-4 bg-white rounded-lg border border-blue-100">
             <p className="text-xs text-slate-600 leading-relaxed">
               {formData.outreach_method === 'email' 
-                ? "The agent will send review requests via email using your business email address. Ensure your business email is correctly set in the Business Profile tab." 
+                ? "The agent will send review requests via email using the business email address provided above." 
                 : "The agent will send review requests via SMS using the Twilio number provided above. Make sure your Twilio account is active and the number is verified."}
             </p>
           </div>
