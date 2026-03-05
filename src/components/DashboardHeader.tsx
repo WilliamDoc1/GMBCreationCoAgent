@@ -1,14 +1,16 @@
 "use client";
 
 import React from 'react';
-import { Users, LogOut, HelpCircle } from "lucide-react";
+import { Users, LogOut, HelpCircle, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SystemStatus from './SystemStatus';
 import { supabase } from '@/lib/supabase';
 import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '@/components/AuthProvider';
 
 const DashboardHeader = () => {
   const navigate = useNavigate();
+  const { session } = useAuth();
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -23,7 +25,7 @@ const DashboardHeader = () => {
             <Users className="text-primary h-6 w-6" />
             <h1 className="text-xl font-bold">Outreach Agent</h1>
           </Link>
-          <SystemStatus />
+          {session && <SystemStatus />}
         </div>
         <div className="flex items-center gap-4">
           <Link to="/documentation">
@@ -32,10 +34,20 @@ const DashboardHeader = () => {
               Help
             </Button>
           </Link>
-          <Button variant="ghost" size="sm" onClick={handleLogout} className="flex items-center gap-2">
-            <LogOut size={16} />
-            Logout
-          </Button>
+          
+          {session ? (
+            <Button variant="ghost" size="sm" onClick={handleLogout} className="flex items-center gap-2">
+              <LogOut size={16} />
+              Logout
+            </Button>
+          ) : (
+            <Link to="/login">
+              <Button variant="outline" size="sm" className="flex items-center gap-2">
+                <LogIn size={16} />
+                Login
+              </Button>
+            </Link>
+          )}
         </div>
       </div>
     </header>
