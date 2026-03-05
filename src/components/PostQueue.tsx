@@ -75,25 +75,19 @@ const PostQueue = () => {
   const handlePublishToGMB = async (post: Post) => {
     setPublishingId(post.id);
     try {
-      const response = await fetch('http://localhost:5678/webhook/gbp-post-trigger', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          post_id: post.id,
+      // Call the Edge Function bridge instead of localhost
+      const { data, error } = await supabase.functions.invoke('publish-gmb', {
+        body: {
+          postId: post.id,
           content: post.content,
-          business_name: tenant?.business_name,
-          timestamp: new Date().toISOString()
-        })
+          businessName: tenant?.business_name
+        }
       });
 
-      if (!response.ok) throw new Error('n8n bridge failed - ensure n8n is running on port 5678');
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
 
-      await supabase.from('posts').update({ 
-        status: 'published', 
-        published_at: new Date().toISOString() 
-      }).eq('id', post.id);
-
-      showSuccess("Post sent to n8n for GMB publishing!");
+      showSuccess("Post successfully published to GMB via n8n!");
       fetchPosts();
     } catch (err: any) {
       showError("Publishing failed: " + err.message);
