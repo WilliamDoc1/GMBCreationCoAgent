@@ -46,7 +46,7 @@ const Terms = () => {
 
             <section className="pt-8 border-t">
               <p className="text-sm text-slate-500">
-                For legal inquiries, please contact legal@gmbcreation.co
+                For legal inquiries, please contact william@gmbcreationco.com
               </p>
             </section>
           </div>

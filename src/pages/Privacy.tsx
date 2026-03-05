@@ -53,7 +53,7 @@ const Privacy = () => {
 
             <section className="pt-8 border-t">
               <p className="text-sm text-slate-500">
-                If you have questions about this policy, please contact us at privacy@gmbcreation.co
+                If you have questions about this policy, please contact us at william@gmbcreationco.com
               </p>
             </section>
           </div>
