@@ -19,7 +19,7 @@ serve(async (req) => {
     const geminiKey = Deno.env.get('GEMINI_API_KEY')
     
     const prompt = `Draft a short review request for ${tenant.business_name}. Link: ${tenant.gmb_review_link}. Under 160 chars.`
-    const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
+    const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${geminiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })

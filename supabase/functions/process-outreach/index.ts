@@ -16,7 +16,7 @@ serve(async (req) => {
     const { data: tenants } = await supabase.from('tenants').select('*')
     for (const tenant of tenants || []) {
       const prompt = `Generate a local SEO GBP post for ${tenant.business_name}. Under 300 chars.`
-      const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
+      const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${geminiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
