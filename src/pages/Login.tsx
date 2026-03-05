@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { showError, showSuccess } from '@/utils/toast';
 import { MadeWithDyad } from "@/components/made-with-dyad";
+import { ArrowLeft } from "lucide-react";
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -49,7 +50,16 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-4">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-4 relative">
+      <div className="absolute top-8 left-8">
+        <Link to="/">
+          <Button variant="ghost" className="flex items-center gap-2 text-slate-600 hover:text-slate-900">
+            <ArrowLeft size={20} />
+            Back to Home
+          </Button>
+        </Link>
+      </div>
+
       <div className="mb-16">
         <img 
           src="/logo.jpg" 
