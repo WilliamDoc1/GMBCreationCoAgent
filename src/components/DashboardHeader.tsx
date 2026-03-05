@@ -3,7 +3,6 @@
 import React from 'react';
 import { LogOut, HelpCircle, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import SystemStatus from './SystemStatus';
 import { supabase } from '@/lib/supabase';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/components/AuthProvider';
@@ -31,11 +30,6 @@ const DashboardHeader = () => {
               className="h-36 w-auto object-contain block"
             />
           </Link>
-          {session && !isLandingPage && (
-            <div className="hidden md:block">
-              <SystemStatus />
-            </div>
-          )}
         </div>
         <div className="flex items-center gap-6">
           <Link to="/documentation">
