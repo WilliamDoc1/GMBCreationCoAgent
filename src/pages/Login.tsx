@@ -62,7 +62,7 @@ const Login = () => {
 
       <div className="mb-16">
         <img 
-          src="/logo.jpg" 
+          src="/logo.png" 
           alt="GMB Creation Co." 
           className="h-64 w-auto object-contain mx-auto"
         />

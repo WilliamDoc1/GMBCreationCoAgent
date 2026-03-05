@@ -25,7 +25,7 @@ const DashboardHeader = () => {
         <div className="flex items-center gap-10 h-full">
           <Link to={session ? "/dashboard" : "/"} className="flex items-center h-full">
             <img 
-              src="/logo.jpg" 
+              src="/logo.png" 
               alt="GMB Creation Co." 
               className="h-36 w-auto object-contain block"
             />
