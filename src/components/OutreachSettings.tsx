@@ -11,7 +11,7 @@ import { useTenant } from '@/hooks/use-tenant';
 import { useAuth } from '@/components/AuthProvider';
 import { supabase } from '@/lib/supabase';
 import { showSuccess, showError } from '@/utils/toast';
-import { Loader2, Zap, Phone, Mail, MessageSquare, RotateCcw } from 'lucide-react';
+import { Loader2, Zap, Phone, Mail, MessageSquare, RotateCcw, Sparkles } from 'lucide-react';
 
 const DRAFT_KEY = 'outreach_settings_draft';
 
@@ -25,6 +25,7 @@ const OutreachSettings = () => {
     message_template: ''
   });
   const [saving, setSaving] = useState(false);
+  const [generating, setGenerating] = useState(false);
 
   useEffect(() => {
     if (tenant) {
@@ -50,6 +51,31 @@ const OutreachSettings = () => {
     const newData = { ...formData, [field]: value };
     setFormData(newData);
     localStorage.setItem(DRAFT_KEY, JSON.stringify(newData));
+  };
+
+  const handleGenerateAI = async () => {
+    if (!tenant) return;
+    setGenerating(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('test-ai-prompt', {
+        body: {
+          businessName: tenant.business_name,
+          industry: tenant.industry,
+          context: tenant.business_context,
+          instructions: `Generate a high-converting ${formData.outreach_method} outreach template for requesting a Google review. The template should be friendly, professional, and include placeholders like [Customer Name]. Keep it under 300 characters.`
+        }
+      });
+
+      if (error) throw error;
+      if (data?.preview) {
+        updateField('message_template', data.preview);
+        showSuccess("AI template generated!");
+      }
+    } catch (err: any) {
+      showError("Failed to generate template: " + err.message);
+    } finally {
+      setGenerating(false);
+    }
   };
 
   const handleSave = async () => {
@@ -160,7 +186,19 @@ const OutreachSettings = () => {
           </div>
           
           <div className="space-y-2">
-            <Label className="flex items-center gap-2"><MessageSquare size={14} /> AI Message Template</Label>
+            <div className="flex items-center justify-between">
+              <Label className="flex items-center gap-2"><MessageSquare size={14} /> AI Message Template</Label>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="h-7 text-[10px] gap-1 bg-white border-blue-200 text-blue-700 hover:bg-blue-50"
+                onClick={handleGenerateAI}
+                disabled={generating || !tenant?.business_context}
+              >
+                {generating ? <Loader2 size={10} className="animate-spin" /> : <Sparkles size={10} />}
+                Generate with AI
+              </Button>
+            </div>
             <Textarea 
               value={formData.message_template} 
               onChange={(e) => updateField('message_template', e.target.value)}
