@@ -9,7 +9,8 @@ import {
   Zap,
   AlertCircle,
   ShieldAlert,
-  Clock
+  Hash,
+  Info
 } from "lucide-react";
 import DashboardHeader from '@/components/DashboardHeader';
 import { MadeWithDyad } from "@/components/made-with-dyad";
@@ -29,6 +30,38 @@ const Documentation = () => {
         </div>
 
         <div className="space-y-10">
+          <section id="manual-ids">
+            <div className="flex items-center gap-2 mb-4">
+              <Hash className="text-purple-500" size={24} />
+              <h2 className="text-xl font-semibold">Manual ID Cheat Sheet</h2>
+            </div>
+            <Card className="border-purple-100 bg-purple-50/30">
+              <CardHeader>
+                <CardDescription>Use these formats in n8n to bypass "Account Management" API restrictions.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-4 bg-white rounded-lg border border-purple-100">
+                    <h4 className="text-xs font-bold text-slate-500 uppercase mb-2">Account Field</h4>
+                    <code className="text-[11px] text-purple-700 font-mono">accounts/YOUR_ACCOUNT_ID</code>
+                    <p className="text-[10px] text-slate-500 mt-2">Found in: Business Profile Settings {">"} Advanced Settings</p>
+                  </div>
+                  <div className="p-4 bg-white rounded-lg border border-purple-100">
+                    <h4 className="text-xs font-bold text-slate-500 uppercase mb-2">Location Field</h4>
+                    <code className="text-[11px] text-purple-700 font-mono">locations/YOUR_LOCATION_ID</code>
+                    <p className="text-[10px] text-slate-500 mt-2">Found in: Business Profile Settings {">"} Advanced Settings (Business Profile ID)</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2 p-3 bg-blue-50 rounded-lg border border-blue-100">
+                  <Info className="text-blue-500 shrink-0 mt-0.5" size={14} />
+                  <p className="text-[10px] text-blue-800">
+                    <strong>Note:</strong> If you have the "Google Business Profile Management API" enabled, manual entry will work even while awaiting Agency approval for the Account Management API.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </section>
+
           <section id="api-quota-fix">
             <div className="flex items-center gap-2 mb-4">
               <ShieldAlert className="text-amber-500" size={24} />
@@ -36,12 +69,6 @@ const Documentation = () => {
             </div>
             <Card className="border-amber-100 bg-amber-50/30">
               <CardContent className="pt-6 space-y-4">
-                <div className="flex items-start gap-3 p-3 bg-white rounded-lg border border-amber-100">
-                  <Clock className="text-amber-600 shrink-0 mt-1" size={18} />
-                  <div className="text-xs text-slate-700">
-                    <strong>Wait 2 Minutes:</strong> Google resets "Requests per minute" every 60 seconds. Stop clicking the dropdown to let the quota clear.
-                  </div>
-                </div>
                 <div className="space-y-2">
                   <p className="text-sm font-bold">Required APIs (Enable all 3):</p>
                   <ul className="list-disc list-inside text-xs text-slate-600 space-y-1">
@@ -52,42 +79,6 @@ const Documentation = () => {
                 </div>
               </CardContent>
             </Card>
-          </section>
-
-          <section id="terminal-setup">
-            <div className="flex items-center gap-2 mb-4">
-              <Terminal className="text-blue-500" size={24} />
-              <h2 className="text-xl font-semibold">Side-by-Side Terminal Setup</h2>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card className="border-blue-100 bg-blue-50/30">
-                <CardHeader>
-                  <CardTitle className="text-sm flex items-center gap-2">
-                    <Globe size={16} className="text-blue-600" />
-                    Terminal 1: ngrok
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <pre className="bg-slate-900 text-green-400 p-3 rounded text-[10px] font-mono break-all whitespace-pre-wrap">
-                    ngrok http 5678 --domain=advantageous-goatishly-tanya.ngrok-free.dev
-                  </pre>
-                </CardContent>
-              </Card>
-
-              <Card className="border-purple-100 bg-purple-50/30">
-                <CardHeader>
-                  <CardTitle className="text-sm flex items-center gap-2">
-                    <Zap size={16} className="text-purple-600" />
-                    Terminal 2: n8n
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <pre className="bg-slate-900 text-green-400 p-3 rounded text-[10px] font-mono break-all whitespace-pre-wrap">
-                    export WEBHOOK_URL=https://advantageous-goatishly-tanya.ngrok-free.dev && n8n start
-                  </pre>
-                </CardContent>
-              </Card>
-            </div>
           </section>
         </div>
       </main>
