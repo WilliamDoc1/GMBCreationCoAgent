@@ -12,16 +12,19 @@ serve(async (req) => {
   try {
     const supabase = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '')
     
-    // 1. Process Outreach Queue (Customers)
+    console.log("Agent Heartbeat: Starting autonomous loop...")
+
+    // 1. Process Outreach Queue
     const { data: queueItems } = await supabase
       .from('outreach_queue')
       .select('*')
       .eq('status', 'pending')
-      .limit(10)
+      .limit(5)
 
     for (const item of queueItems || []) {
-      // Trigger the individual outreach function
-      await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-outreach`, {
+      console.log(`Processing outreach for customer: ${item.customer_id}`)
+      
+      const outreachRes = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-outreach`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -30,36 +33,62 @@ serve(async (req) => {
         body: JSON.stringify({ customerId: item.customer_id })
       })
 
-      // Mark queue item as completed
-      await supabase.from('outreach_queue').update({ status: 'completed' }).eq('id', item.id)
+      if (outreachRes.ok) {
+        await supabase.from('outreach_queue').update({ status: 'completed' }).eq('id', item.id)
+      } else {
+        const err = await outreachRes.json()
+        await supabase.from('outreach_queue').update({ status: 'failed', last_error: err.error }).eq('id', item.id)
+      }
     }
 
-    // 2. Process GBP Posts (Existing logic)
+    // 2. Content Gap Analysis & Generation
     const { data: tenants } = await supabase.from('tenants').select('*')
-    const geminiKey = Deno.env.get('GEMINI_API_KEY')
-
+    
     for (const tenant of tenants || []) {
-      // Only generate if they have less than 3 pending posts
-      const { count } = await supabase.from('posts').select('*', { count: 'exact', head: true }).eq('tenant_id', tenant.id).eq('status', 'pending')
+      // Check if they have enough pending posts for the week
+      const { count } = await supabase
+        .from('posts')
+        .select('*', { count: 'exact', head: true })
+        .eq('tenant_id', tenant.id)
+        .eq('status', 'pending')
       
       if ((count || 0) < 3) {
-        const prompt = `Generate a local SEO GBP post for ${tenant.business_name}. Under 300 chars.`
-        const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${geminiKey}`, {
+        console.log(`Generating content for tenant: ${tenant.business_name}`)
+        await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/gbp-content-generator`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`
+          },
+          body: JSON.stringify({ tenantId: tenant.id })
         })
-        const geminiData = await geminiRes.json()
-        const content = geminiData.candidates?.[0]?.content?.parts?.[0]?.text?.trim()
-
-        if (content) {
-          await supabase.from('posts').insert({ tenant_id: tenant.id, content, status: 'pending' })
-        }
       }
+    }
+
+    // 3. Auto-Publish Scheduled Posts
+    const now = new Date().toISOString()
+    const { data: duePosts } = await supabase
+      .from('posts')
+      .select('*')
+      .eq('status', 'pending')
+      .lte('scheduled_for', now)
+      .limit(5)
+
+    for (const post of duePosts || []) {
+      console.log(`Auto-publishing post: ${post.id}`)
+      await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/publish-gmb`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`
+        },
+        body: JSON.stringify({ postId: post.id, content: post.content })
+      })
     }
 
     return new Response(JSON.stringify({ success: true }), { headers: corsHeaders })
   } catch (error) {
+    console.error("Autonomous Loop Error:", error.message)
     return new Response(JSON.stringify({ error: error.message }), { 
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400 

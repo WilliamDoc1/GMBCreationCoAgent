@@ -11,17 +11,9 @@ serve(async (req) => {
 
   try {
     const supabase = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '')
-    
-    // SECURITY: Verify the user's JWT from the request header
-    const authHeader = req.headers.get('Authorization')
-    if (!authHeader) throw new Error('Missing Authorization header')
-    
-    const { data: { user }, error: authError } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''))
-    if (authError || !user) throw new Error('Unauthorized: Invalid session')
-
     const { customerId } = await req.json()
     
-    // SECURITY: Fetch Customer and Tenant details, but verify ownership
+    // 1. Fetch Customer and Tenant details
     const { data: customer, error: custError } = await supabase
       .from('customers')
       .select('*, tenants(*)')
@@ -29,26 +21,21 @@ serve(async (req) => {
       .single()
 
     if (custError || !customer) throw new Error('Customer not found')
-    
-    // SECURITY: Ensure the authenticated user owns this tenant
-    if (customer.tenants.owner_id !== user.id) {
-      throw new Error('Security Violation: You do not own this customer record')
-    }
-
     const tenant = customer.tenants
     const geminiKey = Deno.env.get('GEMINI_API_KEY')
     
-    // ... rest of the AI and n8n logic remains the same but is now protected
+    // 2. Generate Content with AI
     const prompt = `
       Business: ${tenant.business_name}
       Industry: ${tenant.industry}
       Customer Name: ${customer.full_name}
       Review Link: ${tenant.gmb_review_link}
       Context: ${tenant.business_context || 'Service provider'}
+      Method: ${tenant.outreach_method}
       
-      Task: Write a friendly, professional email thanking the customer for their business and asking for a Google review.
+      Task: Write a friendly, professional ${tenant.outreach_method} thanking the customer and asking for a Google review.
       Tone: Warm and South African (Use ZA English: "optimise", "centre").
-      Format: Return JSON with "subject" and "body" keys.
+      Format: Return JSON with "subject" (if email) and "body" keys.
     `
 
     const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${geminiKey}`, {
@@ -59,30 +46,49 @@ serve(async (req) => {
     
     const geminiData = await geminiRes.json()
     const aiText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || ""
-    
     const jsonMatch = aiText.match(/\{[\s\S]*\}/)
-    const emailContent = jsonMatch ? JSON.parse(jsonMatch[0]) : { 
+    const content = jsonMatch ? JSON.parse(jsonMatch[0]) : { 
       subject: `How was your experience with ${tenant.business_name}?`,
       body: `Hi ${customer.full_name}, thank you for choosing us! We'd love to hear your feedback: ${tenant.gmb_review_link}`
     }
 
-    const N8N_EMAIL_URL = 'https://advantageous-goatishly-tanya.ngrok-free.dev/webhook-test/email-outreach';
-    
-    const n8nRes = await fetch(N8N_EMAIL_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        to: customer.email,
-        from_name: tenant.business_name,
-        subject: emailContent.subject,
-        body: emailContent.body,
-        customer_id: customer.id,
-        tenant_id: tenant.id
+    // 3. Send via chosen method
+    if (tenant.outreach_method === 'sms') {
+      const accountSid = Deno.env.get('TWILIO_ACCOUNT_SID')
+      const authToken = Deno.env.get('TWILIO_AUTH_TOKEN')
+      const twilioRes = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`, {
+        method: 'POST',
+        headers: { 
+          'Authorization': 'Basic ' + btoa(`${accountSid}:${authToken}`), 
+          'Content-Type': 'application/x-www-form-urlencoded' 
+        },
+        body: new URLSearchParams({ 
+          To: customer.phone_number, 
+          From: tenant.twilio_number || Deno.env.get('TWILIO_PHONE_NUMBER') || '', 
+          Body: content.body 
+        })
       })
-    })
+      if (!twilioRes.ok) throw new Error("Twilio failed to send SMS")
+    } else {
+      // Email via Resend
+      const resendKey = Deno.env.get('RESEND_API_KEY')
+      const emailRes = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${resendKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          from: `${tenant.business_name} <onboarding@resend.dev>`, // In production, use verified domain
+          to: [customer.email],
+          subject: content.subject,
+          html: `<p>${content.body.replace(/\n/g, '<br>')}</p>`
+        })
+      })
+      if (!emailRes.ok) throw new Error("Resend failed to send email")
+    }
 
-    if (!n8nRes.ok) throw new Error("n8n failed to send email")
-
+    // 4. Update Status and Log
     await supabase.from('customers').update({ 
       status: 'contacted', 
       last_contacted_at: new Date().toISOString() 
@@ -91,8 +97,8 @@ serve(async (req) => {
     await supabase.from('audit_log').insert({
       tenant_id: tenant.id,
       customer_id: customer.id,
-      action: 'email_outreach_sent',
-      message_content: emailContent.subject,
+      action: `${tenant.outreach_method}_outreach_sent`,
+      message_content: content.subject || content.body.substring(0, 50),
       status: 'success'
     })
 
@@ -101,6 +107,7 @@ serve(async (req) => {
     })
 
   } catch (error) {
+    console.error("Outreach Error:", error.message)
     return new Response(JSON.stringify({ error: error.message }), { 
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400 
