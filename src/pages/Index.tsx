@@ -5,7 +5,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
 import { useTenant } from '@/hooks/use-tenant';
-import { Loader2, LayoutDashboard, Settings, Users, ShieldCheck, History, TrendingUp, Calendar, Zap } from "lucide-react";
+import { Loader2, LayoutDashboard, Settings, Users, ShieldCheck, History, TrendingUp, Calendar, Zap, MapPin } from "lucide-react";
 import CustomerTable from '@/components/CustomerTable';
 import DashboardHeader from '@/components/DashboardHeader';
 import CustomerActionBar from '@/components/CustomerActionBar';
@@ -21,6 +21,7 @@ import AgentMonitoring from '@/components/AgentMonitoring';
 import SEOInsights from '@/components/SEOInsights';
 import PostQueue from '@/components/PostQueue';
 import AdminDiagnostics from '@/components/AdminDiagnostics';
+import BranchManager from '@/components/BranchManager';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Footer from "@/components/Footer";
 import { showSuccess, showError } from '@/utils/toast';
@@ -136,6 +137,9 @@ const Index = () => {
               <TabsTrigger value="overview" className="flex items-center gap-2">
                 <LayoutDashboard size={16} /> Overview
               </TabsTrigger>
+              <TabsTrigger value="locations" className="flex items-center gap-2">
+                <MapPin size={16} /> Locations
+              </TabsTrigger>
               <TabsTrigger value="customers" className="flex items-center gap-2">
                 <Users size={16} /> Customers
               </TabsTrigger>
@@ -180,6 +184,10 @@ const Index = () => {
                 <OnboardingChecklist />
               </div>
             </div>
+          </TabsContent>
+
+          <TabsContent value="locations">
+            <BranchManager />
           </TabsContent>
 
           <TabsContent value="posts">
