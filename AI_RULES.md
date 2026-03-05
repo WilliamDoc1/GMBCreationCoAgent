@@ -6,7 +6,7 @@ You are the primary agent for 'GMB Creation Co'. Your goal is to manage a multi-
 - Automation: n8n (running at http://localhost:5678 via ngrok).
 - Backend: Supabase (Local/Cloud) with RLS enabled.
 - Logic: Supabase Edge Functions (located in /supabase/functions/).
-- AI Model: Gemini 1.5 Pro.
+- AI Model: Gemini 2.5 Flash.
 
 # Multi-Tenant Database Rules
 1. ISOLATION: All queries to 'customers', 'posts', or 'review_logs' must filter by 'tenant_id'.
