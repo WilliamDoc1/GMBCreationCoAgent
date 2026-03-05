@@ -22,13 +22,13 @@ const DashboardHeader = () => {
 
   return (
     <header className="bg-white border-b sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
         <div className="flex items-center gap-6 h-full">
-          <Link to={session ? "/dashboard" : "/"} className="flex items-center h-full py-2">
+          <Link to={session ? "/dashboard" : "/"} className="flex items-center h-full">
             <img 
               src="/logo.jpg" 
               alt="GMB Creation Co." 
-              className="h-full w-auto object-contain block"
+              className="h-14 w-auto object-contain block"
             />
           </Link>
           {session && !isLandingPage && (
