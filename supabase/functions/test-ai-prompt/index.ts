@@ -31,8 +31,8 @@ serve(async (req) => {
       Do NOT include placeholders like [Link] - just write the text.
     `
 
-    // Switching to gemini-1.5-flash for better availability
-    const geminiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
+    // Using the stable v1 endpoint
+    const geminiResponse = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

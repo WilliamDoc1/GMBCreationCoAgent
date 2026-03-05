@@ -46,8 +46,8 @@ serve(async (req) => {
       Example: ["Post 1 text", "Post 2 text", "Post 3 text"]
     `
 
-    // Switching to gemini-1.5-flash for better availability and speed
-    const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
+    // Using the stable v1 endpoint for gemini-1.5-flash
+    const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
