@@ -5,7 +5,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
 import { useTenant } from '@/hooks/use-tenant';
-import { Loader2, LayoutDashboard, Settings, Users, ShieldCheck, History, TrendingUp, Calendar } from "lucide-react";
+import { Loader2, LayoutDashboard, Settings, Users, ShieldCheck, History, TrendingUp, Calendar, Zap } from "lucide-react";
 import CustomerTable from '@/components/CustomerTable';
 import DashboardHeader from '@/components/DashboardHeader';
 import CustomerActionBar from '@/components/CustomerActionBar';
@@ -13,6 +13,7 @@ import DashboardStats from '@/components/DashboardStats';
 import ActivityFeed from '@/components/ActivityFeed';
 import ReviewFeed from '@/components/ReviewFeed';
 import TenantSettings from '@/components/TenantSettings';
+import OutreachSettings from '@/components/OutreachSettings';
 import AdminTenantsTable from '@/components/AdminTenantsTable';
 import AuditLogTable from '@/components/AuditLogTable';
 import OnboardingChecklist from '@/components/OnboardingChecklist';
@@ -141,6 +142,9 @@ const Index = () => {
               <TabsTrigger value="posts" className="flex items-center gap-2">
                 <Calendar size={16} /> Content Queue
               </TabsTrigger>
+              <TabsTrigger value="outreach" className="flex items-center gap-2">
+                <Zap size={16} /> Outreach Settings
+              </TabsTrigger>
               {userRole === 'admin' && (
                 <>
                   <TabsTrigger value="seo" className="flex items-center gap-2">
@@ -193,6 +197,12 @@ const Index = () => {
             />
             <div className="bg-white rounded-xl shadow-sm overflow-hidden">
               <CustomerTable customers={customers} onRefresh={() => fetchCustomers()} />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="outreach">
+            <div className="max-w-2xl">
+              <OutreachSettings />
             </div>
           </TabsContent>
 
