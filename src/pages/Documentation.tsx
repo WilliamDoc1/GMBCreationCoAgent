@@ -16,10 +16,12 @@ import {
   CheckSquare,
   EyeOff,
   Mail,
-  ShieldCheck
+  ShieldCheck,
+  ArrowRight
 } from "lucide-react";
 import DashboardHeader from '@/components/DashboardHeader';
 import { MadeWithDyad } from "@/components/made-with-dyad";
+import { Button } from "@/components/ui/button";
 import { showSuccess } from '@/utils/toast';
 
 const Documentation = () => {
@@ -49,7 +51,7 @@ const Documentation = () => {
               <ShieldCheck className="text-green-600" size={24} />
               <h2 className="text-xl font-semibold">Google OAuth Verification</h2>
             </div>
-            <Card className="border-green-100 bg-green-50/30">
+            <Card className="border-green-100 bg-green-50/30 shadow-sm">
               <CardHeader>
                 <CardTitle className="text-sm">Branding Information</CardTitle>
                 <CardDescription>Copy these values into your Google Cloud Console "OAuth Consent Screen" tab.</CardDescription>
@@ -59,28 +61,28 @@ const Documentation = () => {
                   <div className="space-y-1">
                     <p className="text-[10px] font-bold text-slate-500 uppercase">Application Home Page</p>
                     <div className="flex items-center gap-2">
-                      <code className="bg-white px-2 py-1 rounded border text-xs flex-1">{currentUrl}/</code>
+                      <code className="bg-white px-2 py-1 rounded border text-xs flex-1 truncate">{currentUrl}/</code>
                       <Button variant="ghost" size="sm" onClick={() => copyToClipboard(`${currentUrl}/`)}><Copy size={12} /></Button>
                     </div>
                   </div>
                   <div className="space-y-1">
-                    <p className="text-[10px] font-bold text-slate-500 uppercase">Privacy Policy Link</p>
+                    <p className="text-[10px] font-bold text-slate-500 uppercase">Application Privacy Policy Link</p>
                     <div className="flex items-center gap-2">
-                      <code className="bg-white px-2 py-1 rounded border text-xs flex-1">{currentUrl}/privacy</code>
+                      <code className="bg-white px-2 py-1 rounded border text-xs flex-1 truncate">{currentUrl}/privacy</code>
                       <Button variant="ghost" size="sm" onClick={() => copyToClipboard(`${currentUrl}/privacy`)}><Copy size={12} /></Button>
                     </div>
                   </div>
                   <div className="space-y-1">
-                    <p className="text-[10px] font-bold text-slate-500 uppercase">Terms of Service Link</p>
+                    <p className="text-[10px] font-bold text-slate-500 uppercase">Application Terms of Service Link</p>
                     <div className="flex items-center gap-2">
-                      <code className="bg-white px-2 py-1 rounded border text-xs flex-1">{currentUrl}/terms</code>
+                      <code className="bg-white px-2 py-1 rounded border text-xs flex-1 truncate">{currentUrl}/terms</code>
                       <Button variant="ghost" size="sm" onClick={() => copyToClipboard(`${currentUrl}/terms`)}><Copy size={12} /></Button>
                     </div>
                   </div>
                   <div className="space-y-1">
                     <p className="text-[10px] font-bold text-slate-500 uppercase">Authorized Domain</p>
                     <div className="flex items-center gap-2">
-                      <code className="bg-white px-2 py-1 rounded border text-xs flex-1">{window.location.hostname}</code>
+                      <code className="bg-white px-2 py-1 rounded border text-xs flex-1 truncate">{window.location.hostname}</code>
                       <Button variant="ghost" size="sm" onClick={() => copyToClipboard(window.location.hostname)}><Copy size={12} /></Button>
                     </div>
                   </div>
@@ -97,7 +99,27 @@ const Documentation = () => {
             </Card>
           </section>
 
-          {/* ... rest of existing documentation */}
+          <section id="n8n-setup">
+            <div className="flex items-center gap-2 mb-4">
+              <Zap className="text-amber-500" size={24} />
+              <h2 className="text-xl font-semibold">n8n Automation Setup</h2>
+            </div>
+            <Card>
+              <CardContent className="pt-6 space-y-4">
+                <p className="text-sm text-slate-600">
+                  To enable email outreach and GMB posting, ensure your n8n instance is running and the following webhooks are active:
+                </p>
+                <div className="space-y-2">
+                  <div className="p-3 bg-slate-50 rounded border text-xs font-mono">
+                    POST /webhook-test/email-outreach
+                  </div>
+                  <div className="p-3 bg-slate-50 rounded border text-xs font-mono">
+                    POST /webhook-test/gbp-post-trigger
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </section>
         </div>
       </main>
       <MadeWithDyad />
