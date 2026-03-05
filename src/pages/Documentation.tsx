@@ -13,7 +13,8 @@ import {
   CheckCircle2,
   Info,
   Terminal,
-  Globe
+  Globe,
+  Settings2
 } from "lucide-react";
 import DashboardHeader from '@/components/DashboardHeader';
 import { MadeWithDyad } from "@/components/made-with-dyad";
@@ -69,6 +70,41 @@ const Documentation = () => {
                         $env:N8N_PROXY_HOPS=1; n8n start
                       </pre>
                     </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </section>
+
+          {/* n8n Workflow Configuration */}
+          <section id="n8n-config">
+            <div className="flex items-center gap-2 mb-4">
+              <Settings2 className="text-orange-500" size={24} />
+              <h2 className="text-xl font-semibold">n8n Workflow Configuration</h2>
+            </div>
+            <Card className="border-orange-100 bg-orange-50/30">
+              <CardContent className="pt-6 space-y-4">
+                <p className="text-sm text-slate-600 leading-relaxed">
+                  Configure your n8n workflows to listen for signals from the dashboard.
+                </p>
+                
+                <div className="space-y-4">
+                  <div className="p-3 bg-white rounded border border-orange-100">
+                    <h4 className="text-xs font-bold text-orange-900 mb-2">Webhook: GBP Post Trigger</h4>
+                    <ul className="text-[11px] text-slate-600 space-y-1 list-disc list-inside">
+                      <li><strong>Method:</strong> POST</li>
+                      <li><strong>Path:</strong> gbp-post-trigger</li>
+                      <li><strong>Action:</strong> Connect this to a "Google Business Profile" node to publish posts.</li>
+                    </ul>
+                  </div>
+
+                  <div className="p-3 bg-white rounded border border-orange-100">
+                    <h4 className="text-xs font-bold text-orange-900 mb-2">Webhook: Agent Inbound (Ping)</h4>
+                    <ul className="text-[11px] text-slate-600 space-y-1 list-disc list-inside">
+                      <li><strong>Method:</strong> POST</li>
+                      <li><strong>Path:</strong> gmb-agent-inbound</li>
+                      <li><strong>Action:</strong> Used for diagnostic connectivity tests.</li>
+                    </ul>
                   </div>
                 </div>
               </CardContent>
