@@ -35,8 +35,9 @@ serve(async (req) => {
       Task: Generate 3 distinct Google Business Profile posts for this week to improve local SEO ranking.
       Tone: Professional, Authoritative, and Helpful.
       Constraint: Each post must be under 300 characters. 
+      CTA: Each post must end with a clear call-to-action (e.g., "Visit our website to learn more" or "Contact us today for a quote").
       Format: Return ONLY a raw JSON array of strings.
-      Example: ["Post 1 text", "Post 2 text", "Post 3 text"]
+      Example: ["Post 1 text with CTA", "Post 2 text with CTA", "Post 3 text with CTA"]
     `
 
     const geminiUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${geminiKey}`;

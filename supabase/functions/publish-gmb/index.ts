@@ -44,7 +44,6 @@ serve(async (req) => {
     const accessToken = tokenData.access_token
 
     // 3. Post to Google Business Profile
-    // Endpoint: https://mybusiness.googleapis.com/v4/{locationName}/localPosts
     const gmbUrl = `https://mybusiness.googleapis.com/v4/${tenant.gmb_location_id}/localPosts`
     
     const gmbResponse = await fetch(gmbUrl, {
@@ -58,7 +57,7 @@ serve(async (req) => {
         summary: content,
         callToAction: {
           actionType: "LEARN_MORE",
-          url: tenant.gmb_review_link || "https://google.com"
+          url: tenant.website_url || tenant.gmb_review_link || "https://google.com"
         }
       })
     })

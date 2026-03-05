@@ -21,6 +21,7 @@ const TenantSettings = () => {
     business_name: '',
     industry: '',
     email: '',
+    website_url: '',
     gmb_review_link: '',
     business_context: '',
     gmb_location_id: '',
@@ -43,6 +44,7 @@ const TenantSettings = () => {
           business_name: tenant.business_name || '',
           industry: tenant.industry || '',
           email: (tenant as any).email || '',
+          website_url: (tenant as any).website_url || '',
           gmb_review_link: tenant.gmb_review_link || '',
           business_context: tenant.business_context || '',
           gmb_location_id: (tenant as any).gmb_location_id || '',
@@ -72,6 +74,7 @@ const TenantSettings = () => {
           business_name: formData.business_name,
           industry: formData.industry,
           email: formData.email,
+          website_url: formData.website_url,
           gmb_review_link: formData.gmb_review_link,
           business_context: formData.business_context,
           gmb_location_id: formData.gmb_location_id,
@@ -117,6 +120,7 @@ const TenantSettings = () => {
       business_name: tenant.business_name || '',
       industry: tenant.industry || '',
       email: (tenant as any).email || '',
+      website_url: (tenant as any).website_url || '',
       gmb_review_link: tenant.gmb_review_link || '',
       business_context: tenant.business_context || '',
       gmb_location_id: (tenant as any).gmb_location_id || '',
@@ -218,14 +222,25 @@ const TenantSettings = () => {
               />
             </div>
           </div>
-          <div className="space-y-2">
-            <Label className="flex items-center gap-2"><Mail size={14} /> Business Email</Label>
-            <Input 
-              type="email"
-              value={formData.email} 
-              onChange={(e) => updateField('email', e.target.value)}
-              placeholder="contact@yourbusiness.com"
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2"><Mail size={14} /> Business Email</Label>
+              <Input 
+                type="email"
+                value={formData.email} 
+                onChange={(e) => updateField('email', e.target.value)}
+                placeholder="contact@yourbusiness.com"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2"><Globe size={14} /> Website URL</Label>
+              <Input 
+                type="url"
+                value={formData.website_url} 
+                onChange={(e) => updateField('website_url', e.target.value)}
+                placeholder="https://www.yourbusiness.com"
+              />
+            </div>
           </div>
           <div className="space-y-2">
             <Label className="flex items-center gap-2"><BookOpen size={14} /> Business Context</Label>
