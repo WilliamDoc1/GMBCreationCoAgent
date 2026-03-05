@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { showError, showSuccess } from '@/utils/toast';
+import { MadeWithDyad } from "@/components/made-with-dyad";
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -48,7 +49,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold">Outreach Agent</CardTitle>
@@ -85,6 +86,7 @@ const Login = () => {
           </CardFooter>
         </form>
       </Card>
+      <MadeWithDyad />
     </div>
   );
 };
