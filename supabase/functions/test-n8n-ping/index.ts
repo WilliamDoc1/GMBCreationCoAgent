@@ -9,8 +9,10 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
   try {
-    // Pinging local n8n via the proxy/tunnel
-    const response = await fetch('http://localhost:5678/webhook-test/gmb-agent-inbound', {
+    // Using your provided ngrok URL
+    const N8N_URL = 'https://advantageous-goatishly-tanya.ngrok-free.dev/webhook-test/gmb-agent-inbound';
+
+    const response = await fetch(N8N_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ping: 'test', timestamp: new Date().toISOString() })

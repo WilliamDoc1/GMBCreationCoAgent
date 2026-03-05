@@ -13,7 +13,7 @@ serve(async (req) => {
     const { postId, content, businessName } = await req.json()
     const supabase = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '')
 
-    // DIAGNOSTIC: Check if ngrok is reachable
+    // Using your provided ngrok URL
     const N8N_URL = 'https://advantageous-goatishly-tanya.ngrok-free.dev/webhook-test/gbp-post-trigger';
     
     console.log(`Attempting connection to: ${N8N_URL}`);
