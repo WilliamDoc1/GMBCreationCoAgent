@@ -3,78 +3,91 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { Users, Zap, ShieldCheck, Star, ArrowRight, MessageSquare, Calendar, TrendingUp } from "lucide-react";
+import { Users, Zap, ShieldCheck, Star, ArrowRight, MessageSquare, Calendar, TrendingUp, CheckCircle2 } from "lucide-react";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import DashboardHeader from '@/components/DashboardHeader';
+import { useAuth } from '@/components/AuthProvider';
 
 const Landing = () => {
+  const { session } = useAuth();
+
   return (
     <div className="min-h-screen bg-white">
       <DashboardHeader />
       
       {/* Hero Section */}
-      <section className="py-20 px-4 max-w-7xl mx-auto text-center">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-blue-600 text-xs font-bold mb-6 uppercase tracking-wider">
+      <section className="py-24 px-4 max-w-7xl mx-auto text-center">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-blue-600 text-xs font-bold mb-8 uppercase tracking-wider">
           <Zap size={14} />
           Autonomous Local SEO for South African Businesses
         </div>
-        <h1 className="text-5xl md:text-6xl font-extrabold text-slate-900 mb-6 tracking-tight">
-          Automate Your Google <br />
-          <span className="text-primary">Business Reviews & Posts</span>
+        <h1 className="text-5xl md:text-7xl font-extrabold text-slate-900 mb-8 tracking-tight">
+          Dominate Local Search <br />
+          <span className="text-primary">On Autopilot</span>
         </h1>
-        <p className="text-xl text-slate-600 mb-10 max-w-2xl mx-auto leading-relaxed">
-          The Outreach Agent helps you collect 5-star reviews and publishes 3x weekly SEO-optimised posts to your Google Business Profile—completely on autopilot.
+        <p className="text-xl text-slate-600 mb-12 max-w-3xl mx-auto leading-relaxed">
+          The Outreach Agent autonomously collects 5-star reviews and publishes SEO-optimised posts to your Google Business Profile, keeping your business at the top of local search results.
         </p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <Link to="/login">
-            <Button size="lg" className="px-8 h-14 text-lg gap-2">
-              Register Now <ArrowRight size={20} />
-            </Button>
-          </Link>
-          <Link to="/login">
-            <Button size="lg" variant="outline" className="px-8 h-14 text-lg">
-              Sign In
-            </Button>
-          </Link>
+          {session ? (
+            <Link to="/dashboard">
+              <Button size="lg" className="px-10 h-16 text-lg gap-2 shadow-lg shadow-primary/20">
+                Go to Dashboard <ArrowRight size={20} />
+              </Button>
+            </Link>
+          ) : (
+            <>
+              <Link to="/login">
+                <Button size="lg" className="px-10 h-16 text-lg gap-2 shadow-lg shadow-primary/20">
+                  Get Started Now <ArrowRight size={20} />
+                </Button>
+              </Link>
+              <Link to="/login">
+                <Button size="lg" variant="outline" className="px-10 h-16 text-lg">
+                  Sign In
+                </Button>
+              </Link>
+            </>
+          )}
         </div>
       </section>
 
       {/* Features Grid */}
-      <section className="py-20 bg-slate-50 border-y">
+      <section className="py-24 bg-slate-50 border-y">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-slate-900">Built for Growth</h2>
-            <p className="text-slate-500 mt-2">Everything you need to dominate local search results.</p>
+          <div className="text-center mb-20">
+            <h2 className="text-4xl font-bold text-slate-900">Engineered for Growth</h2>
+            <p className="text-slate-500 mt-4 text-lg">Everything you need to outrank your local competition.</p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-white p-8 rounded-2xl border shadow-sm">
-              <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 mb-6">
-                <MessageSquare size={24} />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+            <div className="bg-white p-10 rounded-3xl border shadow-sm hover:shadow-md transition-shadow">
+              <div className="w-14 h-14 bg-blue-100 rounded-2xl flex items-center justify-center text-blue-600 mb-8">
+                <MessageSquare size={28} />
               </div>
-              <h3 className="text-xl font-bold mb-3">Smart Outreach</h3>
-              <p className="text-slate-600 text-sm leading-relaxed">
-                Automatically send personalised review requests via email or SMS. Our AI handles the follow-ups so you don't have to.
+              <h3 className="text-2xl font-bold mb-4">Smart Outreach</h3>
+              <p className="text-slate-600 leading-relaxed">
+                Automatically send personalised review requests via email or SMS. Our AI handles the follow-ups to ensure you get the feedback you deserve.
               </p>
             </div>
             
-            <div className="bg-white p-8 rounded-2xl border shadow-sm">
-              <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center text-purple-600 mb-6">
-                <Calendar size={24} />
+            <div className="bg-white p-10 rounded-3xl border shadow-sm hover:shadow-md transition-shadow">
+              <div className="w-14 h-14 bg-purple-100 rounded-2xl flex items-center justify-center text-purple-600 mb-8">
+                <Calendar size={28} />
               </div>
-              <h3 className="text-xl font-bold mb-3">3x Weekly Posting</h3>
-              <p className="text-slate-600 text-sm leading-relaxed">
-                Keep your profile fresh with AI-generated posts that reference local landmarks and neighbourhoods to boost SEO.
+              <h3 className="text-2xl font-bold mb-4">Weekly Posting</h3>
+              <p className="text-slate-600 leading-relaxed">
+                Keep your profile active with AI-generated posts that reference local landmarks and neighbourhoods, boosting your relevance in local searches.
               </p>
             </div>
             
-            <div className="bg-white p-8 rounded-2xl border shadow-sm">
-              <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center text-green-600 mb-6">
-                <ShieldCheck size={24} />
+            <div className="bg-white p-10 rounded-3xl border shadow-sm hover:shadow-md transition-shadow">
+              <div className="w-14 h-14 bg-green-100 rounded-2xl flex items-center justify-center text-green-600 mb-8">
+                <ShieldCheck size={28} />
               </div>
-              <h3 className="text-xl font-bold mb-3">Secure Isolation</h3>
-              <p className="text-slate-600 text-sm leading-relaxed">
-                Your data is protected by enterprise-grade Row Level Security. Your business context is yours and yours alone.
+              <h3 className="text-2xl font-bold mb-4">Secure Isolation</h3>
+              <p className="text-slate-600 leading-relaxed">
+                Your business data is protected by enterprise-grade Row Level Security. Your business context is isolated and private.
               </p>
             </div>
           </div>
@@ -82,41 +95,51 @@ const Landing = () => {
       </section>
 
       {/* Trust Section */}
-      <section className="py-20 px-4 max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row items-center gap-12">
-          <div className="flex-1 space-y-6">
-            <h2 className="text-3xl font-bold text-slate-900">Optimise Your Local Presence</h2>
-            <p className="text-slate-600 leading-relaxed">
-              Google rewards active profiles. By consistently posting and receiving fresh reviews, your business climbs the "Local Pack" rankings, putting you in front of more customers in your area.
+      <section className="py-24 px-4 max-w-7xl mx-auto">
+        <div className="flex flex-col lg:flex-row items-center gap-16">
+          <div className="flex-1 space-y-8">
+            <h2 className="text-4xl font-bold text-slate-900 leading-tight">Optimise Your Local Presence Without Lifting a Finger</h2>
+            <p className="text-lg text-slate-600 leading-relaxed">
+              Google rewards active, highly-rated profiles. By consistently posting and receiving fresh reviews, your business climbs the "Local Pack" rankings, putting you in front of more customers exactly when they need you.
             </p>
-            <ul className="space-y-3">
-              <li className="flex items-center gap-2 text-sm font-medium text-slate-700">
-                <Star size={16} className="text-yellow-500 fill-yellow-500" /> 
-                Increase your average star rating
-              </li>
-              <li className="flex items-center gap-2 text-sm font-medium text-slate-700">
-                <TrendingUp size={16} className="text-blue-500" /> 
-                Rank higher for "near me" searches
-              </li>
-              <li className="flex items-center gap-2 text-sm font-medium text-slate-700">
-                <Users size={16} className="text-green-500" /> 
-                Convert more profile views into calls
-              </li>
-            </ul>
-          </div>
-          <div className="flex-1 bg-slate-900 rounded-3xl p-8 text-white shadow-2xl">
             <div className="space-y-4">
-              <div className="p-4 bg-white/10 rounded-xl border border-white/10">
-                <p className="text-xs font-mono text-blue-400 mb-1">{">"} AGENT_STATUS: ACTIVE</p>
-                <p className="text-sm">Generating weekly SEO content for Precision Wealth...</p>
+              <div className="flex items-center gap-3 text-slate-700 font-medium">
+                <CheckCircle2 size={20} className="text-green-500" /> 
+                Increase your average star rating automatically
               </div>
-              <div className="p-4 bg-white/10 rounded-xl border border-white/10">
-                <p className="text-xs font-mono text-green-400 mb-1">{">"} OUTREACH_LOG: SENT</p>
-                <p className="text-sm">Review request delivered to 12 new customers.</p>
+              <div className="flex items-center gap-3 text-slate-700 font-medium">
+                <CheckCircle2 size={20} className="text-green-500" /> 
+                Rank higher for "near me" searches in your area
               </div>
-              <div className="p-4 bg-white/10 rounded-xl border border-white/10">
-                <p className="text-xs font-mono text-purple-400 mb-1">{">"} SEO_INSIGHT: OPTIMAL</p>
-                <p className="text-sm">Local keyword density increased by 24% this month.</p>
+              <div className="flex items-center gap-3 text-slate-700 font-medium">
+                <CheckCircle2 size={20} className="text-green-500" /> 
+                Convert more profile views into phone calls and visits
+              </div>
+            </div>
+          </div>
+          <div className="flex-1 w-full bg-slate-900 rounded-[2.5rem] p-10 text-white shadow-2xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full -mr-32 -mt-32 blur-3xl"></div>
+            <div className="space-y-6 relative z-10">
+              <div className="p-5 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-sm">
+                <p className="text-xs font-mono text-blue-400 mb-2 flex items-center gap-2">
+                  <span className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></span>
+                  AGENT_STATUS: ACTIVE
+                </p>
+                <p className="text-slate-200">Generating weekly SEO content for Precision Wealth...</p>
+              </div>
+              <div className="p-5 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-sm">
+                <p className="text-xs font-mono text-green-400 mb-2 flex items-center gap-2">
+                  <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+                  OUTREACH_LOG: SENT
+                </p>
+                <p className="text-slate-200">Review request delivered to 12 new customers via email.</p>
+              </div>
+              <div className="p-5 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-sm">
+                <p className="text-xs font-mono text-purple-400 mb-2 flex items-center gap-2">
+                  <span className="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></span>
+                  SEO_INSIGHT: OPTIMAL
+                </p>
+                <p className="text-slate-200">Local keyword density increased by 24% this month.</p>
               </div>
             </div>
           </div>
