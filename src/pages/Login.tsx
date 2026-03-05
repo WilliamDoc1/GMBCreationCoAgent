@@ -19,7 +19,7 @@ const Login = () => {
 
   useEffect(() => {
     if (session) {
-      navigate('/');
+      navigate('/dashboard');
     }
   }, [session, navigate]);
 
@@ -32,7 +32,7 @@ const Login = () => {
       showError(error.message);
     } else {
       showSuccess("Logged in successfully");
-      navigate('/');
+      navigate('/dashboard');
     }
     setLoading(false);
   };

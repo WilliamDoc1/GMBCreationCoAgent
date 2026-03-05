@@ -7,6 +7,7 @@ import { AuthProvider } from "./components/AuthProvider";
 import { TenantProvider } from "./hooks/use-tenant";
 import ScrollRestoration from "./components/ScrollRestoration";
 import Index from "./pages/Index";
+import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Feedback from "./pages/Feedback";
 import Documentation from "./pages/Documentation";
@@ -35,7 +36,8 @@ const App = () => (
           <BrowserRouter>
             <ScrollRestoration />
             <Routes>
-              <Route path="/" element={<Index />} />
+              <Route path="/" element={<Landing />} />
+              <Route path="/dashboard" element={<Index />} />
               <Route path="/login" element={<Login />} />
               <Route path="/feedback" element={<Feedback />} />
               <Route path="/documentation" element={<Documentation />} />
