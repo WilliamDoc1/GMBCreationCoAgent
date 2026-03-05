@@ -100,7 +100,10 @@ const TenantSettings = () => {
     setConnecting(true);
     try {
       const { data, error } = await supabase.functions.invoke('auth-gmb', {
-        body: { tenantId: tenant.id }
+        body: { 
+          tenantId: tenant.id,
+          origin: window.location.origin 
+        }
       });
 
       if (error) throw error;

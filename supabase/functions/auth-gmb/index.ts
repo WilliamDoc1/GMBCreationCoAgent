@@ -9,7 +9,7 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
   try {
-    const { tenantId } = await req.json()
+    const { tenantId, origin } = await req.json()
     const clientId = Deno.env.get('GOOGLE_CLIENT_ID')
     const redirectUri = `https://uqqzyqgypljxvmnguhky.supabase.co/functions/v1/gmb-callback`
     
@@ -18,6 +18,9 @@ serve(async (req) => {
       'https://www.googleapis.com/auth/business.manage'
     ].join(' ')
 
+    // We encode both tenantId and origin into the state
+    const state = btoa(JSON.stringify({ tenantId, origin: origin || 'http://localhost:8080' }))
+
     const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth')
     authUrl.searchParams.set('client_id', clientId!)
     authUrl.searchParams.set('redirect_uri', redirectUri)
@@ -25,7 +28,7 @@ serve(async (req) => {
     authUrl.searchParams.set('scope', scopes)
     authUrl.searchParams.set('access_type', 'offline')
     authUrl.searchParams.set('prompt', 'consent')
-    authUrl.searchParams.set('state', tenantId) // Pass tenantId to callback
+    authUrl.searchParams.set('state', state)
 
     return new Response(JSON.stringify({ url: authUrl.toString() }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

@@ -4,13 +4,15 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 serve(async (req) => {
   const url = new URL(req.url)
   const code = url.searchParams.get('code')
-  const tenantId = url.searchParams.get('state')
+  const stateParam = url.searchParams.get('state')
 
-  if (!code || !tenantId) {
+  if (!code || !stateParam) {
     return new Response("Missing code or state", { status: 400 })
   }
 
   try {
+    // Decode state to get tenantId and origin
+    const { tenantId, origin } = JSON.parse(atob(stateParam))
     const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
 
     // Exchange code for tokens
@@ -41,10 +43,14 @@ serve(async (req) => {
 
     if (error) throw error
 
-    // Redirect back to the app dashboard
+    // Redirect back to the app dashboard using the origin from state
+    const redirectUrl = new URL('/dashboard', origin)
+    redirectUrl.searchParams.set('tab', 'settings')
+    redirectUrl.searchParams.set('gmb', 'success')
+
     return new Response(null, {
       status: 302,
-      headers: { Location: `https://uqqzyqgypljxvmnguhky.supabase.co/dashboard?tab=settings&gmb=success` }
+      headers: { Location: redirectUrl.toString() }
     })
   } catch (error) {
     console.error("Callback Error:", error.message)
