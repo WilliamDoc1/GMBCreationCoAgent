@@ -11,7 +11,9 @@ import {
   ShieldAlert, 
   ExternalLink,
   CheckCircle2,
-  Info
+  Info,
+  Terminal,
+  Globe
 } from "lucide-react";
 import DashboardHeader from '@/components/DashboardHeader';
 import { MadeWithDyad } from "@/components/made-with-dyad";
@@ -31,6 +33,48 @@ const Documentation = () => {
         </div>
 
         <div className="space-y-10">
+          {/* Local Environment Setup */}
+          <section id="local-setup">
+            <div className="flex items-center gap-2 mb-4">
+              <Terminal className="text-purple-500" size={24} />
+              <h2 className="text-xl font-semibold">Local Environment Setup</h2>
+            </div>
+            <Card className="border-purple-100 bg-purple-50/30">
+              <CardContent className="pt-6 space-y-4">
+                <p className="text-sm text-slate-600 leading-relaxed">
+                  To enable the AI to post to Google, you must run n8n and ngrok on your local machine.
+                </p>
+                
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="text-xs font-bold text-purple-900 mb-2 flex items-center gap-2">
+                      <Globe size={14} /> 1. Start ngrok (Terminal 1)
+                    </h4>
+                    <pre className="bg-slate-900 text-green-400 p-3 rounded text-xs font-mono">
+                      ngrok http 5678
+                    </pre>
+                  </div>
+
+                  <div>
+                    <h4 className="text-xs font-bold text-purple-900 mb-2 flex items-center gap-2">
+                      <Zap size={14} /> 2. Start n8n (Terminal 2)
+                    </h4>
+                    <div className="space-y-2">
+                      <p className="text-[10px] text-slate-500 font-medium">Mac / Linux:</p>
+                      <pre className="bg-slate-900 text-green-400 p-3 rounded text-xs font-mono">
+                        export N8N_PROXY_HOPS=1 && n8n start
+                      </pre>
+                      <p className="text-[10px] text-slate-500 font-medium">Windows (PowerShell):</p>
+                      <pre className="bg-slate-900 text-green-400 p-3 rounded text-xs font-mono">
+                        $env:N8N_PROXY_HOPS=1; n8n start
+                      </pre>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </section>
+
           {/* Getting Started */}
           <section id="getting-started">
             <div className="flex items-center gap-2 mb-4">
