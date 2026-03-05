@@ -7,10 +7,7 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
-  }
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
   try {
     const { tenantId } = await req.json()
@@ -19,24 +16,15 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey)
     const geminiKey = Deno.env.get('GEMINI_API_KEY')
 
-    if (!geminiKey) {
-      return new Response(JSON.stringify({ 
-        error: "GEMINI_API_KEY is missing from Supabase secrets." 
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200,
-      })
-    }
+    if (!geminiKey) throw new Error("GEMINI_API_KEY is missing.")
 
-    const { data: tenant, error: tenantError } = await supabase
+    const { data: tenant } = await supabase
       .from('tenants')
       .select('*')
       .eq('id', tenantId)
       .single()
 
-    if (tenantError || !tenant) {
-      throw new Error('Business profile not found')
-    }
+    if (!tenant) throw new Error('Business profile not found')
 
     const prompt = `
       Business: ${tenant.business_name}
@@ -51,8 +39,8 @@ serve(async (req) => {
       Example: ["Post 1 text", "Post 2 text", "Post 3 text"]
     `
 
-    // Using the absolute stable v1 endpoint
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${geminiKey}`;
+    // Using gemini-2.0-flash as confirmed by diagnostics
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${geminiKey}`;
     
     const geminiRes = await fetch(geminiUrl, {
       method: 'POST',
@@ -64,9 +52,8 @@ serve(async (req) => {
     
     if (!geminiRes.ok) {
       const errorData = await geminiRes.json()
-      console.error("Google AI Error Details:", errorData);
       return new Response(JSON.stringify({ 
-        error: `Google AI Error: ${errorData.error?.message || 'Unknown API error'}. (Status: ${geminiRes.status})` 
+        error: `Google AI Error: ${errorData.error?.message || 'Unknown API error'}` 
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
@@ -76,33 +63,19 @@ serve(async (req) => {
     const geminiData = await geminiRes.json()
     const contentText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || ""
     
-    // Extract JSON array from the response
     const jsonStart = contentText.indexOf('[')
     const jsonEnd = contentText.lastIndexOf(']')
     
     if (jsonStart === -1 || jsonEnd === -1) {
-      return new Response(JSON.stringify({ 
-        error: "The AI returned an invalid format. Please try again." 
-      }), {
+      return new Response(JSON.stringify({ error: "Invalid AI format" }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
       })
     }
     
     const cleanJson = contentText.substring(jsonStart, jsonEnd + 1)
-    let postContents;
-    try {
-      postContents = JSON.parse(cleanJson)
-    } catch (e) {
-      return new Response(JSON.stringify({ 
-        error: "Failed to parse the AI's response. Please try again." 
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200,
-      })
-    }
+    const postContents = JSON.parse(cleanJson)
 
-    // Prepare posts for insertion
     const postsToInsert = postContents.slice(0, 3).map((content: string, i: number) => ({
       tenant_id: tenantId,
       content: content.trim(),
@@ -110,12 +83,8 @@ serve(async (req) => {
       scheduled_for: new Date(Date.now() + (i * 2 * 24 * 60 * 60 * 1000)).toISOString()
     }))
 
-    const { data, error: insertError } = await supabase
-      .from('posts')
-      .insert(postsToInsert)
-      .select()
-
-    if (insertError) throw insertError
+    const { data, error } = await supabase.from('posts').insert(postsToInsert).select()
+    if (error) throw error
 
     return new Response(JSON.stringify({ success: true, posts: data }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -123,7 +92,6 @@ serve(async (req) => {
     })
 
   } catch (error) {
-    console.error("Function Error:", error.message);
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
