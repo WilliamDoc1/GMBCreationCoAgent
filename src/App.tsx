@@ -10,6 +10,8 @@ import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Feedback from "./pages/Feedback";
 import Documentation from "./pages/Documentation";
+import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -37,6 +39,8 @@ const App = () => (
               <Route path="/login" element={<Login />} />
               <Route path="/feedback" element={<Feedback />} />
               <Route path="/documentation" element={<Documentation />} />
+              <Route path="/privacy" element={<Privacy />} />
+              <Route path="/terms" element={<Terms />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
