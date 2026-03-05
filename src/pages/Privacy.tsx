@@ -3,7 +3,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import DashboardHeader from '@/components/DashboardHeader';
-import { MadeWithDyad } from "@/components/made-with-dyad";
+import Footer from "@/components/Footer";
 import { ShieldCheck, Lock, Eye, Database, ShieldAlert, Globe, Trash2, ArrowLeft } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 
@@ -98,7 +98,7 @@ const Privacy = () => {
           </div>
         </div>
       </main>
-      <MadeWithDyad />
+      <Footer />
     </div>
   );
 };

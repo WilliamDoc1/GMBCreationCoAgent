@@ -15,7 +15,7 @@ import {
   ArrowLeft
 } from "lucide-react";
 import DashboardHeader from '@/components/DashboardHeader';
-import { MadeWithDyad } from "@/components/made-with-dyad";
+import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { showSuccess } from '@/utils/toast';
 
@@ -154,7 +154,7 @@ const Documentation = () => {
           </section>
         </div>
       </main>
-      <MadeWithDyad />
+      <Footer />
     </div>
   );
 };

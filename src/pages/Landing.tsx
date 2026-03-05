@@ -4,7 +4,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Users, Zap, ShieldCheck, Star, ArrowRight, MessageSquare, Calendar, TrendingUp, CheckCircle2 } from "lucide-react";
-import { MadeWithDyad } from "@/components/made-with-dyad";
+import Footer from "@/components/Footer";
 import DashboardHeader from '@/components/DashboardHeader';
 import { useAuth } from '@/components/AuthProvider';
 
@@ -146,7 +146,7 @@ const Landing = () => {
         </div>
       </section>
 
-      <MadeWithDyad />
+      <Footer />
     </div>
   );
 };

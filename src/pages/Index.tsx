@@ -21,7 +21,7 @@ import SEOInsights from '@/components/SEOInsights';
 import PostQueue from '@/components/PostQueue';
 import AdminDiagnostics from '@/components/AdminDiagnostics';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MadeWithDyad } from "@/components/made-with-dyad";
+import Footer from "@/components/Footer";
 import { showSuccess, showError } from '@/utils/toast';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
@@ -228,7 +228,7 @@ const Index = () => {
           )}
         </Tabs>
       </main>
-      <MadeWithDyad />
+      <Footer />
     </div>
   );
 };

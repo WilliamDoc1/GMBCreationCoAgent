@@ -3,7 +3,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import DashboardHeader from '@/components/DashboardHeader';
-import { MadeWithDyad } from "@/components/made-with-dyad";
+import Footer from "@/components/Footer";
 import { FileText, Scale, AlertCircle, ShieldCheck, Ban, Gavel, ArrowLeft } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 
@@ -87,7 +87,7 @@ const Terms = () => {
           </div>
         </div>
       </main>
-      <MadeWithDyad />
+      <Footer />
     </div>
   );
 };
