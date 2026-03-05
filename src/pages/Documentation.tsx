@@ -1,6 +1,7 @@
 "use client";
 
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { 
   BookOpen, 
@@ -10,7 +11,8 @@ import {
   ShieldCheck,
   Lock,
   Database,
-  History
+  History,
+  ArrowLeft
 } from "lucide-react";
 import DashboardHeader from '@/components/DashboardHeader';
 import { MadeWithDyad } from "@/components/made-with-dyad";
@@ -30,6 +32,15 @@ const Documentation = () => {
       <DashboardHeader />
       
       <main className="max-w-4xl mx-auto px-4 py-12">
+        <div className="mb-6">
+          <Link to="/">
+            <Button variant="ghost" size="sm" className="flex items-center gap-2 text-slate-500 hover:text-slate-900">
+              <ArrowLeft size={16} />
+              Back to Dashboard
+            </Button>
+          </Link>
+        </div>
+
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-3">
             <BookOpen className="text-primary" />

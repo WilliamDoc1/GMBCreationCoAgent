@@ -1,15 +1,26 @@
 "use client";
 
 import React from 'react';
+import { Link } from 'react-router-dom';
 import DashboardHeader from '@/components/DashboardHeader';
 import { MadeWithDyad } from "@/components/made-with-dyad";
-import { ShieldCheck, Lock, Eye, Database, ShieldAlert, Globe, Trash2 } from 'lucide-react';
+import { ShieldCheck, Lock, Eye, Database, ShieldAlert, Globe, Trash2, ArrowLeft } from 'lucide-react';
+import { Button } from "@/components/ui/button";
 
 const Privacy = () => {
   return (
     <div className="min-h-screen bg-slate-50 pb-12">
       <DashboardHeader />
       <main className="max-w-3xl mx-auto px-4 py-12">
+        <div className="mb-6">
+          <Link to="/">
+            <Button variant="ghost" size="sm" className="flex items-center gap-2 text-slate-500 hover:text-slate-900">
+              <ArrowLeft size={16} />
+              Back to Dashboard
+            </Button>
+          </Link>
+        </div>
+        
         <div className="bg-white rounded-2xl shadow-sm border p-8 md:p-12">
           <div className="flex items-center gap-3 mb-6">
             <ShieldCheck className="text-primary" size={32} />
