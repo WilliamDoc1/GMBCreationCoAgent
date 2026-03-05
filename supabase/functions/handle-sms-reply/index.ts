@@ -25,7 +25,7 @@ serve(async (req) => {
 
     if (rating >= 4) {
       const prompt = `Generate a "Thank You" response for a ${rating}-star review for ${tenant.business_name}. Link: ${tenant.gmb_review_link}. Under 160 chars.`
-      const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${geminiKey}`, {
+      const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${geminiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
