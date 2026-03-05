@@ -10,7 +10,7 @@ import { useTenant } from '@/hooks/use-tenant';
 import { useAuth } from '@/components/AuthProvider';
 import { supabase } from '@/lib/supabase';
 import { showSuccess, showError } from '@/utils/toast';
-import { Building2, Link as LinkIcon, Loader2, BookOpen, RotateCcw, Mail, Globe, CheckCircle2, AlertCircle, Key } from 'lucide-react';
+import { Building2, Link as LinkIcon, Loader2, BookOpen, RotateCcw, Mail, Globe, CheckCircle2, AlertCircle, Key, MapPin } from 'lucide-react';
 
 const DRAFT_KEY = 'tenant_settings_draft';
 
