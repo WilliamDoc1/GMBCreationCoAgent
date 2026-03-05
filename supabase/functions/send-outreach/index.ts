@@ -24,17 +24,27 @@ serve(async (req) => {
     const tenant = customer.tenants
     const geminiKey = Deno.env.get('GEMINI_API_KEY')
     
-    // 2. Generate Content with AI
+    // 2. Generate Content with AI using the Tenant's Template
+    const userTemplate = tenant.message_template || "Hi [Customer Name], thank you for choosing [Business Name]! We'd love to hear your feedback: [Review Link]";
+    
     const prompt = `
       Business: ${tenant.business_name}
       Industry: ${tenant.industry}
       Customer Name: ${customer.full_name}
       Review Link: ${tenant.gmb_review_link}
+      Website: ${tenant.website_url || 'Not provided'}
       Context: ${tenant.business_context || 'Service provider'}
       Method: ${tenant.outreach_method}
       
-      Task: Write a friendly, professional ${tenant.outreach_method} thanking the customer and asking for a Google review.
-      Tone: Warm and South African (Use ZA English: "optimise", "centre").
+      User's Message Template: "${userTemplate}"
+      
+      Task: Process the User's Message Template. 
+      1. Replace placeholders like [Customer Name] with "${customer.full_name}".
+      2. Replace [Business Name] with "${tenant.business_name}".
+      3. Replace [Review Link] with "${tenant.gmb_review_link}".
+      4. Ensure the tone is warm and professional.
+      5. Use South African English (e.g., "optimise", "centre").
+      
       Format: Return JSON with "subject" (if email) and "body" keys.
     `
 
@@ -47,9 +57,13 @@ serve(async (req) => {
     const geminiData = await geminiRes.json()
     const aiText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || ""
     const jsonMatch = aiText.match(/\{[\s\S]*\}/)
+    
     const content = jsonMatch ? JSON.parse(jsonMatch[0]) : { 
       subject: `How was your experience with ${tenant.business_name}?`,
-      body: `Hi ${customer.full_name}, thank you for choosing us! We'd love to hear your feedback: ${tenant.gmb_review_link}`
+      body: userTemplate
+        .replace(/\[Customer Name\]/g, customer.full_name)
+        .replace(/\[Business Name\]/g, tenant.business_name)
+        .replace(/\[Review Link\]/g, tenant.gmb_review_link)
     }
 
     // 3. Send via chosen method
@@ -79,7 +93,7 @@ serve(async (req) => {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          from: `${tenant.business_name} <onboarding@resend.dev>`, // In production, use verified domain
+          from: `${tenant.business_name} <onboarding@resend.dev>`, 
           to: [customer.email],
           subject: content.subject,
           html: `<p>${content.body.replace(/\n/g, '<br>')}</p>`

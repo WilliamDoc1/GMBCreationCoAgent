@@ -11,7 +11,7 @@ import { useTenant } from '@/hooks/use-tenant';
 import { useAuth } from '@/components/AuthProvider';
 import { supabase } from '@/lib/supabase';
 import { showSuccess, showError } from '@/utils/toast';
-import { Loader2, Zap, Phone, Mail, MessageSquare, RotateCcw, Sparkles, Link as LinkIcon } from 'lucide-react';
+import { Loader2, Zap, Phone, Mail, MessageSquare, RotateCcw, Sparkles, Link as LinkIcon, Info } from 'lucide-react';
 
 const DRAFT_KEY = 'outreach_settings_draft';
 
@@ -42,7 +42,7 @@ const OutreachSettings = () => {
           twilio_number: tenant.twilio_number || '',
           email: (tenant as any).email || '',
           outreach_method: (tenant as any).outreach_method || 'email',
-          message_template: (tenant as any).message_template || 'Draft a short, friendly message. Mention their recent service and ask for a rating from 1 to 5.',
+          message_template: (tenant as any).message_template || 'Hi [Customer Name], thank you for choosing [Business Name]! We would love to hear your feedback: [Review Link]',
           gmb_review_link: tenant.gmb_review_link || ''
         });
       }
@@ -64,14 +64,14 @@ const OutreachSettings = () => {
           businessName: tenant.business_name,
           industry: tenant.industry,
           context: tenant.business_context,
-          instructions: `Generate a high-converting ${formData.outreach_method} outreach template for requesting a Google review. The template should be friendly, professional, and include placeholders like [Customer Name]. IMPORTANT: You MUST include this review link in the message: ${formData.gmb_review_link || 'YOUR_REVIEW_LINK_HERE'}. Keep it under 300 characters.`
+          instructions: `Generate a high-converting ${formData.outreach_method} outreach template for requesting a Google review. Use placeholders like [Customer Name], [Business Name], and [Review Link]. Keep it under 300 characters.`
         }
       });
 
       if (error) throw error;
       if (data?.preview) {
         updateField('message_template', data.preview);
-        showSuccess("AI template generated with your review link!");
+        showSuccess("AI template generated!");
       }
     } catch (err: any) {
       showError("Failed to generate template: " + err.message);
@@ -118,7 +118,7 @@ const OutreachSettings = () => {
       twilio_number: tenant.twilio_number || '',
       email: (tenant as any).email || '',
       outreach_method: (tenant as any).outreach_method || 'email',
-      message_template: (tenant as any).message_template || 'Draft a short, friendly message. Mention their recent service and ask for a rating from 1 to 5.',
+      message_template: (tenant as any).message_template || 'Hi [Customer Name], thank you for choosing [Business Name]! We would love to hear your feedback: [Review Link]',
       gmb_review_link: tenant.gmb_review_link || ''
     });
     localStorage.removeItem(DRAFT_KEY);
@@ -219,9 +219,18 @@ const OutreachSettings = () => {
               placeholder="Instructions for the AI to generate your outreach message..."
               className="min-h-[150px] text-sm bg-white"
             />
-            <p className="text-[10px] text-slate-500 italic">
-              Tip: The AI will automatically include your Google Review Link in the generated template.
-            </p>
+            <div className="flex items-start gap-2 p-3 bg-blue-50/50 rounded-lg border border-blue-100">
+              <Info size={14} className="text-blue-600 mt-0.5 shrink-0" />
+              <div className="space-y-1">
+                <p className="text-[10px] font-bold text-blue-700 uppercase">Supported Placeholders:</p>
+                <p className="text-[10px] text-slate-600">
+                  Use <code className="bg-white px-1 rounded border">[Customer Name]</code>, 
+                  <code className="bg-white px-1 rounded border">[Business Name]</code>, and 
+                  <code className="bg-white px-1 rounded border">[Review Link]</code>. 
+                  The AI will automatically replace these when sending.
+                </p>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
