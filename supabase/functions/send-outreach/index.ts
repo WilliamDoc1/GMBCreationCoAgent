@@ -81,58 +81,67 @@ serve(async (req) => {
       })
       if (!twilioRes.ok) throw new Error("Twilio failed to send SMS")
     } else {
-      // Try Gmail API first if we have a refresh token
-      if (tenant.gmb_refresh_token) {
-        const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: new URLSearchParams({
-            client_id: Deno.env.get('GOOGLE_CLIENT_ID') || '',
-            client_secret: Deno.env.get('GOOGLE_CLIENT_SECRET') || '',
-            refresh_token: tenant.gmb_refresh_token,
-            grant_type: 'refresh_token',
-          }),
-        })
+      // EMAIL OUTREACH
+      let emailSent = false;
+      const provider = tenant.email_provider || 'resend';
 
-        const tokenData = await tokenResponse.json()
-        if (tokenResponse.ok) {
-          const accessToken = tokenData.access_token
-          
-          // Construct RFC 2822 message
-          const utf8Subject = `=?utf-8?B?${btoa(content.subject)}?=`;
-          const message = [
-            `To: ${customer.email}`,
-            `Subject: ${utf8Subject}`,
-            'Content-Type: text/html; charset=utf-8',
-            'MIME-Version: 1.0',
-            '',
-            content.body.replace(/\n/g, '<br>')
-          ].join('\r\n');
-
-          const encodedMessage = btoa(message).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-
-          const gmailRes = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
+      // 1. Try Gmail API if selected and token exists
+      if (provider === 'gmail' && tenant.gmb_refresh_token) {
+        try {
+          const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
             method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${accessToken}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ raw: encodedMessage })
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+              client_id: Deno.env.get('GOOGLE_CLIENT_ID') || '',
+              client_secret: Deno.env.get('GOOGLE_CLIENT_SECRET') || '',
+              refresh_token: tenant.gmb_refresh_token,
+              grant_type: 'refresh_token',
+            }),
           })
 
-          if (gmailRes.ok) {
-            console.log("Email sent via Gmail API")
-          } else {
-            const gmailError = await gmailRes.json()
-            console.error("Gmail API failed, falling back to Resend:", gmailError)
-            await sendViaResend(tenant, customer, content)
+          const tokenData = await tokenResponse.json()
+          if (tokenResponse.ok) {
+            const accessToken = tokenData.access_token
+            
+            // Construct RFC 2822 message
+            const utf8Subject = `=?utf-8?B?${btoa(content.subject)}?=`;
+            const message = [
+              `To: ${customer.email}`,
+              `Subject: ${utf8Subject}`,
+              'Content-Type: text/html; charset=utf-8',
+              'MIME-Version: 1.0',
+              '',
+              content.body.replace(/\n/g, '<br>')
+            ].join('\r\n');
+
+            const encodedMessage = btoa(message).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+
+            const gmailRes = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ raw: encodedMessage })
+            })
+
+            if (gmailRes.ok) {
+              emailSent = true;
+              console.log("Email sent via Gmail API");
+            } else {
+              const gmailError = await gmailRes.json();
+              console.error("Gmail API failed:", gmailError);
+            }
           }
-        } else {
-          console.error("Failed to refresh Google token, falling back to Resend")
-          await sendViaResend(tenant, customer, content)
+        } catch (e) {
+          console.error("Gmail flow error:", e);
         }
-      } else {
-        await sendViaResend(tenant, customer, content)
+      }
+
+      // 2. Fallback to Resend if Gmail failed or wasn't used
+      if (!emailSent) {
+        await sendViaResend(tenant, customer, content);
+        emailSent = true;
       }
     }
 
@@ -166,6 +175,10 @@ async function sendViaResend(tenant: any, customer: any, content: any) {
   const resendKey = Deno.env.get('RESEND_API_KEY')
   if (!resendKey) throw new Error("No email provider configured (Gmail failed and Resend key missing)")
   
+  // Use from_email if provided, otherwise fallback to tenant.email, otherwise onboarding@resend.dev
+  const fromEmail = tenant.from_email || tenant.email || 'onboarding@resend.dev';
+  const fromName = tenant.business_name || 'Outreach Agent';
+  
   const emailRes = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: {
@@ -173,12 +186,13 @@ async function sendViaResend(tenant: any, customer: any, content: any) {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      from: `${tenant.business_name} <onboarding@resend.dev>`, 
+      from: `${fromName} <${fromEmail}>`, 
       to: [customer.email],
       subject: content.subject,
       html: `<p>${content.body.replace(/\n/g, '<br>')}</p>`
     })
   })
+  
   if (!emailRes.ok) {
     const err = await emailRes.json()
     throw new Error(`Resend failed: ${err.message || 'Unknown error'}`)
