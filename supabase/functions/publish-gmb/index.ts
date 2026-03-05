@@ -7,79 +7,49 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
-  }
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
   try {
     const { postId, content, businessName } = await req.json()
+    const supabase = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '')
+
+    // DIAGNOSTIC: Check if ngrok is reachable
+    const N8N_URL = 'https://advantageous-goatishly-tanya.ngrok-free.dev/webhook-test/gbp-post-trigger';
     
-    if (!postId || !content) {
-      throw new Error("Missing postId or content in request body");
-    }
+    console.log(`Attempting connection to: ${N8N_URL}`);
 
-    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    const supabase = createClient(supabaseUrl, supabaseKey)
-
-    // We use the 'webhook-test' path by default as it's more reliable during development
-    // when the n8n workflow might not be 'Activated' yet.
-    const N8N_WEBHOOK_URL = 'https://advantageous-goatishly-tanya.ngrok-free.dev/webhook-test/gbp-post-trigger';
-
-    console.log(`Attempting to publish post ${postId} to n8n at ${N8N_WEBHOOK_URL}`);
-
-    const response = await fetch(N8N_WEBHOOK_URL, {
+    const response = await fetch(N8N_URL, {
       method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify({
-        post_id: postId,
-        content: content,
-        business_name: businessName,
-        timestamp: new Date().toISOString(),
-        source: 'supabase-edge-function'
-      }),
-      // Add a timeout to prevent the function from hanging
-      signal: AbortSignal.timeout(10000) 
-    })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ post_id: postId, content, business_name: businessName }),
+      signal: AbortSignal.timeout(8000)
+    }).catch(err => {
+      throw new Error(`CONNECTION_FAILED: Could not reach ngrok. Is your tunnel active? (${err.message})`);
+    });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`n8n Error (${response.status}):`, errorText);
-      throw new Error(`n8n responded with ${response.status}. Make sure your n8n workflow is listening at /webhook-test/gbp-post-trigger`);
+      const errorBody = await response.text();
+      throw new Error(`N8N_ERROR (${response.status}): ${errorBody || 'No response body'}`);
     }
 
-    // Update the post status in the database only after successful n8n delivery
-    const { error: updateError } = await supabase
-      .from('posts')
-      .update({ 
-        status: 'published', 
-        published_at: new Date().toISOString() 
-      })
-      .eq('id', postId);
+    // Success - Update DB
+    await supabase.from('posts').update({ 
+      status: 'published', 
+      published_at: new Date().toISOString() 
+    }).eq('id', postId);
 
-    if (updateError) throw updateError;
-
-    return new Response(JSON.stringify({ 
-      success: true, 
-      message: "Post delivered to n8n and status updated" 
-    }), {
+    return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 200,
     })
 
   } catch (error) {
-    console.error("Publishing Function Error:", error.message);
-    
+    console.error("Detailed Error:", error.message);
     return new Response(JSON.stringify({ 
       error: error.message,
-      details: "Check if your ngrok tunnel is active and n8n is running."
+      tip: "Ensure ngrok is running and n8n is listening for a TEST event."
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 400, // This triggers the 'non-2xx' error in the client
+      status: 400,
     })
   }
 })
