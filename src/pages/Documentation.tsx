@@ -14,7 +14,8 @@ import {
   Info,
   Terminal,
   Globe,
-  Settings2
+  Settings2,
+  Share2
 } from "lucide-react";
 import DashboardHeader from '@/components/DashboardHeader';
 import { MadeWithDyad } from "@/components/made-with-dyad";
@@ -90,20 +91,24 @@ const Documentation = () => {
                 
                 <div className="space-y-4">
                   <div className="p-3 bg-white rounded border border-orange-100">
-                    <h4 className="text-xs font-bold text-orange-900 mb-2">Webhook: GBP Post Trigger</h4>
+                    <h4 className="text-xs font-bold text-orange-900 mb-2 flex items-center gap-2">
+                      <Share2 size={14} /> 1. Webhook: GBP Post Trigger
+                    </h4>
                     <ul className="text-[11px] text-slate-600 space-y-1 list-disc list-inside">
                       <li><strong>Method:</strong> POST</li>
                       <li><strong>Path:</strong> gbp-post-trigger</li>
-                      <li><strong>Action:</strong> Connect this to a "Google Business Profile" node to publish posts.</li>
                     </ul>
                   </div>
 
                   <div className="p-3 bg-white rounded border border-orange-100">
-                    <h4 className="text-xs font-bold text-orange-900 mb-2">Webhook: Agent Inbound (Ping)</h4>
+                    <h4 className="text-xs font-bold text-orange-900 mb-2 flex items-center gap-2">
+                      <ExternalLink size={14} /> 2. Node: Google Business Profile
+                    </h4>
                     <ul className="text-[11px] text-slate-600 space-y-1 list-disc list-inside">
-                      <li><strong>Method:</strong> POST</li>
-                      <li><strong>Path:</strong> gmb-agent-inbound</li>
-                      <li><strong>Action:</strong> Used for diagnostic connectivity tests.</li>
+                      <li><strong>Resource:</strong> Location Post</li>
+                      <li><strong>Operation:</strong> Create</li>
+                      <li><strong>Summary:</strong> Map to <code>{"{{ $json.content }}"}</code> from Webhook.</li>
+                      <li><strong>Auth:</strong> Connect your Google account via OAuth.</li>
                     </ul>
                   </div>
                 </div>
