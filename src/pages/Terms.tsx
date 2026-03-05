@@ -3,7 +3,7 @@
 import React from 'react';
 import DashboardHeader from '@/components/DashboardHeader';
 import { MadeWithDyad } from "@/components/made-with-dyad";
-import { FileText, Scale, AlertCircle } from 'lucide-react';
+import { FileText, Scale, AlertCircle, ShieldCheck } from 'lucide-react';
 
 const Terms = () => {
   return (
@@ -21,7 +21,16 @@ const Terms = () => {
           <div className="space-y-8 text-slate-700 leading-relaxed">
             <section>
               <h2 className="text-xl font-semibold text-slate-900 mb-3 flex items-center gap-2">
-                <Scale size={20} className="text-blue-500" /> 1. Acceptance of Terms
+                <ShieldCheck size={20} className="text-green-600" /> 1. Data Integrity & Isolation
+              </h2>
+              <p>
+                GMB Creation Co guarantees strict multi-tenant isolation. Any attempt to bypass security protocols or access data belonging to another business is a material breach of these terms and will result in immediate account termination and potential legal action.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold text-slate-900 mb-3 flex items-center gap-2">
+                <Scale size={20} className="text-blue-500" /> 2. Acceptance of Terms
               </h2>
               <p>
                 By accessing or using the GMB Creation Co platform, you agree to be bound by these Terms of Service. If you do not agree, you may not use the service.
@@ -30,17 +39,10 @@ const Terms = () => {
 
             <section>
               <h2 className="text-xl font-semibold text-slate-900 mb-3 flex items-center gap-2">
-                <AlertCircle size={20} className="text-amber-500" /> 2. Use of Automation
+                <AlertCircle size={20} className="text-amber-500" /> 3. Use of Automation
               </h2>
               <p>
                 Our service provides AI-generated content for Google Business Profiles. You are responsible for reviewing all content before it is published. We are not liable for any account suspensions resulting from content that violates Google's community guidelines.
-              </p>
-            </section>
-
-            <section>
-              <h2 className="text-xl font-semibold text-slate-900 mb-3">3. Account Responsibilities</h2>
-              <p>
-                You must maintain the security of your account and are fully responsible for all activities that occur under your credentials. You must notify us immediately of any unauthorized use.
               </p>
             </section>
 

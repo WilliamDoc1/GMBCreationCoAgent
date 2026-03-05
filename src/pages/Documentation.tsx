@@ -4,20 +4,13 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { 
   BookOpen, 
-  Terminal, 
-  Globe, 
   Zap,
-  AlertCircle,
-  ShieldAlert,
-  Hash,
   Info,
   Copy,
-  Lock,
-  CheckSquare,
-  EyeOff,
-  Mail,
   ShieldCheck,
-  ArrowRight
+  Lock,
+  Database,
+  History
 } from "lucide-react";
 import DashboardHeader from '@/components/DashboardHeader';
 import { MadeWithDyad } from "@/components/made-with-dyad";
@@ -46,6 +39,41 @@ const Documentation = () => {
         </div>
 
         <div className="space-y-10">
+          <section id="security-architecture">
+            <div className="flex items-center gap-2 mb-4">
+              <Lock className="text-purple-600" size={24} />
+              <h2 className="text-xl font-semibold">Security & Data Isolation</h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Card className="border-purple-100 bg-purple-50/30">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <Database size={16} className="text-purple-600" />
+                    Row Level Security (RLS)
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-xs text-slate-600">
+                    Every database row is locked to your unique Business ID. It is physically impossible for one business to query or view another's data.
+                  </p>
+                </CardContent>
+              </Card>
+              <Card className="border-blue-100 bg-blue-50/30">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <History size={16} className="text-blue-600" />
+                    Immutable Audit Logs
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-xs text-slate-600">
+                    Every sensitive action—from AI generation to email outreach—is logged with a timestamp, creating a transparent and secure history.
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          </section>
+
           <section id="google-verification">
             <div className="flex items-center gap-2 mb-4">
               <ShieldCheck className="text-green-600" size={24} />
@@ -77,13 +105,6 @@ const Documentation = () => {
                     <div className="flex items-center gap-2">
                       <code className="bg-white px-2 py-1 rounded border text-xs flex-1 truncate">{currentUrl}/terms</code>
                       <Button variant="ghost" size="sm" onClick={() => copyToClipboard(`${currentUrl}/terms`)}><Copy size={12} /></Button>
-                    </div>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-[10px] font-bold text-slate-500 uppercase">Authorized Domain</p>
-                    <div className="flex items-center gap-2">
-                      <code className="bg-white px-2 py-1 rounded border text-xs flex-1 truncate">{window.location.hostname}</code>
-                      <Button variant="ghost" size="sm" onClick={() => copyToClipboard(window.location.hostname)}><Copy size={12} /></Button>
                     </div>
                   </div>
                 </div>

@@ -3,7 +3,7 @@
 import React from 'react';
 import DashboardHeader from '@/components/DashboardHeader';
 import { MadeWithDyad } from "@/components/made-with-dyad";
-import { ShieldCheck, Lock, Eye, Database } from 'lucide-react';
+import { ShieldCheck, Lock, Eye, Database, ShieldAlert } from 'lucide-react';
 
 const Privacy = () => {
   return (
@@ -21,7 +21,16 @@ const Privacy = () => {
           <div className="space-y-8 text-slate-700 leading-relaxed">
             <section>
               <h2 className="text-xl font-semibold text-slate-900 mb-3 flex items-center gap-2">
-                <Eye size={20} className="text-blue-500" /> 1. Information We Collect
+                <ShieldAlert size={20} className="text-red-500" /> 1. Zero-Trust Data Isolation
+              </h2>
+              <p>
+                We employ a strict <strong>Zero-Trust Architecture</strong>. Your business data is protected by Row Level Security (RLS) at the database level, ensuring that your information is logically isolated and completely untouchable by any other tenant or user on the platform.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold text-slate-900 mb-3 flex items-center gap-2">
+                <Eye size={20} className="text-blue-500" /> 2. Information We Collect
               </h2>
               <p>
                 We collect information you provide directly to us when you create an account, such as your name, email address, and business details. When you connect your Google Business Profile or Gmail account, we access specific data required to automate your posts and outreach.
@@ -30,24 +39,19 @@ const Privacy = () => {
 
             <section>
               <h2 className="text-xl font-semibold text-slate-900 mb-3 flex items-center gap-2">
-                <Database size={20} className="text-green-500" /> 2. How We Use Google Data
+                <Database size={20} className="text-green-500" /> 3. How We Use Google Data
               </h2>
               <p>
-                Our application's use and transfer to any other app of information received from Google APIs will adhere to the <a href="https://developers.google.com/terms/api-services-user-data-policy" className="text-blue-600 underline">Google API Services User Data Policy</a>, including the Limited Use requirements. We only use this data to:
+                Our application's use and transfer to any other app of information received from Google APIs will adhere to the <a href="https://developers.google.com/terms/api-services-user-data-policy" className="text-blue-600 underline">Google API Services User Data Policy</a>, including the Limited Use requirements.
               </p>
-              <ul className="list-disc ml-6 mt-2 space-y-1">
-                <li>Publish posts to your Google Business Profile.</li>
-                <li>Send review request emails via your Gmail account.</li>
-                <li>Monitor review status to provide dashboard analytics.</li>
-              </ul>
             </section>
 
             <section>
               <h2 className="text-xl font-semibold text-slate-900 mb-3 flex items-center gap-2">
-                <Lock size={20} className="text-purple-500" /> 3. Data Security
+                <Lock size={20} className="text-purple-500" /> 4. Identity Verification
               </h2>
               <p>
-                We implement industry-standard security measures to protect your data. Your OAuth tokens are encrypted and stored securely within our Supabase backend. We do not sell your personal or business data to third parties.
+                Every action performed within the app is verified using cryptographically signed JSON Web Tokens (JWT). This ensures that only you can trigger automations or view data associated with your business.
               </p>
             </section>
 
