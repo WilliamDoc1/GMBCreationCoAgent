@@ -13,9 +13,10 @@ serve(async (req) => {
     const clientId = Deno.env.get('GOOGLE_CLIENT_ID')
     const redirectUri = `https://uqqzyqgypljxvmnguhky.supabase.co/functions/v1/gmb-callback`
     
-    // Scopes required for GMB posting
+    // Scopes required for GMB posting AND Gmail sending
     const scopes = [
-      'https://www.googleapis.com/auth/business.manage'
+      'https://www.googleapis.com/auth/business.manage',
+      'https://www.googleapis.com/auth/gmail.send'
     ].join(' ')
 
     // We encode both tenantId and origin into the state

@@ -13,7 +13,6 @@ serve(async (req) => {
     const supabase = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '')
     const { customerId } = await req.json()
     
-    // 1. Fetch Customer and Tenant details
     const { data: customer, error: custError } = await supabase
       .from('customers')
       .select('*, tenants(*)')
@@ -24,7 +23,6 @@ serve(async (req) => {
     const tenant = customer.tenants
     const geminiKey = Deno.env.get('GEMINI_API_KEY')
     
-    // 2. Generate Content with AI using the Tenant's Template
     const userTemplate = tenant.message_template || "Hi [Customer Name], thank you for choosing [Business Name]! We'd love to hear your feedback: [Review Link]";
     
     const prompt = `
@@ -66,7 +64,6 @@ serve(async (req) => {
         .replace(/\[Review Link\]/g, tenant.gmb_review_link)
     }
 
-    // 3. Send via chosen method
     if (tenant.outreach_method === 'sms') {
       const accountSid = Deno.env.get('TWILIO_ACCOUNT_SID')
       const authToken = Deno.env.get('TWILIO_AUTH_TOKEN')
@@ -84,25 +81,61 @@ serve(async (req) => {
       })
       if (!twilioRes.ok) throw new Error("Twilio failed to send SMS")
     } else {
-      // Email via Resend
-      const resendKey = Deno.env.get('RESEND_API_KEY')
-      const emailRes = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${resendKey}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          from: `${tenant.business_name} <onboarding@resend.dev>`, 
-          to: [customer.email],
-          subject: content.subject,
-          html: `<p>${content.body.replace(/\n/g, '<br>')}</p>`
+      // Try Gmail API first if we have a refresh token
+      if (tenant.gmb_refresh_token) {
+        const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({
+            client_id: Deno.env.get('GOOGLE_CLIENT_ID') || '',
+            client_secret: Deno.env.get('GOOGLE_CLIENT_SECRET') || '',
+            refresh_token: tenant.gmb_refresh_token,
+            grant_type: 'refresh_token',
+          }),
         })
-      })
-      if (!emailRes.ok) throw new Error("Resend failed to send email")
+
+        const tokenData = await tokenResponse.json()
+        if (tokenResponse.ok) {
+          const accessToken = tokenData.access_token
+          
+          // Construct RFC 2822 message
+          const utf8Subject = `=?utf-8?B?${btoa(content.subject)}?=`;
+          const message = [
+            `To: ${customer.email}`,
+            `Subject: ${utf8Subject}`,
+            'Content-Type: text/html; charset=utf-8',
+            'MIME-Version: 1.0',
+            '',
+            content.body.replace(/\n/g, '<br>')
+          ].join('\r\n');
+
+          const encodedMessage = btoa(message).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+
+          const gmailRes = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${accessToken}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ raw: encodedMessage })
+          })
+
+          if (gmailRes.ok) {
+            console.log("Email sent via Gmail API")
+          } else {
+            const gmailError = await gmailRes.json()
+            console.error("Gmail API failed, falling back to Resend:", gmailError)
+            await sendViaResend(tenant, customer, content)
+          }
+        } else {
+          console.error("Failed to refresh Google token, falling back to Resend")
+          await sendViaResend(tenant, customer, content)
+        }
+      } else {
+        await sendViaResend(tenant, customer, content)
+      }
     }
 
-    // 4. Update Status and Log
     await supabase.from('customers').update({ 
       status: 'contacted', 
       last_contacted_at: new Date().toISOString() 
@@ -128,3 +161,26 @@ serve(async (req) => {
     })
   }
 })
+
+async function sendViaResend(tenant: any, customer: any, content: any) {
+  const resendKey = Deno.env.get('RESEND_API_KEY')
+  if (!resendKey) throw new Error("No email provider configured (Gmail failed and Resend key missing)")
+  
+  const emailRes = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${resendKey}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      from: `${tenant.business_name} <onboarding@resend.dev>`, 
+      to: [customer.email],
+      subject: content.subject,
+      html: `<p>${content.body.replace(/\n/g, '<br>')}</p>`
+    })
+  })
+  if (!emailRes.ok) {
+    const err = await emailRes.json()
+    throw new Error(`Resend failed: ${err.message || 'Unknown error'}`)
+  }
+}
