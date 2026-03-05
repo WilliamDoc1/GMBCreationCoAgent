@@ -11,7 +11,8 @@ import {
   ShieldAlert,
   Hash,
   Info,
-  Copy
+  Copy,
+  Lock
 } from "lucide-react";
 import DashboardHeader from '@/components/DashboardHeader';
 import { MadeWithDyad } from "@/components/made-with-dyad";
@@ -56,24 +57,25 @@ const Documentation = () => {
             </div>
           </section>
 
-          <section id="manual-ids">
+          <section id="troubleshooting">
             <div className="flex items-center gap-2 mb-4">
-              <Hash className="text-purple-500" size={24} />
-              <h2 className="text-xl font-semibold">Manual ID Cheat Sheet</h2>
+              <Lock className="text-red-500" size={24} />
+              <h2 className="text-xl font-semibold">Fixing "403 Forbidden"</h2>
             </div>
-            <Card className="border-purple-100 bg-purple-50/30">
-              <CardHeader>
-                <CardDescription>Use these formats in n8n to bypass "Account Management" API restrictions.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="p-4 bg-white rounded-lg border border-purple-100">
-                    <h4 className="text-xs font-bold text-slate-500 uppercase mb-2">Account Field</h4>
-                    <code className="text-[11px] text-purple-700 font-mono">accounts/YOUR_ACCOUNT_ID</code>
+            <Card className="border-red-100 bg-red-50/30">
+              <CardContent className="pt-6 space-y-4">
+                <div className="space-y-3">
+                  <div className="flex gap-3">
+                    <div className="h-5 w-5 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-xs font-bold shrink-0">1</div>
+                    <p className="text-sm text-slate-700"><strong>Try "accounts/primary":</strong> If your specific Account ID fails, use <code>accounts/primary</code> in the Account field. This uses the main account of the logged-in user.</p>
                   </div>
-                  <div className="p-4 bg-white rounded-lg border border-purple-100">
-                    <h4 className="text-xs font-bold text-slate-500 uppercase mb-2">Location Field</h4>
-                    <code className="text-[11px] text-purple-700 font-mono">locations/YOUR_LOCATION_ID</code>
+                  <div className="flex gap-3">
+                    <div className="h-5 w-5 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-xs font-bold shrink-0">2</div>
+                    <p className="text-sm text-slate-700"><strong>Check OAuth Scopes:</strong> Reconnect your Google credentials in n8n and ensure the "Manage your business listings" checkbox is ticked.</p>
+                  </div>
+                  <div className="flex gap-3">
+                    <div className="h-5 w-5 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-xs font-bold shrink-0">3</div>
+                    <p className="text-sm text-slate-700"><strong>Verify Location ID:</strong> Ensure the Location ID is exactly <code>locations/02346738413812334316</code> (no extra spaces).</p>
                   </div>
                 </div>
               </CardContent>
