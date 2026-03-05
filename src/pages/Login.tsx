@@ -50,25 +50,25 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-4">
-      <div className="mb-12">
+      <div className="mb-16">
         <img 
           src="/logo.jpg" 
           alt="GMB Creation Co." 
-          className="h-40 w-auto object-contain mx-auto"
+          className="h-64 w-auto object-contain mx-auto"
         />
       </div>
-      <Card className="w-full max-w-md shadow-xl border-slate-200">
-        <CardHeader className="space-y-2 text-center pb-8">
-          <CardTitle className="text-3xl font-bold tracking-tight">Welcome Back</CardTitle>
-          <CardDescription className="text-base">Enter your credentials to access your dashboard</CardDescription>
+      <Card className="w-full max-w-md shadow-2xl border-slate-200">
+        <CardHeader className="space-y-3 text-center pb-10">
+          <CardTitle className="text-4xl font-extrabold tracking-tight">Welcome Back</CardTitle>
+          <CardDescription className="text-lg">Enter your credentials to access your dashboard</CardDescription>
         </CardHeader>
         <form onSubmit={handleLogin}>
-          <CardContent className="space-y-5">
+          <CardContent className="space-y-6">
             <div className="space-y-2">
               <Input 
                 type="email" 
                 placeholder="email@example.com" 
-                className="h-12 text-lg"
+                className="h-14 text-xl"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -78,18 +78,18 @@ const Login = () => {
               <Input 
                 type="password" 
                 placeholder="Password" 
-                className="h-12 text-lg"
+                className="h-14 text-xl"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
             </div>
           </CardContent>
-          <CardFooter className="flex flex-col gap-3 pt-6">
-            <Button type="submit" className="w-full h-12 text-lg font-semibold" disabled={loading}>
+          <CardFooter className="flex flex-col gap-4 pt-8">
+            <Button type="submit" className="w-full h-14 text-xl font-bold" disabled={loading}>
               {loading ? "Processing..." : "Login"}
             </Button>
-            <Button type="button" variant="outline" className="w-full h-12 text-lg" onClick={handleSignUp} disabled={loading}>
+            <Button type="button" variant="outline" className="w-full h-14 text-xl font-semibold" onClick={handleSignUp} disabled={loading}>
               Create New Account
             </Button>
           </CardFooter>
