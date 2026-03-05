@@ -4,13 +4,15 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Activity, Loader2, ListTree, AlertCircle } from "lucide-react";
+import { Activity, Loader2, ListTree, AlertCircle, Globe, CheckCircle2, XCircle } from "lucide-react";
 import { supabase } from '@/lib/supabase';
-import { showError } from '@/utils/toast';
+import { showError, showSuccess } from '@/utils/toast';
 
 const AdminDiagnostics = () => {
   const [loading, setLoading] = useState(false);
+  const [pingLoading, setPingLoading] = useState(false);
   const [results, setResults] = useState<any>(null);
+  const [pingStatus, setPingStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
   const checkModels = async () => {
     setLoading(true);
@@ -25,6 +27,27 @@ const AdminDiagnostics = () => {
     }
   };
 
+  const testTunnel = async () => {
+    setPingLoading(true);
+    setPingStatus('idle');
+    try {
+      const { data, error } = await supabase.functions.invoke('test-n8n-ping');
+      if (error) throw error;
+      
+      if (data.ok) {
+        setPingStatus('success');
+        showSuccess("n8n Tunnel is ONLINE");
+      } else {
+        throw new Error(`n8n returned status ${data.status}`);
+      }
+    } catch (err: any) {
+      setPingStatus('error');
+      showError("Tunnel Check Failed: " + err.message);
+    } finally {
+      setPingLoading(false);
+    }
+  };
+
   return (
     <Card className="border-amber-200 bg-amber-50/5">
       <CardHeader>
@@ -34,36 +57,44 @@ const AdminDiagnostics = () => {
         </CardTitle>
         <CardDescription>Verify API connectivity and available AI models.</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <Button 
-          variant="outline" 
-          onClick={checkModels} 
-          disabled={loading}
-          className="w-full flex items-center gap-2 bg-white"
-        >
-          {loading ? <Loader2 className="animate-spin" size={16} /> : <ListTree size={16} />}
-          Run ListModels Check
-        </Button>
+      <CardContent className="space-y-6">
+        <div className="space-y-3">
+          <p className="text-xs font-bold text-slate-500 uppercase">Connectivity Tests</p>
+          <div className="grid grid-cols-1 gap-3">
+            <Button 
+              variant="outline" 
+              onClick={testTunnel} 
+              disabled={pingLoading}
+              className="w-full flex items-center justify-between bg-white"
+            >
+              <div className="flex items-center gap-2">
+                {pingLoading ? <Loader2 className="animate-spin" size={16} /> : <Globe size={16} className="text-blue-500" />}
+                Test n8n Tunnel
+              </div>
+              {pingStatus === 'success' && <CheckCircle2 size={16} className="text-green-500" />}
+              {pingStatus === 'error' && <XCircle size={16} className="text-red-500" />}
+            </Button>
+
+            <Button 
+              variant="outline" 
+              onClick={checkModels} 
+              disabled={loading}
+              className="w-full flex items-center gap-2 bg-white"
+            >
+              {loading ? <Loader2 className="animate-spin" size={16} /> : <ListTree size={16} className="text-amber-500" />}
+              Check Gemini Models
+            </Button>
+          </div>
+        </div>
 
         {results && (
           <div className="space-y-2">
             <p className="text-xs font-bold text-slate-500 uppercase">Available Models:</p>
-            <ScrollArea className="h-[200px] w-full rounded-md border bg-slate-900 p-4">
+            <ScrollArea className="h-[150px] w-full rounded-md border bg-slate-900 p-4">
               <pre className="text-[10px] text-green-400 font-mono">
                 {JSON.stringify(results, null, 2)}
               </pre>
             </ScrollArea>
-            {results.models?.some((m: any) => m.name.includes('gemini-1.5-flash')) ? (
-              <div className="flex items-center gap-2 text-xs text-green-600 font-medium">
-                <AlertCircle size={14} />
-                gemini-1.5-flash is available for your key.
-              </div>
-            ) : (
-              <div className="flex items-center gap-2 text-xs text-red-600 font-medium">
-                <AlertCircle size={14} />
-                gemini-1.5-flash NOT found in your model list.
-              </div>
-            )}
           </div>
         )}
       </CardContent>
