@@ -7,7 +7,10 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
+  // Handle CORS preflight
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders })
+  }
 
   try {
     const { tenantId } = await req.json()
@@ -16,22 +19,24 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey)
     const geminiKey = Deno.env.get('GEMINI_API_KEY')
 
-    if (!geminiKey || geminiKey.length < 10) {
+    if (!geminiKey) {
       return new Response(JSON.stringify({ 
-        error: "GEMINI_API_KEY is missing or invalid in Supabase secrets." 
+        error: "GEMINI_API_KEY is missing from Supabase secrets." 
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
       })
     }
 
-    const { data: tenant } = await supabase
+    const { data: tenant, error: tenantError } = await supabase
       .from('tenants')
       .select('*')
       .eq('id', tenantId)
       .single()
 
-    if (!tenant) throw new Error('Business profile not found')
+    if (tenantError || !tenant) {
+      throw new Error('Business profile not found')
+    }
 
     const prompt = `
       Business: ${tenant.business_name}
@@ -46,8 +51,10 @@ serve(async (req) => {
       Example: ["Post 1 text", "Post 2 text", "Post 3 text"]
     `
 
-    // Using the stable v1 endpoint for gemini-1.5-flash
-    const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
+    // Using the absolute stable v1 endpoint
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${geminiKey}`;
+    
+    const geminiRes = await fetch(geminiUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -57,8 +64,9 @@ serve(async (req) => {
     
     if (!geminiRes.ok) {
       const errorData = await geminiRes.json()
+      console.error("Google AI Error Details:", errorData);
       return new Response(JSON.stringify({ 
-        error: `Google AI Error: ${errorData.error?.message || 'Unknown API error'}. Status: ${geminiRes.status}` 
+        error: `Google AI Error: ${errorData.error?.message || 'Unknown API error'}. (Status: ${geminiRes.status})` 
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
@@ -68,6 +76,7 @@ serve(async (req) => {
     const geminiData = await geminiRes.json()
     const contentText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || ""
     
+    // Extract JSON array from the response
     const jsonStart = contentText.indexOf('[')
     const jsonEnd = contentText.lastIndexOf(']')
     
@@ -93,6 +102,7 @@ serve(async (req) => {
       })
     }
 
+    // Prepare posts for insertion
     const postsToInsert = postContents.slice(0, 3).map((content: string, i: number) => ({
       tenant_id: tenantId,
       content: content.trim(),
@@ -100,8 +110,12 @@ serve(async (req) => {
       scheduled_for: new Date(Date.now() + (i * 2 * 24 * 60 * 60 * 1000)).toISOString()
     }))
 
-    const { data, error } = await supabase.from('posts').insert(postsToInsert).select()
-    if (error) throw error
+    const { data, error: insertError } = await supabase
+      .from('posts')
+      .insert(postsToInsert)
+      .select()
+
+    if (insertError) throw insertError
 
     return new Response(JSON.stringify({ success: true, posts: data }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -109,6 +123,7 @@ serve(async (req) => {
     })
 
   } catch (error) {
+    console.error("Function Error:", error.message);
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
