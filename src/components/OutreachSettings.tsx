@@ -11,7 +11,7 @@ import { useTenant } from '@/hooks/use-tenant';
 import { useAuth } from '@/components/AuthProvider';
 import { supabase } from '@/lib/supabase';
 import { showSuccess, showError } from '@/utils/toast';
-import { Loader2, Zap, Phone, Mail, MessageSquare, RotateCcw, Sparkles } from 'lucide-react';
+import { Loader2, Zap, Phone, Mail, MessageSquare, RotateCcw, Sparkles, Link as LinkIcon } from 'lucide-react';
 
 const DRAFT_KEY = 'outreach_settings_draft';
 
@@ -22,7 +22,8 @@ const OutreachSettings = () => {
     twilio_number: '',
     email: '',
     outreach_method: 'email',
-    message_template: ''
+    message_template: '',
+    gmb_review_link: ''
   });
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -41,7 +42,8 @@ const OutreachSettings = () => {
           twilio_number: tenant.twilio_number || '',
           email: (tenant as any).email || '',
           outreach_method: (tenant as any).outreach_method || 'email',
-          message_template: (tenant as any).message_template || 'Draft a short, friendly message. Mention their recent service and ask for a rating from 1 to 5.'
+          message_template: (tenant as any).message_template || 'Draft a short, friendly message. Mention their recent service and ask for a rating from 1 to 5.',
+          gmb_review_link: tenant.gmb_review_link || ''
         });
       }
     }
@@ -62,14 +64,14 @@ const OutreachSettings = () => {
           businessName: tenant.business_name,
           industry: tenant.industry,
           context: tenant.business_context,
-          instructions: `Generate a high-converting ${formData.outreach_method} outreach template for requesting a Google review. The template should be friendly, professional, and include placeholders like [Customer Name]. Keep it under 300 characters.`
+          instructions: `Generate a high-converting ${formData.outreach_method} outreach template for requesting a Google review. The template should be friendly, professional, and include placeholders like [Customer Name]. IMPORTANT: You MUST include this review link in the message: ${formData.gmb_review_link || 'YOUR_REVIEW_LINK_HERE'}. Keep it under 300 characters.`
         }
       });
 
       if (error) throw error;
       if (data?.preview) {
         updateField('message_template', data.preview);
-        showSuccess("AI template generated!");
+        showSuccess("AI template generated with your review link!");
       }
     } catch (err: any) {
       showError("Failed to generate template: " + err.message);
@@ -93,6 +95,7 @@ const OutreachSettings = () => {
           email: formData.email,
           outreach_method: formData.outreach_method,
           message_template: formData.message_template,
+          gmb_review_link: formData.gmb_review_link,
           updated_at: new Date().toISOString()
         })
         .eq('id', tenant.id);
@@ -115,7 +118,8 @@ const OutreachSettings = () => {
       twilio_number: tenant.twilio_number || '',
       email: (tenant as any).email || '',
       outreach_method: (tenant as any).outreach_method || 'email',
-      message_template: (tenant as any).message_template || 'Draft a short, friendly message. Mention their recent service and ask for a rating from 1 to 5.'
+      message_template: (tenant as any).message_template || 'Draft a short, friendly message. Mention their recent service and ask for a rating from 1 to 5.',
+      gmb_review_link: tenant.gmb_review_link || ''
     });
     localStorage.removeItem(DRAFT_KEY);
     showSuccess("Draft cleared.");
@@ -160,29 +164,39 @@ const OutreachSettings = () => {
             </div>
             
             <div className="space-y-2">
-              {formData.outreach_method === 'email' ? (
-                <>
-                  <Label className="flex items-center gap-2"><Mail size={14} /> Business Email</Label>
-                  <Input 
-                    type="email"
-                    value={formData.email} 
-                    onChange={(e) => updateField('email', e.target.value)}
-                    placeholder="contact@yourbusiness.com"
-                    className="bg-white"
-                  />
-                </>
-              ) : (
-                <>
-                  <Label className="flex items-center gap-2"><Phone size={14} /> Twilio Phone Number</Label>
-                  <Input 
-                    value={formData.twilio_number} 
-                    onChange={(e) => updateField('twilio_number', e.target.value)}
-                    placeholder="+27..."
-                    className="bg-white"
-                  />
-                </>
-              )}
+              <Label className="flex items-center gap-2"><LinkIcon size={14} /> Google Review Link</Label>
+              <Input 
+                value={formData.gmb_review_link} 
+                onChange={(e) => updateField('gmb_review_link', e.target.value)}
+                placeholder="https://g.page/r/..."
+                className="bg-white"
+              />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            {formData.outreach_method === 'email' ? (
+              <>
+                <Label className="flex items-center gap-2"><Mail size={14} /> Business Email</Label>
+                <Input 
+                  type="email"
+                  value={formData.email} 
+                  onChange={(e) => updateField('email', e.target.value)}
+                  placeholder="contact@yourbusiness.com"
+                  className="bg-white"
+                />
+              </>
+            ) : (
+              <>
+                <Label className="flex items-center gap-2"><Phone size={14} /> Twilio Phone Number</Label>
+                <Input 
+                  value={formData.twilio_number} 
+                  onChange={(e) => updateField('twilio_number', e.target.value)}
+                  placeholder="+27..."
+                  className="bg-white"
+                />
+              </>
+            )}
           </div>
           
           <div className="space-y-2">
@@ -206,15 +220,7 @@ const OutreachSettings = () => {
               className="min-h-[150px] text-sm bg-white"
             />
             <p className="text-[10px] text-slate-500 italic">
-              Tip: Tell the AI what tone to use and what specific details to mention in the review request.
-            </p>
-          </div>
-
-          <div className="p-4 bg-white rounded-lg border border-blue-100">
-            <p className="text-xs text-slate-600 leading-relaxed">
-              {formData.outreach_method === 'email' 
-                ? "The agent will send review requests via email using the business email address provided above." 
-                : "The agent will send review requests via SMS using the Twilio number provided above. Make sure your Twilio account is active and the number is verified."}
+              Tip: The AI will automatically include your Google Review Link in the generated template.
             </p>
           </div>
         </CardContent>
