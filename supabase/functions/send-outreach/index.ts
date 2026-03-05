@@ -10,10 +10,18 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
   try {
-    const { customerId } = await req.json()
     const supabase = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '')
     
-    // 1. Fetch Customer and Tenant details
+    // SECURITY: Verify the user's JWT from the request header
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) throw new Error('Missing Authorization header')
+    
+    const { data: { user }, error: authError } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''))
+    if (authError || !user) throw new Error('Unauthorized: Invalid session')
+
+    const { customerId } = await req.json()
+    
+    // SECURITY: Fetch Customer and Tenant details, but verify ownership
     const { data: customer, error: custError } = await supabase
       .from('customers')
       .select('*, tenants(*)')
@@ -21,10 +29,16 @@ serve(async (req) => {
       .single()
 
     if (custError || !customer) throw new Error('Customer not found')
-    const tenant = customer.tenants
+    
+    // SECURITY: Ensure the authenticated user owns this tenant
+    if (customer.tenants.owner_id !== user.id) {
+      throw new Error('Security Violation: You do not own this customer record')
+    }
 
-    // 2. Generate Email Content with Gemini
+    const tenant = customer.tenants
     const geminiKey = Deno.env.get('GEMINI_API_KEY')
+    
+    // ... rest of the AI and n8n logic remains the same but is now protected
     const prompt = `
       Business: ${tenant.business_name}
       Industry: ${tenant.industry}
@@ -46,14 +60,12 @@ serve(async (req) => {
     const geminiData = await geminiRes.json()
     const aiText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || ""
     
-    // Extract JSON from AI response
     const jsonMatch = aiText.match(/\{[\s\S]*\}/)
     const emailContent = jsonMatch ? JSON.parse(jsonMatch[0]) : { 
       subject: `How was your experience with ${tenant.business_name}?`,
       body: `Hi ${customer.full_name}, thank you for choosing us! We'd love to hear your feedback: ${tenant.gmb_review_link}`
     }
 
-    // 3. Trigger n8n Email Webhook
     const N8N_EMAIL_URL = 'https://advantageous-goatishly-tanya.ngrok-free.dev/webhook-test/email-outreach';
     
     const n8nRes = await fetch(N8N_EMAIL_URL, {
@@ -71,7 +83,6 @@ serve(async (req) => {
 
     if (!n8nRes.ok) throw new Error("n8n failed to send email")
 
-    // 4. Update Customer Status & Log Audit
     await supabase.from('customers').update({ 
       status: 'contacted', 
       last_contacted_at: new Date().toISOString() 
