@@ -7,7 +7,9 @@ import {
   Terminal, 
   Globe, 
   Zap,
-  AlertCircle 
+  AlertCircle,
+  ShieldAlert,
+  Clock
 } from "lucide-react";
 import DashboardHeader from '@/components/DashboardHeader';
 import { MadeWithDyad } from "@/components/made-with-dyad";
@@ -27,6 +29,31 @@ const Documentation = () => {
         </div>
 
         <div className="space-y-10">
+          <section id="api-quota-fix">
+            <div className="flex items-center gap-2 mb-4">
+              <ShieldAlert className="text-amber-500" size={24} />
+              <h2 className="text-xl font-semibold">Fixing '429 Quota Exceeded'</h2>
+            </div>
+            <Card className="border-amber-100 bg-amber-50/30">
+              <CardContent className="pt-6 space-y-4">
+                <div className="flex items-start gap-3 p-3 bg-white rounded-lg border border-amber-100">
+                  <Clock className="text-amber-600 shrink-0 mt-1" size={18} />
+                  <div className="text-xs text-slate-700">
+                    <strong>Wait 2 Minutes:</strong> Google resets "Requests per minute" every 60 seconds. Stop clicking the dropdown to let the quota clear.
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-sm font-bold">Required APIs (Enable all 3):</p>
+                  <ul className="list-disc list-inside text-xs text-slate-600 space-y-1">
+                    <li>Google Business Profile Management API</li>
+                    <li>My Business Account Management API</li>
+                    <li>My Business Business Information API</li>
+                  </ul>
+                </div>
+              </CardContent>
+            </Card>
+          </section>
+
           <section id="terminal-setup">
             <div className="flex items-center gap-2 mb-4">
               <Terminal className="text-blue-500" size={24} />
@@ -39,7 +66,6 @@ const Documentation = () => {
                     <Globe size={16} className="text-blue-600" />
                     Terminal 1: ngrok
                   </CardTitle>
-                  <CardDescription>Keep this running to maintain the tunnel.</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <pre className="bg-slate-900 text-green-400 p-3 rounded text-[10px] font-mono break-all whitespace-pre-wrap">
@@ -54,7 +80,6 @@ const Documentation = () => {
                     <Zap size={16} className="text-purple-600" />
                     Terminal 2: n8n
                   </CardTitle>
-                  <CardDescription>Start n8n with the webhook URL.</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <pre className="bg-slate-900 text-green-400 p-3 rounded text-[10px] font-mono break-all whitespace-pre-wrap">
@@ -63,24 +88,6 @@ const Documentation = () => {
                 </CardContent>
               </Card>
             </div>
-          </section>
-
-          <section id="troubleshooting">
-            <Card className="border-amber-100 bg-amber-50/30">
-              <CardContent className="pt-6">
-                <div className="flex items-start gap-3">
-                  <AlertCircle className="text-amber-600 mt-0.5" size={20} />
-                  <div className="text-xs text-amber-800 space-y-2">
-                    <p><strong>Seeing ERR_NGROK_3200?</strong></p>
-                    <ul className="list-disc list-inside space-y-1">
-                      <li>Ensure Terminal 1 (ngrok) is active and showing "online".</li>
-                      <li>Ensure you are using port <strong>5678</strong> in the ngrok command.</li>
-                      <li>Check that your Google Cloud Console has the correct Redirect URI: <code>https://advantageous-goatishly-tanya.ngrok-free.dev/rest/oauth2-credential/callback</code></li>
-                    </ul>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
           </section>
         </div>
       </main>
