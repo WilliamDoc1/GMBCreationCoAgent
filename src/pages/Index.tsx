@@ -135,14 +135,11 @@ const Index = () => {
               <TabsTrigger value="overview" className="flex items-center gap-2">
                 <LayoutDashboard size={16} /> Overview
               </TabsTrigger>
-              <TabsTrigger value="posts" className="flex items-center gap-2">
-                <Calendar size={16} /> Content Queue
-              </TabsTrigger>
               <TabsTrigger value="customers" className="flex items-center gap-2">
                 <Users size={16} /> Customers
               </TabsTrigger>
-              <TabsTrigger value="settings" className="flex items-center gap-2">
-                <Settings size={16} /> Business Profile
+              <TabsTrigger value="posts" className="flex items-center gap-2">
+                <Calendar size={16} /> Content Queue
               </TabsTrigger>
               {userRole === 'admin' && (
                 <>
@@ -152,10 +149,15 @@ const Index = () => {
                   <TabsTrigger value="logs" className="flex items-center gap-2">
                     <History size={16} /> Audit Logs
                   </TabsTrigger>
-                  <TabsTrigger value="admin" className="flex items-center gap-2 text-purple-600">
-                    <ShieldCheck size={16} /> Admin
-                  </TabsTrigger>
                 </>
+              )}
+              <TabsTrigger value="settings" className="flex items-center gap-2">
+                <Settings size={16} /> Business Profile
+              </TabsTrigger>
+              {userRole === 'admin' && (
+                <TabsTrigger value="admin" className="flex items-center gap-2 text-purple-600">
+                  <ShieldCheck size={16} /> Admin
+                </TabsTrigger>
               )}
             </TabsList>
           </div>
