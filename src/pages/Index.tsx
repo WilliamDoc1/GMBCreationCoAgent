@@ -19,6 +19,7 @@ import OnboardingChecklist from '@/components/OnboardingChecklist';
 import AgentMonitoring from '@/components/AgentMonitoring';
 import SEOInsights from '@/components/SEOInsights';
 import PostQueue from '@/components/PostQueue';
+import AdminDiagnostics from '@/components/AdminDiagnostics';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { showSuccess, showError } from '@/utils/toast';
@@ -210,9 +211,17 @@ const Index = () => {
                 <AuditLogTable />
               </TabsContent>
               <TabsContent value="admin">
-                <div className="space-y-4">
-                  <h2 className="text-xl font-bold">SaaS Administration</h2>
-                  <AdminTenantsTable />
+                <div className="space-y-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-4">
+                      <h2 className="text-xl font-bold">SaaS Administration</h2>
+                      <AdminTenantsTable />
+                    </div>
+                    <div className="space-y-4">
+                      <h2 className="text-xl font-bold">Diagnostics</h2>
+                      <AdminDiagnostics />
+                    </div>
+                  </div>
                 </div>
               </TabsContent>
             </>
