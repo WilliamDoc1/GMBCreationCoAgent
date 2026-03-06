@@ -8,12 +8,14 @@ import { Check, Zap, ShieldCheck, Building2, Loader2, CreditCard } from "lucide-
 import { useTenant } from '@/hooks/use-tenant';
 import { supabase } from '@/lib/supabase';
 import { showSuccess, showError } from '@/utils/toast';
+import { initializeYocoPayment } from '@/utils/yoco';
 
 const PLANS = [
   {
     id: 'starter',
     name: 'Local Hero',
     price: 'R499',
+    priceInCents: 49900,
     description: 'Perfect for single-location local shops.',
     features: [
       '1 GBP Location',
@@ -27,6 +29,7 @@ const PLANS = [
     id: 'growth',
     name: 'Market Leader',
     price: 'R1,299',
+    priceInCents: 129900,
     description: 'For growing businesses with multiple branches.',
     features: [
       'Up to 5 Locations',
@@ -41,6 +44,7 @@ const PLANS = [
     id: 'agency',
     name: 'Agency',
     price: 'R3,499',
+    priceInCents: 349900,
     description: 'For agencies managing multiple clients.',
     features: [
       'Unlimited Locations',
@@ -56,27 +60,35 @@ const SubscriptionManager = () => {
   const { tenant, refreshTenant } = useTenant();
   const [loading, setLoading] = useState<string | null>(null);
 
-  const handleUpgrade = async (planId: string) => {
+  const handleUpgrade = async (plan: typeof PLANS[0]) => {
     if (!tenant) return;
-    setLoading(planId);
+    setLoading(plan.id);
     
     try {
-      // In a real app, this would call a Stripe/Paystack checkout session
-      // For now, we'll simulate the update in the database
+      // 1. Trigger Yoco Payment
+      const paymentResult = await initializeYocoPayment(
+        plan.priceInCents, 
+        `Upgrade to ${plan.name} Plan`
+      );
+
+      // 2. Update Subscription in Database
       const { error } = await supabase
         .from('tenants')
         .update({ 
-          plan_type: planId,
-          subscription_status: 'active'
+          plan_type: plan.id,
+          subscription_status: 'active',
+          stripe_subscription_id: paymentResult.id // Storing Yoco charge ID as reference
         })
         .eq('id', tenant.id);
 
       if (error) throw error;
       
-      showSuccess(`Successfully upgraded to the ${planId} plan!`);
+      showSuccess(`Successfully upgraded to the ${plan.name} plan!`);
       await refreshTenant();
     } catch (err: any) {
-      showError("Failed to update subscription: " + err.message);
+      if (err !== 'User closed the payment window') {
+        showError("Payment failed: " + (err.message || err));
+      }
     } finally {
       setLoading(null);
     }
@@ -125,7 +137,7 @@ const SubscriptionManager = () => {
                 className="w-full" 
                 variant={currentPlan === plan.id ? "outline" : "default"}
                 disabled={currentPlan === plan.id || !!loading}
-                onClick={() => handleUpgrade(plan.id)}
+                onClick={() => handleUpgrade(plan)}
               >
                 {loading === plan.id ? <Loader2 className="animate-spin mr-2" size={16} /> : null}
                 {currentPlan === plan.id ? "Current Plan" : `Upgrade to ${plan.name}`}
@@ -143,7 +155,7 @@ const SubscriptionManager = () => {
               <CreditCard className="text-primary" />
               Billing Information
             </h3>
-            <p className="text-slate-400 text-sm">Manage your payment methods and view past invoices.</p>
+            <p className="text-slate-400 text-sm">Manage your payment methods and view past invoices via Yoco.</p>
           </div>
           <Button variant="outline" className="bg-white/5 border-white/10 hover:bg-white/10 text-white">
             Manage Billing Portal

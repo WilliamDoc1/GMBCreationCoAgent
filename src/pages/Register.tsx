@@ -9,12 +9,14 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Badge } from "@/components/ui/badge";
 import { Check, ArrowLeft, ArrowRight, Loader2, CreditCard, ShieldCheck } from "lucide-react";
 import { showError, showSuccess } from '@/utils/toast';
+import { initializeYocoPayment } from '@/utils/yoco';
 
 const PLANS = [
   {
     id: 'starter',
     name: 'Local Hero',
     price: 'R499',
+    priceInCents: 49900,
     description: 'Perfect for single-location local shops.',
     features: ['1 GBP Location', '3x Weekly AI Posts', 'Email Review Outreach']
   },
@@ -22,6 +24,7 @@ const PLANS = [
     id: 'growth',
     name: 'Market Leader',
     price: 'R1,299',
+    priceInCents: 129900,
     description: 'For growing businesses with multiple branches.',
     features: ['Up to 5 Locations', 'Advanced AI SEO Insights', 'SMS & Email Outreach'],
     popular: true
@@ -30,6 +33,7 @@ const PLANS = [
     id: 'agency',
     name: 'Agency',
     price: 'R3,499',
+    priceInCents: 349900,
     description: 'For agencies managing multiple clients.',
     features: ['Unlimited Locations', 'Full Audit Logs', 'Bulk CSV Uploads']
   }
@@ -44,10 +48,7 @@ const Register = () => {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
-    businessName: '',
-    cardNumber: '',
-    expiry: '',
-    cvc: ''
+    businessName: ''
   });
 
   const handlePlanSelect = (plan: typeof PLANS[0]) => {
@@ -60,13 +61,21 @@ const Register = () => {
     setLoading(true);
 
     try {
+      // 1. Trigger Yoco Payment First
+      const paymentResult = await initializeYocoPayment(
+        selectedPlan.priceInCents,
+        `Initial Subscription: ${selectedPlan.name}`
+      );
+
+      // 2. Create Account if payment successful
       const { error } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
           data: {
             plan_type: selectedPlan.id,
-            business_name: formData.businessName
+            business_name: formData.businessName,
+            yoco_charge_id: paymentResult.id
           }
         }
       });
@@ -76,7 +85,9 @@ const Register = () => {
       showSuccess("Account created! Please check your email for confirmation.");
       navigate('/login');
     } catch (err: any) {
-      showError(err.message);
+      if (err !== 'User closed the payment window') {
+        showError(err.message || err);
+      }
     } finally {
       setLoading(false);
     }
@@ -139,82 +150,59 @@ const Register = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-2xl shadow-2xl">
+      <Card className="w-full max-w-md shadow-2xl">
         <CardHeader className="space-y-2">
           <Button variant="ghost" size="sm" onClick={() => setStep('plan')} className="w-fit gap-2 text-slate-500">
             <ArrowLeft size={16} /> Change Plan
           </Button>
           <div className="flex justify-between items-center">
-            <CardTitle className="text-3xl font-bold">Complete Your Registration</CardTitle>
+            <CardTitle className="text-3xl font-bold">Account Details</CardTitle>
             <Badge variant="secondary" className="bg-blue-50 text-blue-700 h-6">
               {selectedPlan.name} Plan
             </Badge>
           </div>
-          <CardDescription>Enter your business and payment details to activate your account.</CardDescription>
+          <CardDescription>Enter your business details to proceed to secure payment.</CardDescription>
         </CardHeader>
         <form onSubmit={handleSignUp}>
-          <CardContent className="space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <h3 className="font-bold text-slate-900 flex items-center gap-2">
-                  <ShieldCheck size={18} className="text-primary" /> Account Details
-                </h3>
-                <div className="space-y-2">
-                  <Input 
-                    placeholder="Business Name" 
-                    value={formData.businessName}
-                    onChange={(e) => setFormData({...formData, businessName: e.target.value})}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Input 
-                    type="email" 
-                    placeholder="Email Address" 
-                    value={formData.email}
-                    onChange={(e) => setFormData({...formData, email: e.target.value})}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Input 
-                    type="password" 
-                    placeholder="Create Password" 
-                    value={formData.password}
-                    onChange={(e) => setFormData({...formData, password: e.target.value})}
-                    required
-                  />
-                </div>
+          <CardContent className="space-y-4">
+            <div className="space-y-4">
+              <h3 className="font-bold text-slate-900 flex items-center gap-2">
+                <ShieldCheck size={18} className="text-primary" /> Business Identity
+              </h3>
+              <div className="space-y-2">
+                <Input 
+                  placeholder="Business Name" 
+                  value={formData.businessName}
+                  onChange={(e) => setFormData({...formData, businessName: e.target.value})}
+                  required
+                />
               </div>
-
-              <div className="space-y-4">
-                <h3 className="font-bold text-slate-900 flex items-center gap-2">
-                  <CreditCard size={18} className="text-primary" /> Payment Details
-                </h3>
-                <div className="space-y-2">
-                  <Input 
-                    placeholder="Card Number" 
-                    value={formData.cardNumber}
-                    onChange={(e) => setFormData({...formData, cardNumber: e.target.value})}
-                    required
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <Input 
-                    placeholder="MM/YY" 
-                    value={formData.expiry}
-                    onChange={(e) => setFormData({...formData, expiry: e.target.value})}
-                    required
-                  />
-                  <Input 
-                    placeholder="CVC" 
-                    value={formData.cvc}
-                    onChange={(e) => setFormData({...formData, cvc: e.target.value})}
-                    required
-                  />
-                </div>
-                <p className="text-[10px] text-slate-400 italic">
-                  Your card will be charged {selectedPlan.price} monthly. Secure payment processed via Paystack.
+              <div className="space-y-2">
+                <Input 
+                  type="email" 
+                  placeholder="Email Address" 
+                  value={formData.email}
+                  onChange={(e) => setFormData({...formData, email: e.target.value})}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Input 
+                  type="password" 
+                  placeholder="Create Password" 
+                  value={formData.password}
+                  onChange={(e) => setFormData({...formData, password: e.target.value})}
+                  required
+                />
+              </div>
+            </div>
+            
+            <div className="p-4 bg-blue-50 rounded-lg border border-blue-100 flex items-start gap-3">
+              <CreditCard className="text-blue-600 mt-1" size={20} />
+              <div className="space-y-1">
+                <p className="text-xs font-bold text-blue-900">Secure Yoco Payment</p>
+                <p className="text-[10px] text-blue-700">
+                  Clicking the button below will open the secure Yoco payment popup to process your {selectedPlan.price} subscription.
                 </p>
               </div>
             </div>
@@ -222,7 +210,7 @@ const Register = () => {
           <CardFooter className="bg-slate-50/50 border-t p-6">
             <Button type="submit" className="w-full h-14 text-xl font-bold" disabled={loading}>
               {loading ? <Loader2 className="animate-spin mr-2" /> : <ArrowRight className="mr-2" />}
-              Activate {selectedPlan.name} Account
+              Pay & Activate Account
             </Button>
           </CardFooter>
         </form>
