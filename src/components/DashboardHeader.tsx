@@ -1,56 +1,76 @@
 "use client";
 
-import React from 'react';
-import { LogOut, HelpCircle, LogIn } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { supabase } from '@/lib/supabase';
-import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { useAuth } from '@/components/AuthProvider';
+import React from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "./AuthProvider";
+import { Button } from "./ui/button";
+import { LogOut, LayoutDashboard, User } from "lucide-react";
+import ThemeToggle from "./ThemeToggle";
 
 const DashboardHeader = () => {
+  const { session, signOut } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
-  const { session } = useAuth();
-  
-  const isLandingPage = location.pathname === '/';
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate('/login');
-  };
 
   return (
-    <header className="bg-white border-b sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-        <div className="flex items-center gap-8 h-full">
-          <Link to={session ? "/dashboard" : "/"} className="flex items-center h-full">
-            <img 
-              src="/logo.png" 
-              alt="GMB Creation Co." 
-              className="h-12 w-auto object-contain block"
-            />
-          </Link>
-        </div>
+    <header className="fixed top-0 left-0 right-0 z-50 px-6 py-4">
+      <div className="max-w-7xl mx-auto flex items-center justify-between glass-morphism rounded-2xl px-6 py-3">
+        <Link to="/" className="flex items-center gap-2 group">
+          <div className="w-8 h-8 bg-gradient-to-br from-gold to-sage rounded-lg flex items-center justify-center text-obsidian font-bold text-xl group-hover:scale-110 transition-transform">
+            G
+          </div>
+          <span className="font-bold text-xl tracking-tight text-foreground">
+            GMB Creation Co
+          </span>
+        </Link>
+
+        <nav className="hidden md:flex items-center gap-8">
+          <Link to="/" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Home</Link>
+          <Link to="/#features" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Features</Link>
+          <Link to="/#pricing" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Pricing</Link>
+        </nav>
+
         <div className="flex items-center gap-4">
-          <Link to="/documentation">
-            <Button variant="ghost" size="sm" className="flex items-center gap-2 text-slate-600 hover:bg-slate-50 h-10 px-4">
-              <HelpCircle size={18} />
-              <span className="hidden sm:inline font-semibold text-sm">Help Center</span>
-            </Button>
-          </Link>
+          <ThemeToggle />
           
           {session ? (
-            <Button variant="ghost" size="sm" onClick={handleLogout} className="flex items-center gap-2 text-slate-600 hover:bg-slate-50 h-10 px-4">
-              <LogOut size={18} />
-              <span className="hidden sm:inline font-semibold text-sm">Logout</span>
-            </Button>
-          ) : (
-            <Link to="/login">
-              <Button variant="default" size="sm" className="flex items-center gap-2 px-8 h-10 text-sm shadow-md font-bold">
-                <LogIn size={18} />
-                Login
+            <div className="flex items-center gap-3">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => navigate('/dashboard')}
+                className="hidden sm:flex items-center gap-2"
+              >
+                <LayoutDashboard size={16} />
+                Dashboard
               </Button>
-            </Link>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => signOut()}
+                className="flex items-center gap-2 border-white/10 hover:bg-white/5"
+              >
+                <LogOut size={16} />
+                <span className="hidden sm:inline">Sign Out</span>
+              </Button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-3">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => navigate('/login')}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                Sign In
+              </Button>
+              <Button 
+                size="sm" 
+                onClick={() => navigate('/register')}
+                className="bg-gradient-to-r from-gold to-sage text-obsidian font-bold hover:opacity-90 transition-opacity"
+              >
+                Get Started
+              </Button>
+            </div>
           )}
         </div>
       </div>

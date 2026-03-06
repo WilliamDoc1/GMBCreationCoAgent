@@ -4,53 +4,41 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./components/AuthProvider";
-import { TenantProvider } from "./hooks/use-tenant";
-import ScrollRestoration from "./components/ScrollRestoration";
+import { ThemeProvider } from "./components/ThemeProvider";
 import Index from "./pages/Index";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import Feedback from "./pages/Feedback";
-import Documentation from "./pages/Documentation";
-import Privacy from "./pages/Privacy";
-import Terms from "./pages/Terms";
+import Dashboard from "./pages/Dashboard";
+import Profile from "./pages/Profile";
+import Outreach from "./pages/Outreach";
+import Scheduling from "./pages/Scheduling";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60 * 5,
-      gcTime: 1000 * 60 * 30,
-      retry: 1,
-      refetchOnWindowFocus: false,
-    },
-  },
-});
+const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TenantProvider>
+    <ThemeProvider>
+      <AuthProvider>
         <TooltipProvider>
           <Toaster />
           <Sonner />
           <BrowserRouter>
-            <ScrollRestoration />
             <Routes>
               <Route path="/" element={<Landing />} />
-              <Route path="/dashboard" element={<Index />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
-              <Route path="/feedback" element={<Feedback />} />
-              <Route path="/documentation" element={<Documentation />} />
-              <Route path="/privacy" element={<Privacy />} />
-              <Route path="/terms" element={<Terms />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/outreach" element={<Outreach />} />
+              <Route path="/scheduling" element={<Scheduling />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
         </TooltipProvider>
-      </TenantProvider>
-    </AuthProvider>
+      </AuthProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 

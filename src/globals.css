@@ -4,30 +4,30 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --background: 120 10% 98%; /* Alabaster White */
+    --foreground: 120 10% 10%;
+    --card: 120 10% 96%;
+    --card-foreground: 120 10% 10%;
+    --popover: 120 10% 98%;
+    --popover-foreground: 120 10% 10%;
+    --primary: 135 11% 33%; /* Sage */
+    --primary-foreground: 120 10% 98%;
+    --secondary: 43 58% 56%; /* Gold */
+    --secondary-foreground: 120 10% 10%;
+    --muted: 120 5% 90%;
+    --muted-foreground: 120 5% 40%;
+    --accent: 120 5% 90%;
+    --accent-foreground: 120 10% 10%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 120 5% 85%;
+    --input: 120 5% 85%;
+    --ring: 135 11% 33%;
     --radius: 0.75rem;
   }
 
   .dark {
-    --background: 240 10% 3.9%;
+    --background: 240 10% 3.9%; /* Obsidian Black */
     --foreground: 0 0% 98%;
     --card: 240 10% 3.9%;
     --card-foreground: 0 0% 98%;
@@ -51,22 +51,22 @@
 
 @layer base {
   * {
-    @apply border-border;
+    @apply border-border transition-colors duration-300;
   }
 
   body {
-    @apply bg-obsidian text-slate-300 antialiased;
+    @apply bg-background text-foreground antialiased;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
     letter-spacing: 0.01em;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply text-white;
+    @apply text-foreground;
     letter-spacing: -0.02em;
   }
 }
 
-/* Subtle Noise Overlay */
+/* Noise Overlay - Adjusted for light mode */
 body::before {
   content: "";
   position: fixed;
@@ -81,8 +81,15 @@ body::before {
 }
 
 .glass-morphism {
-  @apply backdrop-blur-[20px] bg-white/[0.04] border border-white/[0.1];
+  @apply backdrop-blur-[20px] transition-all duration-300;
+  @apply bg-white/[0.04] border-white/[0.1] dark:bg-white/[0.04] dark:border-white/[0.1];
+  @apply light:bg-black/[0.02] light:border-black/[0.05];
   box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.05);
+}
+
+.light .glass-morphism {
+  @apply bg-black/[0.02] border-black/[0.05];
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.02);
 }
 
 .diffused-glow-sage {
@@ -104,6 +111,18 @@ body::before {
   -webkit-background-clip: text;
   background-clip: text;
   animation: shimmer 4s infinite linear;
+}
+
+.light .text-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 0.6) 50%,
+    rgba(0, 0, 0, 0) 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
 }
 
 .icon-gradient {
