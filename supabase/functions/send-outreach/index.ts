@@ -10,6 +10,8 @@ const corsHeaders = {
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
+  console.log("--- Outreach Agent Triggered ---");
+
   try {
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '', 
@@ -18,6 +20,8 @@ serve(async (req) => {
     
     const { customerId } = await req.json()
     if (!customerId) throw new Error("No customerId provided")
+
+    console.log(`Fetching data for customer: ${customerId}`);
 
     // 1. Fetch Customer and Tenant Data
     const { data: customer, error: custError } = await supabase
@@ -29,6 +33,8 @@ serve(async (req) => {
     if (custError || !customer) throw new Error(`Customer not found: ${custError?.message}`)
     const tenant = customer.tenants
 
+    console.log(`Business: ${tenant.business_name}, Customer: ${customer.full_name}`);
+
     // 2. Prepare Content
     const subject = `How was your experience with ${tenant.business_name}?`;
     const body = (tenant.message_template || "Hi [Customer Name], thank you for choosing [Business Name]! We'd love to hear your feedback: [Review Link]")
@@ -38,8 +44,12 @@ serve(async (req) => {
 
     // 3. Send via SMTP (Gmail)
     const smtpPassword = Deno.env.get('SMTP_PASSWORD')
-    if (!smtpPassword) throw new Error("SMTP_PASSWORD secret is missing in Supabase")
+    if (!smtpPassword) {
+      console.error("SMTP_PASSWORD secret is missing in Supabase");
+      throw new Error("SMTP_PASSWORD secret is missing in Supabase. Please add it in Project Settings > Edge Functions.");
+    }
 
+    console.log("Initializing SMTP transporter...");
     const transporter = nodemailer.createTransport({
       host: "smtp.gmail.com",
       port: 465,
@@ -48,8 +58,20 @@ serve(async (req) => {
         user: "william@gmbcreationco.com",
         pass: smtpPassword,
       },
+      connectionTimeout: 10000,
     });
 
+    // Verify connection
+    console.log("Verifying SMTP connection...");
+    try {
+      await transporter.verify();
+      console.log("SMTP connection verified");
+    } catch (verifyError) {
+      console.error("SMTP Verification Failed:", verifyError.message);
+      throw new Error(`SMTP Connection Error: ${verifyError.message}. Ensure you are using a Google App Password.`);
+    }
+
+    console.log(`Sending email to ${customer.email}...`);
     await transporter.sendMail({
       from: `"William @ ${tenant.business_name}" <william@gmbcreationco.com>`,
       to: customer.email,
@@ -57,13 +79,20 @@ serve(async (req) => {
       html: body.replace(/\n/g, '<br>'),
     });
 
-    // 4. Update Database
-    await supabase.from('customers').update({ 
-      status: 'contacted', 
-      last_contacted_at: new Date().toISOString() 
-    }).eq('id', customer.id)
+    console.log("Email sent successfully");
 
-    await supabase.from('audit_log').insert({
+    // 4. Update Database
+    const { error: updateError } = await supabase
+      .from('customers')
+      .update({ 
+        status: 'contacted', 
+        last_contacted_at: new Date().toISOString() 
+      })
+      .eq('id', customer.id)
+
+    if (updateError) console.error("Failed to update customer status:", updateError);
+
+    const { error: logError } = await supabase.from('audit_log').insert({
       tenant_id: tenant.id,
       customer_id: customer.id,
       action: 'email_outreach_sent',
@@ -71,12 +100,14 @@ serve(async (req) => {
       status: 'success'
     })
 
+    if (logError) console.error("Failed to insert audit log:", logError);
+
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
 
   } catch (error) {
-    console.error("Outreach Error:", error.message)
+    console.error("Outreach Agent Error:", error.message)
     return new Response(JSON.stringify({ error: error.message }), { 
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400 

@@ -13,9 +13,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Mail, Loader2, Search } from "lucide-react";
+import { Mail, Loader2, Search, History } from "lucide-react";
 import { supabase } from '@/lib/supabase';
 import { showError, showSuccess } from '@/utils/toast';
+import MessageHistoryDialog from './MessageHistoryDialog';
 
 interface Customer {
   id: string;
@@ -47,18 +48,30 @@ const CustomerTable = ({ customers, onRefresh }: CustomerTableProps) => {
   const triggerOutreach = async (customer: Customer) => {
     setLoadingId(customer.id);
     try {
+      console.log(`Triggering outreach for customer: ${customer.id}`);
+      
       const { data, error } = await supabase.functions.invoke('send-outreach', {
         body: { customerId: customer.id }
       });
 
       if (error) {
-        // Handle function invocation errors
-        const errorMsg = error.message || "Network error calling outreach function";
-        throw new Error(errorMsg);
+        // Handle function invocation errors (e.g., 400, 500)
+        console.error("Edge Function Error:", error);
+        let errorMessage = "Failed to trigger outreach.";
+        
+        // Try to extract the error message from the response
+        try {
+          const errorBody = await error.context?.json();
+          if (errorBody?.error) errorMessage = errorBody.error;
+        } catch (e) {
+          errorMessage = error.message || errorMessage;
+        }
+        
+        throw new Error(errorMessage);
       }
 
       if (data?.error) {
-        // Handle errors returned by the function logic
+        // Handle errors returned in the response body
         throw new Error(data.error);
       }
 
@@ -93,13 +106,14 @@ const CustomerTable = ({ customers, onRefresh }: CustomerTableProps) => {
               <TableHead>Name</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Last Contacted</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredCustomers.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-center py-8 text-slate-500">
+                <TableCell colSpan={5} className="text-center py-8 text-slate-500">
                   No customers found.
                 </TableCell>
               </TableRow>
@@ -109,20 +123,30 @@ const CustomerTable = ({ customers, onRefresh }: CustomerTableProps) => {
                   <TableCell className="font-medium">{customer.full_name}</TableCell>
                   <TableCell className="text-slate-500">{customer.email || 'N/A'}</TableCell>
                   <TableCell>
-                    <Badge variant="secondary" className={customer.status === 'reviewed' ? 'bg-green-100 text-green-800' : ''}>
+                    <Badge variant="secondary" className={
+                      customer.status === 'reviewed' ? 'bg-green-100 text-green-800' : 
+                      customer.status === 'contacted' ? 'bg-blue-100 text-blue-800' : ''
+                    }>
                       {customer.status}
                     </Badge>
                   </TableCell>
+                  <TableCell className="text-xs text-slate-400">
+                    {customer.last_contacted_at ? new Date(customer.last_contacted_at).toLocaleString() : 'Never'}
+                  </TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      disabled={loadingId === customer.id}
-                      onClick={() => triggerOutreach(customer)}
-                      title="Send Review Request"
-                    >
-                      {loadingId === customer.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
-                    </Button>
+                    <div className="flex justify-end gap-2">
+                      <MessageHistoryDialog customerId={customer.id} customerName={customer.full_name} />
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        disabled={loadingId === customer.id}
+                        onClick={() => triggerOutreach(customer)}
+                        title="Send Review Request"
+                        className="text-primary hover:text-primary hover:bg-primary/10"
+                      >
+                        {loadingId === customer.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))
