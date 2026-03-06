@@ -23,8 +23,9 @@ serve(async (req) => {
       });
     }
 
-    // Yoco requires amount to be an integer (cents)
     const finalAmount = parseInt(String(amountInCents), 10);
+
+    console.log(`Requesting Yoco checkout for ${finalAmount} ZAR cents`);
 
     const yocoResponse = await fetch('https://online.yoco.com/api/checkouts', {
       method: 'POST',
@@ -43,9 +44,24 @@ serve(async (req) => {
       }),
     });
 
-    const data = await yocoResponse.json();
+    // Safely handle the response text first to avoid JSON parse errors
+    const responseText = await yocoResponse.text();
+    let data;
+    
+    try {
+      data = JSON.parse(responseText);
+    } catch (e) {
+      console.error("Failed to parse Yoco response as JSON:", responseText);
+      return new Response(JSON.stringify({ 
+        error: `The payment gateway returned an invalid response (Status: ${yocoResponse.status}).` 
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 502,
+      });
+    }
 
     if (!yocoResponse.ok) {
+      console.error("Yoco API Error:", data);
       return new Response(JSON.stringify({ 
         error: data.message || data.error || `Yoco Error: ${yocoResponse.statusText}` 
       }), {
@@ -60,6 +76,7 @@ serve(async (req) => {
     });
 
   } catch (error) {
+    console.error("Edge Function Exception:", error.message);
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400,
