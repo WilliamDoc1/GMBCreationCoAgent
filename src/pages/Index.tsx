@@ -5,7 +5,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
 import { useTenant } from '@/hooks/use-tenant';
-import { Loader2, LayoutDashboard, Settings, Users, ShieldCheck, History, TrendingUp, Calendar, Zap, MapPin, CreditCard } from "lucide-react";
+import { Loader2, LayoutDashboard, Settings, Users, ShieldCheck, History, TrendingUp, Calendar, Zap, MapPin, CreditCard, Lock } from "lucide-react";
 import CustomerTable from '@/components/CustomerTable';
 import DashboardHeader from '@/components/DashboardHeader';
 import CustomerActionBar from '@/components/CustomerActionBar';
@@ -127,6 +127,10 @@ const Index = () => {
 
   if (!session) return null;
 
+  const currentPlan = (tenant as any)?.plan_type || 'starter';
+  const hasSEOAccess = currentPlan === 'growth' || currentPlan === 'agency';
+  const hasLogAccess = currentPlan === 'agency';
+
   return (
     <div className="min-h-screen bg-slate-50 pb-12">
       <DashboardHeader />
@@ -153,16 +157,17 @@ const Index = () => {
               <TabsTrigger value="subscription" className="flex items-center gap-2 text-blue-600">
                 <CreditCard size={16} /> Subscription
               </TabsTrigger>
-              {userRole === 'admin' && (
-                <>
-                  <TabsTrigger value="seo" className="flex items-center gap-2">
-                    <TrendingUp size={16} /> SEO Insights
-                  </TabsTrigger>
-                  <TabsTrigger value="logs" className="flex items-center gap-2">
-                    <History size={16} /> Audit Logs
-                  </TabsTrigger>
-                </>
-              )}
+              
+              <TabsTrigger value="seo" className="flex items-center gap-2">
+                <TrendingUp size={16} /> SEO Insights
+                {!hasSEOAccess && <Lock size={12} className="text-slate-400" />}
+              </TabsTrigger>
+              
+              <TabsTrigger value="logs" className="flex items-center gap-2">
+                <History size={16} /> Audit Logs
+                {!hasLogAccess && <Lock size={12} className="text-slate-400" />}
+              </TabsTrigger>
+
               <TabsTrigger value="settings" className="flex items-center gap-2">
                 <Settings size={16} /> Business Profile
               </TabsTrigger>
@@ -228,31 +233,57 @@ const Index = () => {
             </div>
           </TabsContent>
 
+          <TabsContent value="seo">
+            <div className="max-w-3xl">
+              {!hasSEOAccess ? (
+                <Card className="border-dashed py-12 text-center">
+                  <CardContent className="space-y-4">
+                    <TrendingUp size={48} className="mx-auto text-slate-200" />
+                    <h3 className="text-lg font-bold">SEO Insights Locked</h3>
+                    <p className="text-slate-500 max-w-sm mx-auto">
+                      Advanced AI SEO analysis is available on the <strong>Market Leader</strong> and <strong>Agency</strong> plans.
+                    </p>
+                    <Button onClick={() => handleTabChange('subscription')}>Upgrade Now</Button>
+                  </CardContent>
+                </Card>
+              ) : (
+                <SEOInsights />
+              )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="logs">
+            {!hasLogAccess ? (
+              <Card className="border-dashed py-12 text-center">
+                <CardContent className="space-y-4">
+                  <History size={48} className="mx-auto text-slate-200" />
+                  <h3 className="text-lg font-bold">Audit Logs Locked</h3>
+                  <p className="text-slate-500 max-w-sm mx-auto">
+                    Full operational audit logs are exclusive to the <strong>Agency</strong> plan.
+                  </p>
+                  <Button onClick={() => handleTabChange('subscription')}>Upgrade to Agency</Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <AuditLogTable />
+            )}
+          </TabsContent>
+
           {userRole === 'admin' && (
-            <>
-              <TabsContent value="seo">
-                <div className="max-w-3xl">
-                  <SEOInsights />
-                </div>
-              </TabsContent>
-              <TabsContent value="logs">
-                <AuditLogTable />
-              </TabsContent>
-              <TabsContent value="admin">
-                <div className="space-y-8">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div className="space-y-4">
-                      <h2 className="text-xl font-bold">SaaS Administration</h2>
-                      <AdminTenantsTable />
-                    </div>
-                    <div className="space-y-4">
-                      <h2 className="text-xl font-bold">Diagnostics</h2>
-                      <AdminDiagnostics />
-                    </div>
+            <TabsContent value="admin">
+              <div className="space-y-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-4">
+                    <h2 className="text-xl font-bold">SaaS Administration</h2>
+                    <AdminTenantsTable />
+                  </div>
+                  <div className="space-y-4">
+                    <h2 className="text-xl font-bold">Diagnostics</h2>
+                    <AdminDiagnostics />
                   </div>
                 </div>
-              </TabsContent>
-            </>
+              </div>
+            </TabsContent>
           )}
         </Tabs>
       </main>

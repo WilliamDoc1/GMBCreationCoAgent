@@ -2,11 +2,12 @@
 
 import React, { useRef } from 'react';
 import { Button } from "@/components/ui/button";
-import { Upload, Loader2 } from "lucide-react";
+import { Upload, Loader2, Lock } from "lucide-react";
 import Papa from 'papaparse';
 import { supabase } from '@/lib/supabase';
 import { useTenant } from '@/hooks/use-tenant';
 import { showSuccess, showError } from '@/utils/toast';
+import { useNavigate } from 'react-router-dom';
 
 interface BulkUploadProps {
   onSuccess: () => void;
@@ -14,8 +15,12 @@ interface BulkUploadProps {
 
 const BulkUpload = ({ onSuccess }: BulkUploadProps) => {
   const { tenant } = useTenant();
+  const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = React.useState(false);
+
+  const currentPlan = (tenant as any)?.plan_type || 'starter';
+  const canBulkUpload = currentPlan === 'agency';
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -61,6 +66,15 @@ const BulkUpload = ({ onSuccess }: BulkUploadProps) => {
     });
   };
 
+  const handleClick = () => {
+    if (!canBulkUpload) {
+      showError("Bulk CSV Upload is an Agency-only feature.");
+      navigate('/dashboard?tab=subscription');
+      return;
+    }
+    fileInputRef.current?.click();
+  };
+
   return (
     <div>
       <input
@@ -72,11 +86,11 @@ const BulkUpload = ({ onSuccess }: BulkUploadProps) => {
       />
       <Button 
         variant="outline" 
-        onClick={() => fileInputRef.current?.click()}
+        onClick={handleClick}
         disabled={uploading || !tenant}
         className="flex items-center gap-2"
       >
-        {uploading ? <Loader2 className="animate-spin" size={16} /> : <Upload size={16} />}
+        {uploading ? <Loader2 className="animate-spin" size={16} /> : canBulkUpload ? <Upload size={16} /> : <Lock size={16} className="text-slate-400" />}
         Bulk Upload CSV
       </Button>
     </div>

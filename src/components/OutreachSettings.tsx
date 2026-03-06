@@ -11,13 +11,15 @@ import { useTenant } from '@/hooks/use-tenant';
 import { useAuth } from '@/components/AuthProvider';
 import { supabase } from '@/lib/supabase';
 import { showSuccess, showError } from '@/utils/toast';
-import { Loader2, Zap, Phone, Mail, MessageSquare, RotateCcw, Sparkles, Link as LinkIcon, Info, ShieldCheck, Globe, Server } from 'lucide-react';
+import { Loader2, Zap, Sparkles, Lock } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const DRAFT_KEY = 'outreach_settings_draft';
 
 const OutreachSettings = () => {
   const { tenant, refreshTenant } = useTenant();
   const { session } = useAuth();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     twilio_number: '',
     email: '',
@@ -130,6 +132,9 @@ const OutreachSettings = () => {
     }
   };
 
+  const currentPlan = (tenant as any)?.plan_type || 'starter';
+  const canUseSMS = currentPlan === 'growth' || currentPlan === 'agency';
+
   return (
     <div className="space-y-6">
       <Card className="border-blue-100 bg-blue-50/10">
@@ -148,16 +153,32 @@ const OutreachSettings = () => {
               <Label>Outreach Method</Label>
               <Select 
                 value={formData.outreach_method} 
-                onValueChange={(value) => updateField('outreach_method', value)}
+                onValueChange={(value) => {
+                  if (value === 'sms' && !canUseSMS) {
+                    showError("SMS outreach is only available on Growth and Agency plans.");
+                    return;
+                  }
+                  updateField('outreach_method', value);
+                }}
               >
                 <SelectTrigger className="bg-white">
                   <SelectValue placeholder="Select method" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="email">Email</SelectItem>
-                  <SelectItem value="sms">SMS (Twilio)</SelectItem>
+                  <SelectItem value="sms" disabled={!canUseSMS}>
+                    <div className="flex items-center gap-2">
+                      SMS (Twilio)
+                      {!canUseSMS && <Lock size={12} className="text-slate-400" />}
+                    </div>
+                  </SelectItem>
                 </SelectContent>
               </Select>
+              {!canUseSMS && (
+                <p className="text-[10px] text-amber-600 font-medium flex items-center gap-1">
+                  <Lock size={10} /> Upgrade to Growth for SMS support.
+                </p>
+              )}
             </div>
             
             <div className="space-y-2">
