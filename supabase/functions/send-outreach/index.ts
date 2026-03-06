@@ -32,31 +32,50 @@ serve(async (req) => {
     // 2. Extract First Name Only
     const firstName = customer.full_name.trim().split(' ')[0];
 
-    // 3. SMTP Configuration
-    const smtpUser = Deno.env.get('SMTP_USER');
-    const smtpPassword = Deno.env.get('SMTP_PASSWORD');
+    // 3. Determine Email Configuration
+    let transporter;
+    let fromEmail = tenant.from_email || `william@gmbcreationco.com`;
 
-    if (!smtpUser || !smtpPassword) {
-      throw new Error("Missing SMTP_USER or SMTP_PASSWORD secrets in Supabase");
+    if (tenant.email_provider === 'smtp' && tenant.smtp_host) {
+      // Use Tenant's Custom SMTP
+      transporter = nodemailer.createTransport({
+        host: tenant.smtp_host,
+        port: tenant.smtp_port || 587,
+        secure: tenant.smtp_port === 465,
+        auth: {
+          user: tenant.smtp_user,
+          pass: tenant.smtp_pass,
+        },
+        tls: { rejectUnauthorized: false }
+      });
+    } else if (tenant.email_provider === 'gmail' && tenant.gmb_refresh_token) {
+      // Use Tenant's Gmail via OAuth
+      transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          type: 'OAuth2',
+          user: tenant.from_email || tenant.email,
+          clientId: Deno.env.get('GOOGLE_CLIENT_ID'),
+          clientSecret: Deno.env.get('GOOGLE_CLIENT_SECRET'),
+          refreshToken: tenant.gmb_refresh_token,
+        },
+      });
+    } else {
+      // Fallback to System Default (Resend/SMTP)
+      transporter = nodemailer.createTransport({
+        host: "smtp.gmail.com",
+        port: 587,
+        secure: false,
+        auth: {
+          user: Deno.env.get('SMTP_USER'),
+          pass: Deno.env.get('SMTP_PASSWORD'),
+        },
+        tls: { rejectUnauthorized: false }
+      });
     }
-
-    const transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 587,
-      secure: false,
-      auth: {
-        user: smtpUser,
-        pass: smtpPassword,
-      },
-      tls: {
-        rejectUnauthorized: false
-      }
-    });
 
     // 4. Prepare Content
     const subject = `Quick question about your experience with ${tenant.business_name}`;
-    
-    // Styled Review Button
     const reviewButtonHtml = `
       <div style="margin: 25px 0;">
         <a href="${tenant.gmb_review_link}" style="background-color: #2563eb; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; font-family: sans-serif;">
@@ -70,48 +89,22 @@ serve(async (req) => {
       .replace(/\[Business Name\]/g, tenant.business_name)
       .replace(/\[Review Link\]/g, reviewButtonHtml);
 
-    // 5. Send Professional HTML Email
+    // 5. Send Email
     await transporter.sendMail({
-      from: `"William @ ${tenant.business_name}" <william@gmbcreationco.com>`,
+      from: `"${tenant.business_name}" <${fromEmail}>`,
       to: customer.email,
       subject: subject,
       html: `
         <!DOCTYPE html>
         <html>
-          <head>
-            <meta charset="utf-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          </head>
-          <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f4f7fa; color: #2d3748;">
+          <body style="margin: 0; padding: 0; font-family: sans-serif; background-color: #f4f7fa; color: #2d3748;">
             <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f4f7fa; padding: 40px 20px;">
               <tr>
                 <td align="center">
-                  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 600px; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);">
-                    <!-- Header -->
-                    <tr>
-                      <td style="padding: 40px 40px 10px 40px;">
-                        <h2 style="margin: 0; color: #1a202c; font-size: 22px; font-weight: 800; letter-spacing: -0.025em;">
-                          ${tenant.business_name}
-                        </h2>
-                      </td>
-                    </tr>
-                    <!-- Body -->
-                    <tr>
-                      <td style="padding: 20px 40px 40px 40px; font-size: 16px; line-height: 1.6; color: #4a5568;">
-                        ${messageContent.replace(/\n/g, '<br>')}
-                      </td>
-                    </tr>
-                    <!-- Footer -->
-                    <tr>
-                      <td style="padding: 30px 40px; background-color: #f8fafc; border-top: 1px solid #edf2f7; text-align: center;">
-                        <p style="margin: 0; font-size: 12px; color: #a0aec0; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">
-                          &copy; ${new Date().getFullYear()} ${tenant.business_name}
-                        </p>
-                        <p style="margin: 8px 0 0 0; font-size: 11px; color: #cbd5e0;">
-                          Sent via GMB Creation Co. Outreach Agent
-                        </p>
-                      </td>
-                    </tr>
+                  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 600px; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
+                    <tr><td style="padding: 40px 40px 10px 40px;"><h2 style="margin: 0;">${tenant.business_name}</h2></td></tr>
+                    <tr><td style="padding: 20px 40px 40px 40px; font-size: 16px; line-height: 1.6;">${messageContent.replace(/\n/g, '<br>')}</td></tr>
+                    <tr><td style="padding: 30px 40px; background-color: #f8fafc; border-top: 1px solid #edf2f7; text-align: center; font-size: 11px; color: #a0aec0;">&copy; ${new Date().getFullYear()} ${tenant.business_name}</td></tr>
                   </table>
                 </td>
               </tr>
