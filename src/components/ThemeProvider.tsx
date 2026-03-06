@@ -1,32 +1,42 @@
 "use client";
 
-import React, { createContext, useContext, useEffect } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
+
+type Theme = "dark" | "light" | "system";
 
 interface ThemeContextType {
-  theme: "dark";
-  toggleTheme: () => void;
+  theme: Theme;
+  setTheme: (theme: Theme) => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
-  // Force dark mode
-  const theme = "dark";
+  const [theme, setTheme] = useState<Theme>(() => {
+    if (typeof window !== "undefined") {
+      return (localStorage.getItem("theme") as Theme) || "system";
+    }
+    return "system";
+  });
 
   useEffect(() => {
     const root = window.document.documentElement;
-    root.classList.remove("light");
-    root.classList.add("dark");
-    localStorage.setItem("theme", "dark");
-  }, []);
+    root.classList.remove("light", "dark");
 
-  const toggleTheme = () => {
-    // No-op as light mode is removed
-    console.log("Theme is locked to dark mode.");
-  };
+    if (theme === "system") {
+      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
+        ? "dark"
+        : "light";
+      root.classList.add(systemTheme);
+    } else {
+      root.classList.add(theme);
+    }
+
+    localStorage.setItem("theme", theme);
+  }, [theme]);
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, setTheme }}>
       {children}
     </ThemeContext.Provider>
   );
