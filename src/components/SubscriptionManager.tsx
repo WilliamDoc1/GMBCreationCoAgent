@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,7 +9,7 @@ import { Check, Zap, ShieldCheck, Building2, Loader2, CreditCard } from "lucide-
 import { useTenant } from '@/hooks/use-tenant';
 import { supabase } from '@/lib/supabase';
 import { showSuccess, showError } from '@/utils/toast';
-import { initializeYocoPayment } from '@/utils/yoco';
+import { initializeYocoCheckout } from '@/utils/yoco';
 
 const PLANS = [
   {
@@ -58,38 +59,51 @@ const PLANS = [
 
 const SubscriptionManager = () => {
   const { tenant, refreshTenant } = useTenant();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [loading, setLoading] = useState<string | null>(null);
+
+  // Handle the return from Yoco
+  useEffect(() => {
+    const paymentStatus = searchParams.get('payment');
+    const planId = searchParams.get('plan');
+
+    if (paymentStatus === 'success' && planId && tenant) {
+      const updatePlan = async () => {
+        const { error } = await supabase
+          .from('tenants')
+          .update({ 
+            plan_type: planId,
+            subscription_status: 'active'
+          })
+          .eq('id', tenant.id);
+
+        if (!error) {
+          showSuccess("Payment successful! Your plan has been updated.");
+          await refreshTenant();
+          // Clear the URL parameters
+          setSearchParams({});
+        }
+      };
+      updatePlan();
+    } else if (paymentStatus === 'cancel') {
+      showError("Payment was cancelled.");
+      setSearchParams({});
+    }
+  }, [searchParams, tenant, refreshTenant, setSearchParams]);
 
   const handleUpgrade = async (plan: typeof PLANS[0]) => {
     if (!tenant) return;
     setLoading(plan.id);
     
     try {
-      // 1. Trigger Yoco Payment
-      const paymentResult = await initializeYocoPayment(
+      await initializeYocoCheckout(
         plan.priceInCents, 
-        `Upgrade to ${plan.name} Plan`
+        `Upgrade to ${plan.name} Plan`,
+        plan.id
       );
-
-      // 2. Update Subscription in Database
-      const { error } = await supabase
-        .from('tenants')
-        .update({ 
-          plan_type: plan.id,
-          subscription_status: 'active',
-          stripe_subscription_id: paymentResult.id // Storing Yoco charge ID as reference
-        })
-        .eq('id', tenant.id);
-
-      if (error) throw error;
-      
-      showSuccess(`Successfully upgraded to the ${plan.name} plan!`);
-      await refreshTenant();
+      // The browser will redirect, so we don't need to do anything else here
     } catch (err: any) {
-      if (err !== 'User closed the payment window') {
-        showError("Payment failed: " + (err.message || err));
-      }
-    } finally {
+      showError("Payment failed: " + (err.message || err));
       setLoading(null);
     }
   };

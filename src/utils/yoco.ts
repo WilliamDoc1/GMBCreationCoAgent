@@ -1,82 +1,49 @@
 "use client";
 
-/**
- * Yoco Payment Utility
- * This handles the popup checkout flow for South African ZAR payments.
- */
+import { supabase } from "@/integrations/supabase/client";
 
-declare global {
-  interface Window {
-    YocoSDK: any;
-  }
-}
-
-// Use 'pk_test_...' for development and 'pk_live_...' for production
-const YOCO_PUBLIC_KEY = "pk_test_d58cafe2V45X43ode0d4"; 
-
-export interface YocoPaymentResult {
-  id: string;
-  amountInCents: number;
-  currency: string;
+export interface YocoCheckoutResult {
+  redirectUrl: string;
+  checkoutId: string;
 }
 
 /**
- * Ensures the Yoco SDK is available by polling window.YocoSDK
+ * Initializes a Yoco Checkout session via Supabase Edge Function.
+ * This redirects the user to a secure Yoco-hosted payment page.
  */
-const ensureYocoLoaded = (): Promise<void> => {
-  return new Promise((resolve, reject) => {
-    // 1. Check if it's already there
-    if (window.YocoSDK) {
-      resolve();
-      return;
-    }
-
-    // 2. Poll for the object (check every 250ms)
-    let attempts = 0;
-    const maxAttempts = 40; // 10 seconds total
-    
-    const interval = setInterval(() => {
-      attempts++;
-      if (window.YocoSDK) {
-        clearInterval(interval);
-        resolve();
-      } else if (attempts >= maxAttempts) {
-        clearInterval(interval);
-        reject(new Error("Yoco SDK failed to load. Please ensure you have disabled Ad-Blockers or 'Strict Tracking Protection' for this site and refresh the page."));
-      }
-    }, 250);
-  });
-};
-
-export const initializeYocoPayment = async (amountInCents: number, description: string): Promise<YocoPaymentResult> => {
+export const initializeYocoCheckout = async (
+  amountInCents: number, 
+  description: string,
+  planId: string
+): Promise<void> => {
   try {
-    // Wait for SDK to be ready
-    await ensureYocoLoaded();
+    const origin = window.location.origin;
+    
+    // Define where the user goes after payment
+    // We pass the planId in the URL so we can update the DB on return
+    const successUrl = `${origin}/dashboard?payment=success&plan=${planId}`;
+    const cancelUrl = `${origin}/dashboard?payment=cancel`;
 
-    return new Promise((resolve, reject) => {
-      try {
-        const yoco = new window.YocoSDK({
-          publicKey: YOCO_PUBLIC_KEY,
-        });
-
-        yoco.showPopup({
-          amountInCents: amountInCents,
-          currency: 'ZAR',
-          name: 'GMB Creation Co.',
-          description: description,
-          callback: (result: any) => {
-            if (result.error) {
-              reject(new Error(result.error.message || "Payment failed"));
-            } else {
-              resolve(result);
-            }
-          },
-        });
-      } catch (e: any) {
-        reject(new Error("Yoco initialization error: " + e.message));
+    const { data, error } = await supabase.functions.invoke('create-yoco-checkout', {
+      body: { 
+        amountInCents, 
+        description,
+        successUrl,
+        cancelUrl
       }
     });
+
+    if (error) throw error;
+    if (data.error) throw new Error(data.error);
+
+    if (data.redirectUrl) {
+      // Redirect the entire browser to Yoco's secure page
+      window.location.href = data.redirectUrl;
+    } else {
+      throw new Error("No redirect URL received from Yoco");
+    }
   } catch (err: any) {
-    throw new Error(err.message || "Could not initialize payment");
+    console.error("Checkout initialization failed:", err);
+    throw new Error(err.message || "Could not initialize payment session");
   }
 };

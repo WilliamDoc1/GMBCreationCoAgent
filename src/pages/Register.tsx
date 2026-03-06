@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,7 +9,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Badge } from "@/components/ui/badge";
 import { Check, ArrowLeft, ArrowRight, Loader2, CreditCard, ShieldCheck } from "lucide-react";
 import { showError, showSuccess } from '@/utils/toast';
-import { initializeYocoPayment } from '@/utils/yoco';
+import { initializeYocoCheckout } from '@/utils/yoco';
 
 const PLANS = [
   {
@@ -39,17 +39,57 @@ const PLANS = [
   }
 ];
 
+const DRAFT_REG_KEY = 'pending_registration_data';
+
 const Register = () => {
   const [step, setStep] = useState<'plan' | 'details'>('plan');
   const [selectedPlan, setSelectedPlan] = useState(PLANS[1]);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     businessName: ''
   });
+
+  // Check if we are returning from a successful payment
+  useEffect(() => {
+    const paymentStatus = searchParams.get('payment');
+    const planId = searchParams.get('plan');
+    
+    if (paymentStatus === 'success' && planId) {
+      const completeRegistration = async () => {
+        const savedData = localStorage.getItem(DRAFT_REG_KEY);
+        if (!savedData) return;
+
+        try {
+          const { email, password, businessName } = JSON.parse(savedData);
+          
+          const { error } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+              data: {
+                plan_type: planId,
+                business_name: businessName
+              }
+            }
+          });
+
+          if (error) throw error;
+
+          showSuccess("Account created! Please check your email for confirmation.");
+          localStorage.removeItem(DRAFT_REG_KEY);
+          navigate('/login');
+        } catch (err: any) {
+          showError("Failed to complete registration: " + err.message);
+        }
+      };
+      completeRegistration();
+    }
+  }, [searchParams, navigate]);
 
   const handlePlanSelect = (plan: typeof PLANS[0]) => {
     setSelectedPlan(plan);
@@ -61,34 +101,20 @@ const Register = () => {
     setLoading(true);
 
     try {
-      // 1. Trigger Yoco Payment First
-      const paymentResult = await initializeYocoPayment(
+      // Save form data to local storage so we can recover it after redirect
+      localStorage.setItem(DRAFT_REG_KEY, JSON.stringify({
+        ...formData,
+        planId: selectedPlan.id
+      }));
+
+      // Trigger Yoco Checkout
+      await initializeYocoCheckout(
         selectedPlan.priceInCents,
-        `Initial Subscription: ${selectedPlan.name}`
+        `Initial Subscription: ${selectedPlan.name}`,
+        selectedPlan.id
       );
-
-      // 2. Create Account if payment successful
-      const { error } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
-        options: {
-          data: {
-            plan_type: selectedPlan.id,
-            business_name: formData.businessName,
-            yoco_charge_id: paymentResult.id
-          }
-        }
-      });
-
-      if (error) throw error;
-
-      showSuccess("Account created! Please check your email for confirmation.");
-      navigate('/login');
     } catch (err: any) {
-      if (err !== 'User closed the payment window') {
-        showError(err.message || err);
-      }
-    } finally {
+      showError(err.message || err);
       setLoading(false);
     }
   };
@@ -202,7 +228,7 @@ const Register = () => {
               <div className="space-y-1">
                 <p className="text-xs font-bold text-blue-900">Secure Yoco Payment</p>
                 <p className="text-[10px] text-blue-700">
-                  Clicking the button below will open the secure Yoco payment popup to process your {selectedPlan.price} subscription.
+                  Clicking the button below will redirect you to Yoco's secure payment page to process your {selectedPlan.price} subscription.
                 </p>
               </div>
             </div>
