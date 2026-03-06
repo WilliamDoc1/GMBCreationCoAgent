@@ -37,7 +37,6 @@ serve(async (req) => {
     let fromEmail = tenant.from_email || `william@gmbcreationco.com`;
 
     if (tenant.email_provider === 'smtp' && tenant.smtp_host) {
-      // Use Tenant's Custom SMTP
       transporter = nodemailer.createTransport({
         host: tenant.smtp_host,
         port: tenant.smtp_port || 587,
@@ -49,7 +48,6 @@ serve(async (req) => {
         tls: { rejectUnauthorized: false }
       });
     } else if (tenant.email_provider === 'gmail' && tenant.gmb_refresh_token) {
-      // Use Tenant's Gmail via OAuth
       transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: {
@@ -61,7 +59,6 @@ serve(async (req) => {
         },
       });
     } else {
-      // Fallback to System Default (Resend/SMTP)
       transporter = nodemailer.createTransport({
         host: "smtp.gmail.com",
         port: 587,
@@ -114,11 +111,25 @@ serve(async (req) => {
       `,
     });
 
-    // 6. Update DB
-    await supabase.from('customers').update({ 
-      status: 'contacted', 
-      last_contacted_at: new Date().toISOString() 
-    }).eq('id', customer.id);
+    // 6. Update Customer Status
+    const { error: updateError } = await supabase
+      .from('customers')
+      .update({ 
+        status: 'contacted', 
+        last_contacted_at: new Date().toISOString() 
+      })
+      .eq('id', customer.id);
+
+    if (updateError) throw new Error(`Failed to update customer status: ${updateError.message}`);
+
+    // 7. Log to Audit Log for Dashboard Visibility
+    await supabase.from('audit_log').insert({
+      tenant_id: tenant.id,
+      customer_id: customer.id,
+      action: 'manual_outreach_sent',
+      message_content: `Review request email sent to ${customer.email}`,
+      status: 'success'
+    });
 
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
