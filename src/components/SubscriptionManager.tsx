@@ -5,7 +5,7 @@ import { useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, Zap, ShieldCheck, Building2, Loader2, CreditCard, FlaskConical } from "lucide-react";
+import { Check, Loader2, CreditCard, FlaskConical } from "lucide-react";
 import { useTenant } from '@/hooks/use-tenant';
 import { useAuth } from '@/components/AuthProvider';
 import { supabase } from '@/lib/supabase';
@@ -16,28 +16,30 @@ const PLANS = [
   {
     id: 'starter',
     name: 'Local Hero',
-    price: 'R499',
-    priceInCents: 49900,
-    description: 'Perfect for single-location local shops.',
+    price: 'R2,500',
+    priceInCents: 250000,
+    description: 'Essential automation for local businesses.',
     features: [
-      '1 GBP Location',
-      '3x Weekly AI Posts',
-      'Email Review Outreach',
-      'Basic Analytics'
+      '1 x GBP Location',
+      '3x Weekly Posts',
+      'Email & SMS Review Requests',
+      'Basic Analytics',
+      'SEO Insights'
     ],
     limit: 1
   },
   {
     id: 'growth',
     name: 'Market Leader',
-    price: 'R1,299',
-    priceInCents: 129900,
-    description: 'For growing businesses with multiple branches.',
+    price: 'R5,000',
+    priceInCents: 500000,
+    description: 'Advanced scaling for growing brands.',
     features: [
-      'Up to 5 Locations',
-      'Advanced AI SEO Insights',
-      'SMS & Email Outreach',
-      'Priority AI Processing'
+      '5 x GBP Location',
+      '3x Weekly Posts',
+      'Email & SMS Review Requests',
+      'SEO Insights',
+      'Audit Log'
     ],
     limit: 5,
     popular: true
@@ -45,16 +47,17 @@ const PLANS = [
   {
     id: 'agency',
     name: 'Agency',
-    price: 'R3,499',
-    priceInCents: 349900,
-    description: 'For agencies managing multiple clients.',
+    price: 'Custom Price',
+    priceInCents: 0,
+    description: 'Tailored solutions for multi-location management.',
     features: [
-      'Unlimited Locations',
-      'Full Audit Logs',
-      'Bulk CSV Uploads',
-      'Dedicated Support'
+      '5 x GBP Location',
+      '3x Weekly Posts',
+      'Email & SMS Review Requests',
+      'SEO Insights',
+      'Audit Log'
     ],
-    limit: 100
+    limit: 5
   }
 ];
 
@@ -94,8 +97,13 @@ const SubscriptionManager = () => {
 
   const handleUpgrade = async (plan: typeof PLANS[0]) => {
     if (!tenant) return;
-    setLoading(plan.id);
     
+    if (plan.id === 'agency') {
+      window.location.href = 'mailto:william@gmbcreationco.com?subject=Agency Plan Inquiry';
+      return;
+    }
+
+    setLoading(plan.id);
     try {
       await initializeYocoCheckout(
         plan.priceInCents, 
@@ -180,7 +188,7 @@ const SubscriptionManager = () => {
               <CardTitle className="text-xl">{plan.name}</CardTitle>
               <div className="flex items-baseline gap-1 mt-2">
                 <span className="text-3xl font-bold">{plan.price}</span>
-                <span className="text-slate-500 text-sm">/month</span>
+                {plan.id !== 'agency' && <span className="text-slate-500 text-sm">/month</span>}
               </div>
               <CardDescription className="mt-2">{plan.description}</CardDescription>
             </CardHeader>
@@ -202,7 +210,7 @@ const SubscriptionManager = () => {
                 onClick={() => handleUpgrade(plan)}
               >
                 {loading === plan.id ? <Loader2 className="animate-spin mr-2" size={16} /> : null}
-                {currentPlan === plan.id ? "Current Plan" : `Upgrade to ${plan.name}`}
+                {currentPlan === plan.id ? "Current Plan" : plan.id === 'agency' ? 'Contact Us' : `Upgrade to ${plan.name}`}
               </Button>
             </CardFooter>
           </Card>

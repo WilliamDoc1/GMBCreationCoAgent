@@ -24,24 +24,24 @@ const Landing = () => {
     {
       id: 'starter',
       name: 'Local Hero',
-      price: 'R499',
-      description: 'Perfect for single-location local shops.',
-      features: ['1 GBP Location', '3x Weekly AI Posts', 'Email Review Outreach', 'Basic Analytics']
+      price: 'R2,500',
+      description: 'Essential automation for local businesses.',
+      features: ['1 x GBP Location', '3x Weekly Posts', 'Email & SMS Review Requests', 'Basic Analytics', 'SEO Insights']
     },
     {
       id: 'growth',
       name: 'Market Leader',
-      price: 'R1,299',
-      description: 'For growing businesses with multiple branches.',
-      features: ['Up to 5 Locations', 'Advanced AI SEO Insights', 'SMS & Email Outreach', 'Priority AI Processing'],
+      price: 'R5,000',
+      description: 'Advanced scaling for growing brands.',
+      features: ['5 x GBP Location', '3x Weekly Posts', 'Email & SMS Review Requests', 'SEO Insights', 'Audit Log'],
       popular: true
     },
     {
       id: 'agency',
       name: 'Agency',
-      price: 'R3,499',
-      description: 'For agencies managing multiple clients.',
-      features: ['Unlimited Locations', 'Full Audit Logs', 'Bulk CSV Uploads', 'Dedicated Support']
+      price: 'Custom Price',
+      description: 'Tailored solutions for multi-location management.',
+      features: ['5 x GBP Location', '3x Weekly Posts', 'Email & SMS Review Requests', 'SEO Insights', 'Audit Log']
     }
   ];
 
@@ -149,7 +149,7 @@ const Landing = () => {
                   <CardTitle>{plan.name}</CardTitle>
                   <div className="flex items-baseline gap-1 mt-2">
                     <span className="text-3xl font-bold">{plan.price}</span>
-                    <span className="text-muted-foreground text-sm">/month</span>
+                    {plan.id !== 'agency' && <span className="text-muted-foreground text-sm">/month</span>}
                   </div>
                   <CardDescription className="mt-2">{plan.description}</CardDescription>
                 </CardHeader>
@@ -163,7 +163,7 @@ const Landing = () => {
                     ))}
                   </ul>
                   <Button className="w-full" variant={plan.popular ? 'default' : 'outline'} onClick={() => navigate(`/register?plan=${plan.id}`)}>
-                    Get Started
+                    {plan.id === 'agency' ? 'Contact Us' : 'Get Started'}
                   </Button>
                 </CardContent>
               </Card>

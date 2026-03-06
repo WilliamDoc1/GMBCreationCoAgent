@@ -22,7 +22,7 @@ interface Branch {
 const PLAN_LIMITS: Record<string, number> = {
   'starter': 1,
   'growth': 5,
-  'agency': 100
+  'agency': 5
 };
 
 const BranchManager = () => {

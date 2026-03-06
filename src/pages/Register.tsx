@@ -15,27 +15,27 @@ const PLANS = [
   {
     id: 'starter',
     name: 'Local Hero',
-    price: 'R499',
-    priceInCents: 49900,
-    description: 'Perfect for single-location local shops.',
-    features: ['1 GBP Location', '3x Weekly AI Posts', 'Email Review Outreach']
+    price: 'R2,500',
+    priceInCents: 250000,
+    description: 'Essential automation for local businesses.',
+    features: ['1 x GBP Location', '3x Weekly Posts', 'Email & SMS Review Requests', 'Basic Analytics', 'SEO Insights']
   },
   {
     id: 'growth',
     name: 'Market Leader',
-    price: 'R1,299',
-    priceInCents: 129900,
-    description: 'For growing businesses with multiple branches.',
-    features: ['Up to 5 Locations', 'Advanced AI SEO Insights', 'SMS & Email Outreach'],
+    price: 'R5,000',
+    priceInCents: 500000,
+    description: 'Advanced scaling for growing brands.',
+    features: ['5 x GBP Location', '3x Weekly Posts', 'Email & SMS Review Requests', 'SEO Insights', 'Audit Log'],
     popular: true
   },
   {
     id: 'agency',
     name: 'Agency',
-    price: 'R3,499',
-    priceInCents: 349900,
-    description: 'For agencies managing multiple clients.',
-    features: ['Unlimited Locations', 'Full Audit Logs', 'Bulk CSV Uploads']
+    price: 'Custom Price',
+    priceInCents: 0,
+    description: 'Tailored solutions for multi-location management.',
+    features: ['5 x GBP Location', '3x Weekly Posts', 'Email & SMS Review Requests', 'SEO Insights', 'Audit Log']
   }
 ];
 
@@ -54,7 +54,6 @@ const Register = () => {
     businessName: ''
   });
 
-  // Check if we are returning from a successful payment
   useEffect(() => {
     const paymentStatus = searchParams.get('payment');
     const planId = searchParams.get('plan');
@@ -98,16 +97,19 @@ const Register = () => {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    
+    if (selectedPlan.id === 'agency') {
+      window.location.href = 'mailto:william@gmbcreationco.com?subject=Agency Plan Inquiry';
+      return;
+    }
 
+    setLoading(true);
     try {
-      // Save form data to local storage so we can recover it after redirect
       localStorage.setItem(DRAFT_REG_KEY, JSON.stringify({
         ...formData,
         planId: selectedPlan.id
       }));
 
-      // Trigger Yoco Checkout
       await initializeYocoCheckout(
         selectedPlan.priceInCents,
         `Initial Subscription: ${selectedPlan.name}`,
@@ -147,7 +149,7 @@ const Register = () => {
                   <CardTitle className="text-2xl">{plan.name}</CardTitle>
                   <div className="flex items-baseline gap-1 mt-2">
                     <span className="text-4xl font-bold">{plan.price}</span>
-                    <span className="text-slate-500 text-sm">/month</span>
+                    {plan.id !== 'agency' && <span className="text-slate-500 text-sm">/month</span>}
                   </div>
                   <CardDescription className="mt-4 text-base">{plan.description}</CardDescription>
                 </CardHeader>
@@ -163,7 +165,7 @@ const Register = () => {
                 </CardContent>
                 <CardFooter>
                   <Button className="w-full h-12 text-lg" variant={plan.popular ? "default" : "outline"}>
-                    Select {plan.name}
+                    {plan.id === 'agency' ? 'Contact Us' : `Select ${plan.name}`}
                   </Button>
                 </CardFooter>
               </Card>
@@ -187,7 +189,7 @@ const Register = () => {
               {selectedPlan.name} Plan
             </Badge>
           </div>
-          <CardDescription>Enter your business details to proceed to secure payment.</CardDescription>
+          <CardDescription>Enter your business details to proceed.</CardDescription>
         </CardHeader>
         <form onSubmit={handleSignUp}>
           <CardContent className="space-y-4">
@@ -223,20 +225,22 @@ const Register = () => {
               </div>
             </div>
             
-            <div className="p-4 bg-blue-50 rounded-lg border border-blue-100 flex items-start gap-3">
-              <CreditCard className="text-blue-600 mt-1" size={20} />
-              <div className="space-y-1">
-                <p className="text-xs font-bold text-blue-900">Secure Yoco Payment</p>
-                <p className="text-[10px] text-blue-700">
-                  Clicking the button below will redirect you to Yoco's secure payment page to process your {selectedPlan.price} subscription.
-                </p>
+            {selectedPlan.id !== 'agency' && (
+              <div className="p-4 bg-blue-50 rounded-lg border border-blue-100 flex items-start gap-3">
+                <CreditCard className="text-blue-600 mt-1" size={20} />
+                <div className="space-y-1">
+                  <p className="text-xs font-bold text-blue-900">Secure Yoco Payment</p>
+                  <p className="text-[10px] text-blue-700">
+                    Clicking the button below will redirect you to Yoco's secure payment page to process your {selectedPlan.price} subscription.
+                  </p>
+                </div>
               </div>
-            </div>
+            )}
           </CardContent>
           <CardFooter className="bg-slate-50/50 border-t p-6">
             <Button type="submit" className="w-full h-14 text-xl font-bold" disabled={loading}>
               {loading ? <Loader2 className="animate-spin mr-2" /> : <ArrowRight className="mr-2" />}
-              Pay & Activate Account
+              {selectedPlan.id === 'agency' ? 'Contact Support' : 'Pay & Activate Account'}
             </Button>
           </CardFooter>
         </form>

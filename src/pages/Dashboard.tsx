@@ -130,8 +130,12 @@ const Dashboard = () => {
   if (!session) return null;
 
   const currentPlan = (tenant as any)?.plan_type || 'starter';
-  const hasSEOAccess = currentPlan === 'growth' || currentPlan === 'agency';
-  const hasLogAccess = currentPlan === 'agency';
+  
+  // All plans now have SEO Insights
+  const hasSEOAccess = true;
+  
+  // Market Leader and Agency have Audit Logs
+  const hasLogAccess = currentPlan === 'growth' || currentPlan === 'agency';
 
   return (
     <div className="min-h-screen bg-slate-50 pb-12">
@@ -162,7 +166,6 @@ const Dashboard = () => {
               
               <TabsTrigger value="seo" className="flex items-center gap-2">
                 <TrendingUp size={16} /> SEO Insights
-                {!hasSEOAccess && <Lock size={12} className="text-slate-400" />}
               </TabsTrigger>
               
               <TabsTrigger value="logs" className="flex items-center gap-2">
@@ -237,20 +240,7 @@ const Dashboard = () => {
 
           <TabsContent value="seo">
             <div className="max-w-3xl">
-              {!hasSEOAccess ? (
-                <Card className="border-dashed py-12 text-center">
-                  <CardContent className="space-y-4">
-                    <TrendingUp size={48} className="mx-auto text-slate-200" />
-                    <h3 className="text-lg font-bold">SEO Insights Locked</h3>
-                    <p className="text-slate-500 max-w-sm mx-auto">
-                      Advanced AI SEO analysis is available on the <strong>Market Leader</strong> and <strong>Agency</strong> plans.
-                    </p>
-                    <Button onClick={() => handleTabChange('subscription')}>Upgrade Now</Button>
-                  </CardContent>
-                </Card>
-              ) : (
-                <SEOInsights />
-              )}
+              <SEOInsights />
             </div>
           </TabsContent>
 
@@ -261,9 +251,9 @@ const Dashboard = () => {
                   <History size={48} className="mx-auto text-slate-200" />
                   <h3 className="text-lg font-bold">Audit Logs Locked</h3>
                   <p className="text-slate-500 max-w-sm mx-auto">
-                    Full operational audit logs are exclusive to the <strong>Agency</strong> plan.
+                    Full operational audit logs are available on the <strong>Market Leader</strong> and <strong>Agency</strong> plans.
                   </p>
-                  <Button onClick={() => handleTabChange('subscription')}>Upgrade to Agency</Button>
+                  <Button onClick={() => handleTabChange('subscription')}>Upgrade Now</Button>
                 </CardContent>
               </Card>
             ) : (
