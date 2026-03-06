@@ -5,8 +5,9 @@ import { useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, Zap, ShieldCheck, Building2, Loader2, CreditCard } from "lucide-react";
+import { Check, Zap, ShieldCheck, Building2, Loader2, CreditCard, FlaskConical } from "lucide-react";
 import { useTenant } from '@/hooks/use-tenant';
+import { useAuth } from '@/components/AuthProvider';
 import { supabase } from '@/lib/supabase';
 import { showSuccess, showError } from '@/utils/toast';
 import { initializeYocoCheckout } from '@/utils/yoco';
@@ -59,10 +60,11 @@ const PLANS = [
 
 const SubscriptionManager = () => {
   const { tenant, refreshTenant } = useTenant();
+  const { session } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const [loading, setLoading] = useState<string | null>(null);
+  const [devLoading, setDevLoading] = useState(false);
 
-  // Handle the return from Yoco
   useEffect(() => {
     const paymentStatus = searchParams.get('payment');
     const planId = searchParams.get('plan');
@@ -80,7 +82,6 @@ const SubscriptionManager = () => {
         if (!error) {
           showSuccess("Payment successful! Your plan has been updated.");
           await refreshTenant();
-          // Clear the URL parameters
           setSearchParams({});
         }
       };
@@ -101,17 +102,64 @@ const SubscriptionManager = () => {
         `Upgrade to ${plan.name} Plan`,
         plan.id
       );
-      // The browser will redirect, so we don't need to do anything else here
     } catch (err: any) {
       showError("Payment failed: " + (err.message || err));
       setLoading(null);
     }
   };
 
+  const handleDevForcePlan = async (planId: string) => {
+    if (!tenant) return;
+    setDevLoading(true);
+    try {
+      const { error } = await supabase
+        .from('tenants')
+        .update({ plan_type: planId, subscription_status: 'active' })
+        .eq('id', tenant.id);
+      
+      if (error) throw error;
+      showSuccess(`Dev: Plan forced to ${planId}`);
+      await refreshTenant();
+    } catch (err: any) {
+      showError("Dev switch failed: " + err.message);
+    } finally {
+      setDevLoading(false);
+    }
+  };
+
   const currentPlan = tenant?.plan_type || 'starter';
+  const isDev = session?.user?.email === 'Williamdoherty24@gmail.com';
 
   return (
     <div className="space-y-8">
+      {isDev && (
+        <Card className="border-purple-200 bg-purple-50/30">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-bold flex items-center gap-2 text-purple-700">
+              <FlaskConical size={16} />
+              Developer Plan Switcher
+            </CardTitle>
+            <CardDescription className="text-[10px]">Only visible to {session?.user?.email}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-2">
+              {PLANS.map(p => (
+                <Button 
+                  key={p.id} 
+                  variant={currentPlan === p.id ? "default" : "outline"} 
+                  size="sm"
+                  className="h-8 text-[10px]"
+                  onClick={() => handleDevForcePlan(p.id)}
+                  disabled={devLoading}
+                >
+                  Force {p.name}
+                </Button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="text-center max-w-2xl mx-auto space-y-2">
         <h2 className="text-3xl font-bold text-slate-900">Choose Your Plan</h2>
         <p className="text-slate-500">Scale your local SEO presence with our tiered subscription options.</p>

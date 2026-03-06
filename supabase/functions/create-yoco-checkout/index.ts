@@ -24,10 +24,9 @@ serve(async (req) => {
     }
 
     const finalAmount = parseInt(String(amountInCents), 10);
+    console.log(`[Yoco] Initializing checkout for ${finalAmount} cents. Description: ${description}`);
 
-    console.log(`Requesting Yoco checkout for ${finalAmount} ZAR cents`);
-
-    // Corrected endpoint URL to include /v1/
+    // Using the standard Yoco Online API endpoint
     const yocoResponse = await fetch('https://online.yoco.com/v1/checkouts', {
       method: 'POST',
       headers: {
@@ -46,14 +45,15 @@ serve(async (req) => {
     });
 
     const responseText = await yocoResponse.text();
+    console.log(`[Yoco] Response Status: ${yocoResponse.status}`);
+
     let data;
-    
     try {
       data = JSON.parse(responseText);
     } catch (e) {
-      console.error("Failed to parse Yoco response as JSON:", responseText);
+      console.error("[Yoco] Failed to parse response as JSON. Raw response:", responseText);
       return new Response(JSON.stringify({ 
-        error: `The payment gateway returned an invalid response (Status: ${yocoResponse.status}).` 
+        error: `The payment gateway returned an invalid response format (Status: ${yocoResponse.status}).` 
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 502,
@@ -61,22 +61,23 @@ serve(async (req) => {
     }
 
     if (!yocoResponse.ok) {
-      console.error("Yoco API Error:", data);
+      console.error("[Yoco] API Error Details:", data);
       return new Response(JSON.stringify({ 
-        error: data.message || data.error || `Yoco Error: ${yocoResponse.statusText}` 
+        error: data.message || data.error || `Yoco Error: ${yocoResponse.statusText} (${yocoResponse.status})` 
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: yocoResponse.status,
       });
     }
 
+    console.log("[Yoco] Checkout created successfully:", data.id);
     return new Response(JSON.stringify({ redirectUrl: data.redirectUrl, checkoutId: data.id }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     });
 
   } catch (error) {
-    console.error("Edge Function Exception:", error.message);
+    console.error("[Yoco] Edge Function Exception:", error.message);
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400,
