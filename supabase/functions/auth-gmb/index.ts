@@ -11,15 +11,16 @@ serve(async (req) => {
   try {
     const { tenantId, origin } = await req.json()
     const clientId = Deno.env.get('GOOGLE_CLIENT_ID')
+    
+    // This MUST match exactly what is in your Google Cloud Console
     const redirectUri = `https://uqqzyqgypljxvmnguhky.supabase.co/functions/v1/gmb-callback`
     
-    // Scopes required for GMB posting AND Gmail sending
     const scopes = [
       'https://www.googleapis.com/auth/business.manage',
-      'https://www.googleapis.com/auth/gmail.send'
+      'https://www.googleapis.com/auth/gmail.send',
+      'https://www.googleapis.com/auth/userinfo.email'
     ].join(' ')
 
-    // We encode both tenantId and origin into the state
     const state = btoa(JSON.stringify({ tenantId, origin: origin || 'http://localhost:8080' }))
 
     const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth')
@@ -28,7 +29,7 @@ serve(async (req) => {
     authUrl.searchParams.set('response_type', 'code')
     authUrl.searchParams.set('scope', scopes)
     authUrl.searchParams.set('access_type', 'offline')
-    authUrl.searchParams.set('prompt', 'consent')
+    authUrl.searchParams.set('prompt', 'consent') // Force consent to ensure we get a refresh token
     authUrl.searchParams.set('state', state)
 
     return new Response(JSON.stringify({ url: authUrl.toString() }), {
