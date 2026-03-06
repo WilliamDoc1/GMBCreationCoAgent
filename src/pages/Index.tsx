@@ -6,6 +6,8 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
 import { useTenant } from '@/hooks/use-tenant';
 import { Loader2, LayoutDashboard, Settings, Users, ShieldCheck, History, TrendingUp, Calendar, Zap, MapPin, CreditCard, Lock } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import CustomerTable from '@/components/CustomerTable';
 import DashboardHeader from '@/components/DashboardHeader';
 import CustomerActionBar from '@/components/CustomerActionBar';
