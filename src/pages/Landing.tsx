@@ -11,7 +11,8 @@ import {
   CheckCircle2, 
   Globe, 
   Mail,
-  TrendingUp
+  TrendingUp,
+  Check
 } from "lucide-react";
 import Footer from "@/components/Footer";
 import DashboardHeader from '@/components/DashboardHeader';
@@ -49,6 +50,31 @@ const Landing = () => {
     }
   };
 
+  const plans = [
+    {
+      id: 'starter',
+      name: 'Local Hero',
+      price: 'R499',
+      description: 'Perfect for single-location local shops.',
+      features: ['1 GBP Location', '3x Weekly AI Posts', 'Email Review Outreach', 'Basic Analytics']
+    },
+    {
+      id: 'growth',
+      name: 'Market Leader',
+      price: 'R1,299',
+      description: 'For growing businesses with multiple branches.',
+      features: ['Up to 5 Locations', 'Advanced AI SEO Insights', 'SMS & Email Outreach', 'Priority AI Processing'],
+      popular: true
+    },
+    {
+      id: 'agency',
+      name: 'Agency',
+      price: 'R3,499',
+      description: 'For agencies managing multiple clients.',
+      features: ['Unlimited Locations', 'Full Audit Logs', 'Bulk CSV Uploads', 'Dedicated Support']
+    }
+  ];
+
   return (
     <div className="min-h-screen selection:bg-gold/30 selection:text-gold-light">
       <MeshGradient />
@@ -66,7 +92,7 @@ const Landing = () => {
       <main className="relative">
         <FloatingShards />
 
-        {/* Hero Section - Refined Scaling */}
+        {/* Hero Section */}
         <section className="relative pt-32 pb-24 md:pt-40 md:pb-32 px-4 max-w-7xl mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
@@ -122,8 +148,8 @@ const Landing = () => {
           </motion.div>
         </section>
 
-        {/* Bento Grid Section - Refined Spacing */}
-        <section className="py-24 md:py-32 px-4 max-w-7xl mx-auto">
+        {/* Bento Grid Section (Features) */}
+        <section id="features" className="py-24 md:py-32 px-4 max-w-7xl mx-auto scroll-mt-24">
           <motion.div 
             variants={containerVariants}
             initial="hidden"
@@ -186,7 +212,62 @@ const Landing = () => {
           </div>
         </section>
 
-        {/* Trust Section - Refined Contrast */}
+        {/* Pricing Section */}
+        <section id="pricing" className="py-24 md:py-32 px-4 max-w-7xl mx-auto scroll-mt-24">
+          <motion.div 
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-100px" }}
+            className="text-center mb-20"
+          >
+            <motion.h2 variants={itemVariants} className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 tracking-tight">
+              Simple, Transparent Pricing
+            </motion.h2>
+            <motion.p variants={itemVariants} className="text-slate-400 text-lg max-w-2xl mx-auto">
+              Choose the plan that fits your business growth.
+            </motion.p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {plans.map((plan, i) => (
+              <GlassCard 
+                key={plan.id} 
+                className={`flex flex-col ${plan.popular ? 'border-gold/30' : ''}`} 
+                glowColor={plan.popular ? 'amber' : 'sage'}
+                delay={i * 0.1}
+              >
+                <div className="mb-8">
+                  <h3 className="text-2xl font-bold text-white mb-2">{plan.name}</h3>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-4xl font-bold text-white">{plan.price}</span>
+                    <span className="text-slate-400 text-sm">/month</span>
+                  </div>
+                  <p className="text-slate-400 text-sm mt-4">{plan.description}</p>
+                </div>
+                
+                <ul className="space-y-4 mb-10 flex-1">
+                  {plan.features.map((feature, index) => (
+                    <li key={index} className="flex items-center gap-3 text-sm text-slate-300">
+                      <Check size={18} className="text-gold shrink-0" />
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+
+                <MagneticButton 
+                  variant={plan.popular ? 'primary' : 'ghost'} 
+                  className="w-full"
+                  onClick={() => navigate(`/register?plan=${plan.id}`)}
+                >
+                  Get Started
+                </MagneticButton>
+              </GlassCard>
+            ))}
+          </div>
+        </section>
+
+        {/* Trust Section */}
         <section className="py-24 md:py-32 px-4 max-w-7xl mx-auto">
           <div className="flex flex-col lg:flex-row items-center gap-20 lg:gap-32">
             <motion.div 
@@ -252,7 +333,7 @@ const Landing = () => {
           </div>
         </section>
 
-        {/* Google Integration Section - Refined Scaling */}
+        {/* Google Integration Section */}
         <section className="py-24 md:py-32 px-4 max-w-6xl mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
