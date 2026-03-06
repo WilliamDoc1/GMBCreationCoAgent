@@ -13,7 +13,7 @@ declare global {
 
 // INSERT YOUR KEYS HERE
 // Use 'pk_test_...' for development and 'pk_live_...' for production
-const YOCO_PUBLIC_KEY = "pk_test_ed3c54a69u4p9p17z4a7"; 
+const YOCO_PUBLIC_KEY = pk_test_d58cafe2V45X43ode0d4; 
 
 export interface YocoPaymentResult {
   id: string;
