@@ -21,9 +21,7 @@ serve(async (req) => {
     const { customerId } = await req.json()
     if (!customerId) throw new Error("No customerId provided")
 
-    console.log(`Fetching data for customer: ${customerId}`);
-
-    // 1. Fetch Customer and Tenant Data
+    // 1. Fetch Data
     const { data: customer, error: custError } = await supabase
       .from('customers')
       .select('*, tenants(*)')
@@ -33,45 +31,38 @@ serve(async (req) => {
     if (custError || !customer) throw new Error(`Customer not found: ${custError?.message}`)
     const tenant = customer.tenants
 
-    console.log(`Business: ${tenant.business_name}, Customer: ${customer.full_name}`);
+    // 2. SMTP Configuration
+    const smtpUser = Deno.env.get('SMTP_USER');
+    const smtpPassword = Deno.env.get('SMTP_PASSWORD');
 
-    // 2. Prepare Content
+    if (!smtpUser || !smtpPassword) {
+      throw new Error("Missing SMTP_USER or SMTP_PASSWORD secrets in Supabase");
+    }
+
+    console.log(`Auth Check: User=${smtpUser.charAt(0)}...${smtpUser.split('@')[1]}, Pass Length=${smtpPassword.length}`);
+
+    const transporter = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 587,
+      secure: false, // Use STARTTLS
+      auth: {
+        user: smtpUser,
+        pass: smtpPassword,
+      },
+      tls: {
+        rejectUnauthorized: false // Helps with connection stability in cloud functions
+      }
+    });
+
+    // 3. Send Email
     const subject = `How was your experience with ${tenant.business_name}?`;
-    const body = (tenant.message_template || "Hi [Customer Name], thank you for choosing [Business Name]! We'd love to hear your feedback: [Review Link]")
+    const body = (tenant.message_template || "Hi [Customer Name], thank you for choosing [Business Name]!")
       .replace(/\[Customer Name\]/g, customer.full_name)
       .replace(/\[Business Name\]/g, tenant.business_name)
       .replace(/\[Review Link\]/g, tenant.gmb_review_link);
 
-    // 3. Send via SMTP (Gmail)
-    const smtpPassword = Deno.env.get('SMTP_PASSWORD')
-    if (!smtpPassword) {
-      console.error("SMTP_PASSWORD secret is missing in Supabase");
-      throw new Error("SMTP_PASSWORD secret is missing in Supabase. Please add it in Project Settings > Edge Functions.");
-    }
-
-    console.log("Initializing SMTP transporter...");
-    const transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 465,
-      secure: true,
-      auth: {
-        user: "william@gmbcreationco.com",
-        pass: smtpPassword,
-      },
-      connectionTimeout: 10000,
-    });
-
-    // Verify connection
-    console.log("Verifying SMTP connection...");
-    try {
-      await transporter.verify();
-      console.log("SMTP connection verified");
-    } catch (verifyError) {
-      console.error("SMTP Verification Failed:", verifyError.message);
-      throw new Error(`SMTP Connection Error: ${verifyError.message}. Ensure you are using a Google App Password.`);
-    }
-
-    console.log(`Sending email to ${customer.email}...`);
+    console.log(`Attempting send to ${customer.email} via ${smtpUser}...`);
+    
     await transporter.sendMail({
       from: `"William @ ${tenant.business_name}" <william@gmbcreationco.com>`,
       to: customer.email,
@@ -79,35 +70,20 @@ serve(async (req) => {
       html: body.replace(/\n/g, '<br>'),
     });
 
-    console.log("Email sent successfully");
+    console.log("Email sent successfully!");
 
-    // 4. Update Database
-    const { error: updateError } = await supabase
-      .from('customers')
-      .update({ 
-        status: 'contacted', 
-        last_contacted_at: new Date().toISOString() 
-      })
-      .eq('id', customer.id)
-
-    if (updateError) console.error("Failed to update customer status:", updateError);
-
-    const { error: logError } = await supabase.from('audit_log').insert({
-      tenant_id: tenant.id,
-      customer_id: customer.id,
-      action: 'email_outreach_sent',
-      message_content: subject,
-      status: 'success'
-    })
-
-    if (logError) console.error("Failed to insert audit log:", logError);
+    // 4. Update DB
+    await supabase.from('customers').update({ 
+      status: 'contacted', 
+      last_contacted_at: new Date().toISOString() 
+    }).eq('id', customer.id);
 
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
 
   } catch (error) {
-    console.error("Outreach Agent Error:", error.message)
+    console.error("Outreach Error:", error.message);
     return new Response(JSON.stringify({ error: error.message }), { 
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400 
