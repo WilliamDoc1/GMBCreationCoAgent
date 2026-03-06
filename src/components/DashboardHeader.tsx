@@ -21,33 +21,33 @@ const DashboardHeader = () => {
 
   return (
     <header className="bg-white border-b sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-40 flex items-center justify-between">
-        <div className="flex items-center gap-10 h-full">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+        <div className="flex items-center gap-8 h-full">
           <Link to={session ? "/dashboard" : "/"} className="flex items-center h-full">
             <img 
               src="/logo.png" 
               alt="GMB Creation Co." 
-              className="h-36 w-auto object-contain block"
+              className="h-12 w-auto object-contain block"
             />
           </Link>
         </div>
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-4">
           <Link to="/documentation">
-            <Button variant="ghost" size="lg" className="flex items-center gap-2 text-slate-600 hover:bg-slate-50 h-12 px-5">
-              <HelpCircle size={24} />
-              <span className="hidden sm:inline font-bold text-lg">Help Center</span>
+            <Button variant="ghost" size="sm" className="flex items-center gap-2 text-slate-600 hover:bg-slate-50 h-10 px-4">
+              <HelpCircle size={18} />
+              <span className="hidden sm:inline font-semibold text-sm">Help Center</span>
             </Button>
           </Link>
           
           {session ? (
-            <Button variant="ghost" size="lg" onClick={handleLogout} className="flex items-center gap-2 text-slate-600 hover:bg-slate-50 h-12 px-5">
-              <LogOut size={24} />
-              <span className="hidden sm:inline font-bold text-lg">Logout</span>
+            <Button variant="ghost" size="sm" onClick={handleLogout} className="flex items-center gap-2 text-slate-600 hover:bg-slate-50 h-10 px-4">
+              <LogOut size={18} />
+              <span className="hidden sm:inline font-semibold text-sm">Logout</span>
             </Button>
           ) : (
             <Link to="/login">
-              <Button variant="default" size="lg" className="flex items-center gap-2 px-12 h-16 text-xl shadow-lg font-bold">
-                <LogIn size={24} />
+              <Button variant="default" size="sm" className="flex items-center gap-2 px-8 h-10 text-sm shadow-md font-bold">
+                <LogIn size={18} />
                 Login
               </Button>
             </Link>
