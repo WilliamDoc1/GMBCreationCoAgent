@@ -5,11 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { MapPin, Plus, Trash2, Building, Link as LinkIcon, Loader2 } from "lucide-react";
+import { MapPin, Plus, Trash2, Building, Link as LinkIcon, Loader2, AlertCircle } from "lucide-react";
 import { supabase } from '@/lib/supabase';
 import { useTenant } from '@/hooks/use-tenant';
 import { showSuccess, showError } from '@/utils/toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useNavigate } from 'react-router-dom';
 
 interface Branch {
   id: string;
@@ -18,8 +19,15 @@ interface Branch {
   gmb_review_link: string;
 }
 
+const PLAN_LIMITS: Record<string, number> = {
+  'starter': 1,
+  'growth': 5,
+  'agency': 100
+};
+
 const BranchManager = () => {
   const { tenant } = useTenant();
+  const navigate = useNavigate();
   const [branches, setBranches] = useState<Branch[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -42,8 +50,18 @@ const BranchManager = () => {
     fetchBranches();
   }, [tenant]);
 
+  const currentPlan = (tenant as any)?.plan_type || 'starter';
+  const limit = PLAN_LIMITS[currentPlan] || 1;
+  const isAtLimit = branches.length >= limit;
+
   const handleAddBranch = async () => {
     if (!tenant || !newBranch.name) return;
+    
+    if (isAtLimit) {
+      showError(`You have reached the limit of ${limit} location(s) for the ${currentPlan} plan.`);
+      return;
+    }
+
     setSubmitting(true);
     try {
       const { error } = await supabase
@@ -84,48 +102,79 @@ const BranchManager = () => {
           <h2 className="text-xl font-bold text-slate-900">Location Management</h2>
           <p className="text-sm text-slate-500">Manage multiple branches for {tenant?.business_name}</p>
         </div>
-        <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-          <DialogTrigger asChild>
-            <Button className="flex items-center gap-2">
-              <Plus size={16} /> Add Branch
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Add New Location</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label>Branch Name</Label>
-                <Input 
-                  placeholder="e.g. Sandton Branch" 
-                  value={newBranch.name}
-                  onChange={(e) => setNewBranch({...newBranch, name: e.target.value})}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Address</Label>
-                <Input 
-                  placeholder="123 Main St, Sandton" 
-                  value={newBranch.address}
-                  onChange={(e) => setNewBranch({...newBranch, address: e.target.value})}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Branch GMB Review Link</Label>
-                <Input 
-                  placeholder="https://g.page/r/..." 
-                  value={newBranch.link}
-                  onChange={(e) => setNewBranch({...newBranch, link: e.target.value})}
-                />
-              </div>
-              <Button className="w-full" onClick={handleAddBranch} disabled={submitting}>
-                {submitting ? <Loader2 className="animate-spin mr-2" size={16} /> : null}
-                Create Branch
+        <div className="flex items-center gap-4">
+          <div className="text-right hidden sm:block">
+            <p className="text-[10px] font-bold text-slate-400 uppercase">Current Usage</p>
+            <p className="text-xs font-medium">{branches.length} / {limit} Locations</p>
+          </div>
+          <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+            <DialogTrigger asChild>
+              <Button className="flex items-center gap-2">
+                <Plus size={16} /> Add Branch
               </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Add New Location</DialogTitle>
+              </DialogHeader>
+              
+              {isAtLimit ? (
+                <div className="py-6 space-y-4 text-center">
+                  <div className="flex justify-center">
+                    <AlertCircle size={48} className="text-amber-500" />
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="font-bold text-lg">Plan Limit Reached</h3>
+                    <p className="text-sm text-slate-500">
+                      Your current <strong>{currentPlan}</strong> plan only supports {limit} location(s). 
+                      Upgrade to add more branches.
+                    </p>
+                  </div>
+                  <Button 
+                    className="w-full bg-blue-600 hover:bg-blue-700"
+                    onClick={() => {
+                      setIsAddOpen(false);
+                      navigate('/dashboard?tab=subscription');
+                    }}
+                  >
+                    View Upgrade Options
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label>Branch Name</Label>
+                    <Input 
+                      placeholder="e.g. Sandton Branch" 
+                      value={newBranch.name}
+                      onChange={(e) => setNewBranch({...newBranch, name: e.target.value})}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Address</Label>
+                    <Input 
+                      placeholder="123 Main St, Sandton" 
+                      value={newBranch.address}
+                      onChange={(e) => setNewBranch({...newBranch, address: e.target.value})}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Branch GMB Review Link</Label>
+                    <Input 
+                      placeholder="https://g.page/r/..." 
+                      value={newBranch.link}
+                      onChange={(e) => setNewBranch({...newBranch, link: e.target.value})}
+                    />
+                  </div>
+                  <Button className="w-full" onClick={handleAddBranch} disabled={submitting}>
+                    {submitting ? <Loader2 className="animate-spin mr-2" size={16} /> : null}
+                    Create Branch
+                  </Button>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

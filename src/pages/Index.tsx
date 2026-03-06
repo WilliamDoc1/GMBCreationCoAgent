@@ -5,7 +5,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
 import { useTenant } from '@/hooks/use-tenant';
-import { Loader2, LayoutDashboard, Settings, Users, ShieldCheck, History, TrendingUp, Calendar, Zap, MapPin } from "lucide-react";
+import { Loader2, LayoutDashboard, Settings, Users, ShieldCheck, History, TrendingUp, Calendar, Zap, MapPin, CreditCard } from "lucide-react";
 import CustomerTable from '@/components/CustomerTable';
 import DashboardHeader from '@/components/DashboardHeader';
 import CustomerActionBar from '@/components/CustomerActionBar';
@@ -22,6 +22,7 @@ import SEOInsights from '@/components/SEOInsights';
 import PostQueue from '@/components/PostQueue';
 import AdminDiagnostics from '@/components/AdminDiagnostics';
 import BranchManager from '@/components/BranchManager';
+import SubscriptionManager from '@/components/SubscriptionManager';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Footer from "@/components/Footer";
 import { showSuccess, showError } from '@/utils/toast';
@@ -149,6 +150,9 @@ const Index = () => {
               <TabsTrigger value="outreach" className="flex items-center gap-2">
                 <Zap size={16} /> Outreach Settings
               </TabsTrigger>
+              <TabsTrigger value="subscription" className="flex items-center gap-2 text-blue-600">
+                <CreditCard size={16} /> Subscription
+              </TabsTrigger>
               {userRole === 'admin' && (
                 <>
                   <TabsTrigger value="seo" className="flex items-center gap-2">
@@ -188,6 +192,10 @@ const Index = () => {
 
           <TabsContent value="locations">
             <BranchManager />
+          </TabsContent>
+
+          <TabsContent value="subscription">
+            <SubscriptionManager />
           </TabsContent>
 
           <TabsContent value="posts">
