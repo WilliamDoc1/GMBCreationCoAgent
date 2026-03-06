@@ -2,13 +2,18 @@
 
 /**
  * Yoco Payment Utility
- * Handles the integration with the Yoco SDK for South African payments.
+ * This handles the popup checkout flow for South African ZAR payments.
  */
 
-declare const YocoSDK: any;
+declare global {
+  interface Window {
+    YocoSDK: any;
+  }
+}
 
-// Placeholder Test Key - User should replace this in Supabase secrets or env
-const YOCO_PUBLIC_KEY = "pk_test_ed3c54a69u4p9p17z4a7";
+// INSERT YOUR KEYS HERE
+// Use 'pk_test_...' for development and 'pk_live_...' for production
+const YOCO_PUBLIC_KEY = "pk_test_ed3c54a69u4p9p17z4a7"; 
 
 export interface YocoPaymentResult {
   id: string;
@@ -18,7 +23,12 @@ export interface YocoPaymentResult {
 
 export const initializeYocoPayment = (amountInCents: number, description: string): Promise<YocoPaymentResult> => {
   return new Promise((resolve, reject) => {
-    const yoco = new YocoSDK({
+    if (!window.YocoSDK) {
+      reject(new Error("Yoco SDK not loaded. Please check your internet connection."));
+      return;
+    }
+
+    const yoco = new window.YocoSDK({
       publicKey: YOCO_PUBLIC_KEY,
     });
 
@@ -29,8 +39,11 @@ export const initializeYocoPayment = (amountInCents: number, description: string
       description: description,
       callback: (result: any) => {
         if (result.error) {
-          reject(result.error);
+          // Handle specific Yoco errors
+          const errorMessage = result.error.message || "Payment failed";
+          reject(new Error(errorMessage));
         } else {
+          // Success! Returns a charge token/id
           resolve(result);
         }
       },
