@@ -11,7 +11,7 @@ import { useTenant } from '@/hooks/use-tenant';
 import { useAuth } from '@/components/AuthProvider';
 import { supabase } from '@/lib/supabase';
 import { showSuccess, showError } from '@/utils/toast';
-import { Building2, Link as LinkIcon, Loader2, BookOpen, RotateCcw, Mail, Globe, CheckCircle2, AlertCircle, Key, MapPin, Search, Info, ShieldCheck } from 'lucide-react';
+import { Building2, Link as LinkIcon, Loader2, BookOpen, RotateCcw, Mail, Globe, CheckCircle2, AlertCircle, Key, MapPin, Search, Info, ShieldCheck, ShieldAlert } from 'lucide-react';
 
 const DRAFT_KEY = 'tenant_settings_draft';
 
@@ -151,15 +151,15 @@ const TenantSettings = () => {
         <CardContent className="space-y-6">
           {!isGmbConnected ? (
             <div className="space-y-6">
-              <div className="p-4 bg-blue-50 rounded-xl border border-blue-100 space-y-3">
+              <div className="p-5 bg-blue-50 rounded-xl border border-blue-200 space-y-3 shadow-sm">
                 <div className="flex items-center gap-2 text-blue-800 font-bold text-sm">
-                  <ShieldCheck size={18} />
-                  Prominent Disclosure: Data Access
+                  <ShieldAlert size={18} className="text-blue-600" />
+                  Prominent Disclosure: Google Data Access
                 </div>
-                <p className="text-xs text-blue-700 leading-relaxed">
-                  By connecting your Google account, GMB Creation Co will access your <strong>Business Profile locations, post history, and email address</strong>. 
-                  We use this data exclusively to schedule local posts and send review requests on your behalf. 
-                  We do not store Google API content for more than 30 days. You can revoke access at any time in your Google Security Settings.
+                <p className="text-xs text-blue-800 leading-relaxed">
+                  To enable automation, GMB Creation Co needs to access your <strong>Google Business Profile (GMB)</strong> to manage posts and reviews, and your <strong>Gmail</strong> to send review request emails to your customers. 
+                  <br /><br />
+                  We use this data exclusively for the automation features you enable. We do not store Google API content for more than 30 days, and we do not sell your data or use it for advertising. You can revoke this access at any time via your Google Security Settings.
                 </p>
               </div>
 
@@ -167,9 +167,9 @@ const TenantSettings = () => {
                 <Globe className="text-blue-200 mx-auto" size={48} />
                 <div className="space-y-1">
                   <p className="text-sm font-bold">Connect your Google Account</p>
-                  <p className="text-xs text-slate-500">Grant access to manage your business profile and posts.</p>
+                  <p className="text-xs text-slate-500">Grant access to manage your business profile and automate outreach.</p>
                 </div>
-                <Button onClick={handleConnectGMB} disabled={connecting} className="bg-blue-600 hover:bg-blue-700">
+                <Button onClick={handleConnectGMB} disabled={connecting} className="bg-blue-600 hover:bg-blue-700 h-12 px-8 text-base font-bold shadow-lg shadow-blue-200">
                   {connecting ? <Loader2 className="animate-spin mr-2" size={16} /> : null}
                   Connect Google Business
                 </Button>
