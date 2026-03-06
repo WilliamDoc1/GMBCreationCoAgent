@@ -19,14 +19,14 @@ const Landing = () => {
       <section className="py-24 px-4 max-w-7xl mx-auto text-center">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-blue-600 text-xs font-bold mb-8 uppercase tracking-wider">
           <Zap size={14} />
-          Streamlined Local SEO for South African Businesses
+          Professional Local SEO Management for South African Businesses
         </div>
         <h1 className="text-5xl md:text-7xl font-extrabold text-slate-900 mb-8 tracking-tight">
           Dominate Local Search <br />
           <span className="text-primary">With Efficiency</span>
         </h1>
         <p className="text-xl text-slate-600 mb-12 max-w-3xl mx-auto leading-relaxed">
-          We enable you to efficiently collect reviews and schedule SEO optimised posts to your Google Business Profile, keeping your business at the top of local search results.
+          We enable you to efficiently manage reviews and schedule SEO-optimised posts to your Google Business Profile, keeping your business at the top of local search results.
         </p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           {session ? (
@@ -52,15 +52,15 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Google Integration Section - CRITICAL FOR VERIFICATION */}
+      {/* Google Integration Section - REFRAMED FOR VERIFICATION */}
       <section className="py-16 bg-blue-50/50 border-y border-blue-100">
         <div className="max-w-5xl mx-auto px-4 text-center">
           <h2 className="text-2xl font-bold text-slate-900 mb-6 flex items-center justify-center gap-3">
             <Globe className="text-blue-600" />
-            Official Google Business Integration
+            Verified Google Business Integration
           </h2>
           <p className="text-slate-600 mb-8 max-w-2xl mx-auto">
-            GMB Creation Co integrates directly with the Google Business Profile API and Gmail API to provide a seamless automation experience.
+            GMB Creation Co integrates directly with the Google Business Profile API and Gmail API to provide a seamless management experience.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
             <div className="bg-white p-6 rounded-2xl border border-blue-100 shadow-sm">
@@ -68,14 +68,14 @@ const Landing = () => {
                 <div className="p-2 bg-blue-50 rounded-lg text-blue-600"><Globe size={20} /></div>
                 <h3 className="font-bold">Profile Management</h3>
               </div>
-              <p className="text-sm text-slate-500">We use the <code>business.manage</code> scope to automate your weekly posts and track review status directly on your profile.</p>
+              <p className="text-sm text-slate-500">We use the <code>business.manage</code> scope to help you schedule weekly posts and track review status directly on your profile.</p>
             </div>
             <div className="bg-white p-6 rounded-2xl border border-blue-100 shadow-sm">
               <div className="flex items-center gap-3 mb-3">
                 <div className="p-2 bg-blue-50 rounded-lg text-blue-600"><Mail size={20} /></div>
                 <h3 className="font-bold">Smart Outreach</h3>
               </div>
-              <p className="text-sm text-slate-500">We use the <code>gmail.send</code> scope to deliver review requests from your own business email, ensuring high trust and conversion.</p>
+              <p className="text-sm text-slate-500">We use the <code>gmail.send</code> scope to facilitate review requests from your own business email, ensuring high trust and conversion.</p>
             </div>
           </div>
         </div>
@@ -96,7 +96,7 @@ const Landing = () => {
               </div>
               <h3 className="text-2xl font-bold mb-4">Smart Outreach</h3>
               <p className="text-slate-600 leading-relaxed">
-                Easily send personalised review requests via email or SMS. Our platform helps you manage follow-ups to ensure you get the feedback you deserve.
+                Easily facilitate personalised review requests via email or SMS. Our platform helps you manage follow-ups to ensure you get the feedback you deserve.
               </p>
             </div>
             
@@ -106,7 +106,7 @@ const Landing = () => {
               </div>
               <h3 className="text-2xl font-bold mb-4">Weekly Scheduling</h3>
               <p className="text-slate-600 leading-relaxed">
-                Keep your profile active with AI-assisted posts that reference local landmarks and neighbourhoods, boosting your relevance in local searches.
+                Keep your profile active with scheduled posts that reference local landmarks and neighbourhoods, boosting your relevance in local searches.
               </p>
             </div>
             

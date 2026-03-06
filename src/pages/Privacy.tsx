@@ -49,7 +49,7 @@ const Privacy = () => {
               <ul className="space-y-2 text-sm">
                 <li className="flex items-start gap-2">
                   <div className="mt-1 text-green-600"><ShieldCheck size={14} /></div>
-                  <span><strong>Purpose Specification:</strong> We only collect data for the specific purpose of automating Google Business Profile management and customer outreach.</span>
+                  <span><strong>Purpose Specification:</strong> We only collect data for the specific purpose of facilitating Google Business Profile management and customer outreach.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <div className="mt-1 text-green-600"><ShieldCheck size={14} /></div>
@@ -72,11 +72,11 @@ const Privacy = () => {
               <ul className="space-y-3 text-sm">
                 <li className="p-4 bg-slate-50 rounded-lg border">
                   <strong className="text-slate-900">https://www.googleapis.com/auth/business.manage (Sensitive)</strong>
-                  <p className="text-slate-600 mt-1">We use this to retrieve your Business Location ID, manage local posts, and track review status. This is essential for the core functionality of automating your Google Business Profile (GBP) engagement.</p>
+                  <p className="text-slate-600 mt-1">We use this to retrieve your Business Location ID, help you schedule local posts, and track review status. This is essential for the core functionality of managing your Google Business Profile (GBP) engagement.</p>
                 </li>
                 <li className="p-4 bg-slate-50 rounded-lg border">
                   <strong className="text-slate-900">https://www.googleapis.com/auth/gmail.send (Restricted)</strong>
-                  <p className="text-slate-600 mt-1">We use this exclusively to send review request emails to your customers from your authorized business email. We do not read, store, or analyze your personal emails.</p>
+                  <p className="text-slate-600 mt-1">We use this exclusively to facilitate review request emails to your customers from your authorized business email. We do not read, store, or analyze your personal emails.</p>
                 </li>
                 <li className="p-4 bg-slate-50 rounded-lg border">
                   <strong className="text-slate-900">https://www.googleapis.com/auth/userinfo.email</strong>

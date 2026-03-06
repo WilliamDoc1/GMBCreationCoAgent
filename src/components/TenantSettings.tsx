@@ -139,7 +139,7 @@ const TenantSettings = () => {
                 <Globe className="text-blue-600" size={20} />
                 Google Business Profile Integration
               </CardTitle>
-              <CardDescription>Link your account to automate posts and review tracking.</CardDescription>
+              <CardDescription>Link your account to manage posts and review tracking.</CardDescription>
             </div>
             {isGmbConnected ? (
               <Badge className="bg-green-50 text-green-700 border-green-100">CONNECTED</Badge>
@@ -157,9 +157,9 @@ const TenantSettings = () => {
                   Prominent Disclosure: Google Data Access
                 </div>
                 <p className="text-xs text-blue-800 leading-relaxed">
-                  To enable automation, GMB Creation Co needs to access your <strong>Google Business Profile (GMB)</strong> to manage posts and reviews, and your <strong>Gmail</strong> to send review request emails to your customers. 
+                  To enable management features, GMB Creation Co needs to access your <strong>Google Business Profile (GMB)</strong> to help you schedule posts and track reviews, and your <strong>Gmail</strong> to facilitate review request emails to your customers. 
                   <br /><br />
-                  We use this data exclusively for the automation features you enable. We do not store Google API content for more than 30 days, and we do not sell your data or use it for advertising. You can revoke this access at any time via your Google Security Settings.
+                  We use this data exclusively for the management features you initiate. We do not store Google API content for more than 30 days, and we do not sell your data or use it for advertising. You can revoke this access at any time via your Google Security Settings.
                 </p>
               </div>
 
@@ -167,7 +167,7 @@ const TenantSettings = () => {
                 <Globe className="text-blue-200 mx-auto" size={48} />
                 <div className="space-y-1">
                   <p className="text-sm font-bold">Connect your Google Account</p>
-                  <p className="text-xs text-slate-500">Grant access to manage your business profile and automate outreach.</p>
+                  <p className="text-xs text-slate-500">Grant access to manage your business profile and facilitate outreach.</p>
                 </div>
                 <Button onClick={handleConnectGMB} disabled={connecting} className="bg-blue-600 hover:bg-blue-700 h-12 px-8 text-base font-bold shadow-lg shadow-blue-200">
                   {connecting ? <Loader2 className="animate-spin mr-2" size={16} /> : null}
@@ -182,7 +182,7 @@ const TenantSettings = () => {
                   <div className="p-2 bg-blue-50 rounded-lg"><CheckCircle2 className="text-blue-600" size={20} /></div>
                   <div>
                     <p className="text-sm font-bold">Google Account Linked</p>
-                    <p className="text-xs text-slate-500">Your account is ready for automation.</p>
+                    <p className="text-xs text-slate-500">Your account is ready for management.</p>
                   </div>
                 </div>
                 <Button variant="outline" size="sm" onClick={handleConnectGMB}>Reconnect</Button>
