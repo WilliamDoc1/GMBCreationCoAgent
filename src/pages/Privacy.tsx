@@ -4,7 +4,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import DashboardHeader from '@/components/DashboardHeader';
 import Footer from "@/components/Footer";
-import { ShieldCheck, Lock, Eye, Database, ShieldAlert, Globe, Trash2, ArrowLeft, Key, RefreshCw, Info, UserCheck, Zap } from 'lucide-react';
+import { ShieldCheck, Lock, Eye, Database, ShieldAlert, Globe, Trash2, ArrowLeft, Key, RefreshCw, Info, UserCheck, Zap, Scale } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 
 const Privacy = () => {
@@ -39,9 +39,32 @@ const Privacy = () => {
               </p>
             </section>
 
+            <section className="bg-green-50 p-6 rounded-xl border border-green-100">
+              <h2 className="text-xl font-semibold text-slate-900 mb-3 flex items-center gap-2">
+                <Scale size={20} className="text-green-600" /> 2. POPIA Compliance (South Africa)
+              </h2>
+              <p className="text-sm mb-4">
+                As a South African entity, GMB Creation Co is committed to the <strong>Protection of Personal Information Act (POPIA)</strong>. We process personal information lawfully and in a reasonable manner that does not infringe on the privacy of our users.
+              </p>
+              <ul className="space-y-2 text-sm">
+                <li className="flex items-start gap-2">
+                  <div className="mt-1 text-green-600"><ShieldCheck size={14} /></div>
+                  <span><strong>Purpose Specification:</strong> We only collect data for the specific purpose of automating Google Business Profile management and customer outreach.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <div className="mt-1 text-green-600"><ShieldCheck size={14} /></div>
+                  <span><strong>Processing Limitation:</strong> Data processing is limited to what is necessary for the functionality of the platform.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <div className="mt-1 text-green-600"><ShieldCheck size={14} /></div>
+                  <span><strong>Information Officer:</strong> Our designated Information Officer ensures ongoing compliance with POPIA regulations.</span>
+                </li>
+              </ul>
+            </section>
+
             <section>
               <h2 className="text-xl font-semibold text-slate-900 mb-3 flex items-center gap-2">
-                <Key size={20} className="text-primary" /> 2. Google OAuth Scopes & Data Usage
+                <Key size={20} className="text-primary" /> 3. Google OAuth Scopes & Data Usage
               </h2>
               <p className="mb-4">
                 GMB Creation Co’s use and transfer to any other app of information received from Google APIs will adhere to the <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" className="text-blue-600 underline font-medium">Google API Services User Data Policy</a>, including the Limited Use requirements. We request the following scopes:
@@ -64,7 +87,7 @@ const Privacy = () => {
 
             <section className="bg-blue-50 p-6 rounded-xl border border-blue-100">
               <h2 className="text-xl font-semibold text-slate-900 mb-3 flex items-center gap-2">
-                <ShieldAlert size={20} className="text-blue-600" /> 3. Limited Use Disclosure
+                <ShieldAlert size={20} className="text-blue-600" /> 4. Limited Use Disclosure
               </h2>
               <p className="text-sm mb-4 font-medium">Our app strictly complies with Google’s Limited Use requirements:</p>
               <ul className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
@@ -89,7 +112,7 @@ const Privacy = () => {
 
             <section>
               <h2 className="text-xl font-semibold text-slate-900 mb-3 flex items-center gap-2">
-                <Database size={20} className="text-blue-600" /> 4. Data Storage & Hosting
+                <Database size={20} className="text-blue-600" /> 5. Data Storage & Hosting
               </h2>
               <ul className="space-y-3 text-sm">
                 <li><strong>Isolation:</strong> All user data is stored in encrypted Supabase databases and protected by Row Level Security (RLS) to ensure complete tenant isolation.</li>
@@ -100,7 +123,7 @@ const Privacy = () => {
 
             <section>
               <h2 className="text-xl font-semibold text-slate-900 mb-3 flex items-center gap-2">
-                <Globe size={20} className="text-amber-500" /> 5. Sub-processors
+                <Globe size={20} className="text-amber-500" /> 6. Sub-processors
               </h2>
               <p className="text-sm mb-3">We share specific data with the following third parties to provide our services:</p>
               <div className="grid grid-cols-1 gap-2 text-sm">
@@ -112,7 +135,7 @@ const Privacy = () => {
 
             <section className="pt-8 border-t">
               <h2 className="text-xl font-semibold text-slate-900 mb-3 flex items-center gap-2">
-                <UserCheck size={20} className="text-green-600" /> 6. User Controls & Deletion
+                <UserCheck size={20} className="text-green-600" /> 7. User Controls & Deletion
               </h2>
               <ul className="space-y-4 text-sm">
                 <li>
