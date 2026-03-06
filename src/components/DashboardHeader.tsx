@@ -5,7 +5,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "./AuthProvider";
 import { Button } from "./ui/button";
 import { LogOut, LayoutDashboard } from "lucide-react";
-import ThemeToggle from "./ThemeToggle";
 
 const DashboardHeader = () => {
   const { session, signOut } = useAuth();
@@ -30,7 +29,7 @@ const DashboardHeader = () => {
         </nav>
 
         <div className="flex items-center gap-4">
-          <ThemeToggle />
+          {/* ThemeToggle removed to enforce dark mode only */}
           
           {session ? (
             <div className="flex items-center gap-3">
