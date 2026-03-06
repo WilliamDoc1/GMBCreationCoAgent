@@ -31,18 +31,9 @@ const ensureYocoLoaded = (): Promise<void> => {
       return;
     }
 
-    // 2. If not, ensure the script tag exists
-    const existingScript = document.querySelector('script[src*="yoco.js"]');
-    if (!existingScript) {
-      const script = document.createElement('script');
-      script.src = "https://js.yoco.com/sdk/v1/yoco.js";
-      script.async = true;
-      document.head.appendChild(script);
-    }
-
-    // 3. Poll for the object (check every 100ms)
+    // 2. Poll for the object (check every 200ms)
     let attempts = 0;
-    const maxAttempts = 50; // 5 seconds total
+    const maxAttempts = 25; // 5 seconds total
     
     const interval = setInterval(() => {
       attempts++;
@@ -51,9 +42,9 @@ const ensureYocoLoaded = (): Promise<void> => {
         resolve();
       } else if (attempts >= maxAttempts) {
         clearInterval(interval);
-        reject(new Error("Yoco SDK failed to load after 5 seconds. Please check your connection or disable ad-blockers."));
+        reject(new Error("Yoco SDK failed to load. This is usually caused by an Ad-Blocker or strict browser privacy settings. Please disable them for this site and refresh."));
       }
-    }, 100);
+    }, 200);
   });
 };
 
@@ -63,23 +54,27 @@ export const initializeYocoPayment = async (amountInCents: number, description: 
     await ensureYocoLoaded();
 
     return new Promise((resolve, reject) => {
-      const yoco = new window.YocoSDK({
-        publicKey: YOCO_PUBLIC_KEY,
-      });
+      try {
+        const yoco = new window.YocoSDK({
+          publicKey: YOCO_PUBLIC_KEY,
+        });
 
-      yoco.showPopup({
-        amountInCents: amountInCents,
-        currency: 'ZAR',
-        name: 'GMB Creation Co.',
-        description: description,
-        callback: (result: any) => {
-          if (result.error) {
-            reject(new Error(result.error.message || "Payment failed"));
-          } else {
-            resolve(result);
-          }
-        },
-      });
+        yoco.showPopup({
+          amountInCents: amountInCents,
+          currency: 'ZAR',
+          name: 'GMB Creation Co.',
+          description: description,
+          callback: (result: any) => {
+            if (result.error) {
+              reject(new Error(result.error.message || "Payment failed"));
+            } else {
+              resolve(result);
+            }
+          },
+        });
+      } catch (e: any) {
+        reject(new Error("Yoco initialization error: " + e.message));
+      }
     });
   } catch (err: any) {
     throw new Error(err.message || "Could not initialize payment");
