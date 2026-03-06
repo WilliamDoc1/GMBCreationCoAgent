@@ -19,6 +19,15 @@ export default {
     },
     extend: {
       colors: {
+        obsidian: "#0A0A0B",
+        sage: {
+          DEFAULT: "#4A5D4E",
+          light: "#6B8270",
+        },
+        gold: {
+          DEFAULT: "#C5A059",
+          light: "#D4B475",
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -52,16 +61,6 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        sidebar: {
-          DEFAULT: "hsl(var(--sidebar-background))",
-          foreground: "hsl(var(--sidebar-foreground))",
-          primary: "hsl(var(--sidebar-primary))",
-          "primary-foreground": "hsl(var(--sidebar-primary-foreground))",
-          accent: "hsl(var(--sidebar-accent))",
-          "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
-          border: "hsl(var(--sidebar-border))",
-          ring: "hsl(var(--sidebar-ring))",
-        },
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -69,26 +68,19 @@ export default {
         sm: "calc(var(--radius) - 4px)",
       },
       keyframes: {
-        "accordion-down": {
-          from: {
-            height: "0",
-          },
-          to: {
-            height: "var(--radix-accordion-content-height)",
+        "shimmer": {
+          "100%": {
+            "transform": "translateX(100%)",
           },
         },
-        "accordion-up": {
-          from: {
-            height: "var(--radix-accordion-content-height)",
-          },
-          to: {
-            height: "0",
-          },
-        },
+        "orbit": {
+          "0%": { transform: "rotate(0deg) translateY(-50px) rotate(0deg)" },
+          "100%": { transform: "rotate(360deg) translateY(-50px) rotate(-360deg)" }
+        }
       },
       animation: {
-        "accordion-down": "accordion-down 0.2s ease-out",
-        "accordion-up": "accordion-up 0.2s ease-out",
+        "shimmer": "shimmer 2s infinite",
+        "orbit": "orbit 20s linear infinite",
       },
     },
   },
