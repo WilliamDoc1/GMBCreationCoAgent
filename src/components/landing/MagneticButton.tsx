@@ -19,9 +19,21 @@ const MagneticButton = ({ children, className, variant = 'primary', onClick }: M
     if (!ref.current) return;
     const { clientX, clientY } = e;
     const { left, top, width, height } = ref.current.getBoundingClientRect();
-    const x = clientX - (left + width / 2);
-    const y = clientY - (top + height / 2);
-    setPosition({ x: x * 0.3, y: y * 0.3 });
+    
+    const centerX = left + width / 2;
+    const centerY = top + height / 2;
+    
+    const distanceX = clientX - centerX;
+    const distanceY = clientY - centerY;
+    
+    // 50px pull radius
+    const distance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
+    
+    if (distance < 150) {
+      setPosition({ x: distanceX * 0.4, y: distanceY * 0.4 });
+    } else {
+      setPosition({ x: 0, y: 0 });
+    }
   };
 
   const handleMouseLeave = () => {
@@ -39,14 +51,14 @@ const MagneticButton = ({ children, className, variant = 'primary', onClick }: M
       transition={{ type: "spring", stiffness: 150, damping: 15, mass: 0.1 }}
       onClick={onClick}
       className={cn(
-        "relative h-16 px-10 rounded-full font-bold text-lg transition-all duration-300 overflow-hidden group",
+        "relative h-16 px-12 rounded-full font-bold text-lg transition-all duration-300 overflow-hidden group",
         variant === 'primary' 
-          ? "bg-gradient-to-r from-gold to-sage text-obsidian shadow-lg shadow-gold/20" 
+          ? "bg-gradient-to-r from-gold to-sage text-obsidian shadow-xl shadow-gold/10" 
           : "glass-morphism text-white hover:bg-white/10",
         className
       )}
     >
-      <span className="relative z-10 flex items-center justify-center gap-2">
+      <span className="relative z-10 flex items-center justify-center gap-3">
         {children}
       </span>
       {variant === 'primary' && (

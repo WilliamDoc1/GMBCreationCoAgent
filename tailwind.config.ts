@@ -19,10 +19,13 @@ export default {
     },
     extend: {
       colors: {
-        obsidian: "#0A0A0B",
+        obsidian: "#050505",
         sage: {
           DEFAULT: "#4A5D4E",
           light: "#6B8270",
+        },
+        amber: {
+          glow: "#D4AF37",
         },
         gold: {
           DEFAULT: "#C5A059",
@@ -79,7 +82,7 @@ export default {
         }
       },
       animation: {
-        "shimmer": "shimmer 2s infinite",
+        "shimmer": "shimmer 3s infinite",
         "orbit": "orbit 20s linear infinite",
       },
     },

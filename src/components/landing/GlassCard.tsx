@@ -8,9 +8,10 @@ interface GlassCardProps {
   children: React.ReactNode;
   className?: string;
   delay?: number;
+  glowColor?: 'sage' | 'amber';
 }
 
-const GlassCard = ({ children, className, delay = 0 }: GlassCardProps) => {
+const GlassCard = ({ children, className, delay = 0, glowColor = 'sage' }: GlassCardProps) => {
   const ref = useRef<HTMLDivElement>(null);
 
   const x = useMotionValue(0);
@@ -19,8 +20,8 @@ const GlassCard = ({ children, className, delay = 0 }: GlassCardProps) => {
   const mouseXSpring = useSpring(x);
   const mouseYSpring = useSpring(y);
 
-  const rotateX = useTransform(mouseYSpring, [-0.5, 0.5], ["10deg", "-10deg"]);
-  const rotateY = useTransform(mouseXSpring, [-0.5, 0.5], ["-10deg", "10deg"]);
+  const rotateX = useTransform(mouseYSpring, [-0.5, 0.5], ["12deg", "-12deg"]);
+  const rotateY = useTransform(mouseXSpring, [-0.5, 0.5], ["-12deg", "12deg"]);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!ref.current) return;
@@ -45,10 +46,15 @@ const GlassCard = ({ children, className, delay = 0 }: GlassCardProps) => {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      transition={{ duration: 0.8, delay }}
+      transition={{ 
+        type: "spring", 
+        stiffness: 100, 
+        damping: 20, 
+        delay 
+      }}
       style={{
         rotateX,
         rotateY,
@@ -58,11 +64,12 @@ const GlassCard = ({ children, className, delay = 0 }: GlassCardProps) => {
       onMouseLeave={handleMouseLeave}
       ref={ref}
       className={cn(
-        "glass-morphism rounded-[2rem] p-8 transition-colors duration-500 hover:border-gold/30 group",
+        "glass-morphism rounded-[2.5rem] p-10 transition-all duration-700",
+        glowColor === 'sage' ? "hover:diffused-glow-sage" : "hover:diffused-glow-amber",
         className
       )}
     >
-      <div style={{ transform: "translateZ(50px)" }}>
+      <div style={{ transform: "translateZ(60px)" }}>
         {children}
       </div>
     </motion.div>
