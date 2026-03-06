@@ -16,9 +16,11 @@ const DashboardHeader = () => {
     <header className="fixed top-0 left-0 right-0 z-50 border-b bg-background/80 backdrop-blur-md">
       <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-3">
         <Link to="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-primary-foreground font-bold text-xl">
-            G
-          </div>
+          <img 
+            src="/logo.png" 
+            alt="GMB Creation Co Logo" 
+            className="w-8 h-8 object-contain"
+          />
           <span className="font-bold text-xl tracking-tight">
             GMB Creation Co
           </span>
