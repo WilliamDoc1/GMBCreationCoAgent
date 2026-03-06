@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Mail, Loader2, Trash2, Search, Filter } from "lucide-react";
+import { Mail, Loader2, Search } from "lucide-react";
 import { supabase } from '@/lib/supabase';
 import { showError, showSuccess } from '@/utils/toast';
 
@@ -47,14 +47,26 @@ const CustomerTable = ({ customers, onRefresh }: CustomerTableProps) => {
   const triggerOutreach = async (customer: Customer) => {
     setLoadingId(customer.id);
     try {
-      const { error } = await supabase.functions.invoke('send-outreach', {
+      const { data, error } = await supabase.functions.invoke('send-outreach', {
         body: { customerId: customer.id }
       });
-      if (error) throw error;
-      showSuccess(`Email outreach triggered for ${customer.full_name}`);
+
+      if (error) {
+        // Handle function invocation errors
+        const errorMsg = error.message || "Network error calling outreach function";
+        throw new Error(errorMsg);
+      }
+
+      if (data?.error) {
+        // Handle errors returned by the function logic
+        throw new Error(data.error);
+      }
+
+      showSuccess(`Email outreach sent to ${customer.full_name}`);
       onRefresh();
     } catch (error: any) {
-      showError("Failed to trigger outreach");
+      console.error("Outreach trigger failed:", error);
+      showError(error.message || "Failed to trigger outreach. Check Supabase logs.");
     } finally {
       setLoadingId(null);
     }
@@ -85,27 +97,36 @@ const CustomerTable = ({ customers, onRefresh }: CustomerTableProps) => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredCustomers.map((customer) => (
-              <TableRow key={customer.id}>
-                <TableCell className="font-medium">{customer.full_name}</TableCell>
-                <TableCell className="text-slate-500">{customer.email || 'N/A'}</TableCell>
-                <TableCell>
-                  <Badge variant="secondary" className={customer.status === 'reviewed' ? 'bg-green-100 text-green-800' : ''}>
-                    {customer.status}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-right">
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    disabled={loadingId === customer.id}
-                    onClick={() => triggerOutreach(customer)}
-                  >
-                    {loadingId === customer.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
-                  </Button>
+            {filteredCustomers.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={4} className="text-center py-8 text-slate-500">
+                  No customers found.
                 </TableCell>
               </TableRow>
-            ))}
+            ) : (
+              filteredCustomers.map((customer) => (
+                <TableRow key={customer.id}>
+                  <TableCell className="font-medium">{customer.full_name}</TableCell>
+                  <TableCell className="text-slate-500">{customer.email || 'N/A'}</TableCell>
+                  <TableCell>
+                    <Badge variant="secondary" className={customer.status === 'reviewed' ? 'bg-green-100 text-green-800' : ''}>
+                      {customer.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      disabled={loadingId === customer.id}
+                      onClick={() => triggerOutreach(customer)}
+                      title="Send Review Request"
+                    >
+                      {loadingId === customer.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </div>
