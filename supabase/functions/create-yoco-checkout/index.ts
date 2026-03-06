@@ -27,7 +27,8 @@ serve(async (req) => {
 
     console.log(`Requesting Yoco checkout for ${finalAmount} ZAR cents`);
 
-    const yocoResponse = await fetch('https://online.yoco.com/api/checkouts', {
+    // Corrected endpoint URL to include /v1/
+    const yocoResponse = await fetch('https://online.yoco.com/v1/checkouts', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${secretKey}`,
@@ -44,7 +45,6 @@ serve(async (req) => {
       }),
     });
 
-    // Safely handle the response text first to avoid JSON parse errors
     const responseText = await yocoResponse.text();
     let data;
     
