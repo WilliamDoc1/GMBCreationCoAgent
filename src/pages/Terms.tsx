@@ -4,7 +4,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import DashboardHeader from '@/components/DashboardHeader';
 import Footer from "@/components/Footer";
-import { FileText, Scale, AlertCircle, ShieldCheck, Ban, Gavel, ArrowLeft } from 'lucide-react';
+import { FileText, Scale, AlertCircle, ShieldCheck, Ban, Gavel, ArrowLeft, Clock, UserCheck } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 
 const Terms = () => {
@@ -32,56 +32,43 @@ const Terms = () => {
           <div className="space-y-10 text-slate-700 leading-relaxed">
             <section>
               <h2 className="text-xl font-semibold text-slate-900 mb-3 flex items-center gap-2">
-                <ShieldCheck size={20} className="text-green-600" /> 1. Data Integrity & Isolation
+                <Clock size={20} className="text-blue-500" /> 1. Data Retention Policy
               </h2>
               <p>
-                GMB Creation Co guarantees strict multi-tenant isolation. Any attempt to bypass security protocols, perform SQL injection, or access data belonging to another business is a material breach of these terms and will result in immediate account termination and potential legal action.
+                In compliance with Google Business Profile API policies, GMB Creation Co will <strong>not store content</strong> retrieved from the Google Business Profile API for more than <strong>30 calendar days</strong>. After this period, data is either refreshed or permanently purged from our active storage.
               </p>
             </section>
 
             <section>
               <h2 className="text-xl font-semibold text-slate-900 mb-3 flex items-center gap-2">
-                <AlertCircle size={20} className="text-amber-500" /> 2. Content Management Responsibility
+                <UserCheck size={20} className="text-green-600" /> 2. End-Client Authorization
               </h2>
               <p>
-                Our service provides tools for managing and scheduling content for Google Business Profiles. While we provide AI-assisted suggestions, <strong>you are solely responsible</strong> for reviewing and approving all content before it is published. GMB Creation Co is a management tool, not a publisher, and is not liable for any account suspensions, SEO penalties, or reputational damage resulting from user-approved content.
+                If you are using this platform to manage business profiles on behalf of third-party clients (e.g., as an agency), you represent and warrant that you have obtained <strong>explicit written authorization</strong> from the end-client to manage their profile, respond to reviews, and publish content on their behalf.
               </p>
             </section>
 
             <section>
               <h2 className="text-xl font-semibold text-slate-900 mb-3 flex items-center gap-2">
-                <Ban size={20} className="text-red-500" /> 3. Prohibited Activities
-              </h2>
-              <p>You agree not to use the service to:</p>
-              <ul className="list-disc ml-6 mt-2 space-y-1">
-                <li>Generate spam or deceptive content.</li>
-                <li>Harass customers through excessive outreach.</li>
-                <li>Reverse engineer the platform's logic or API.</li>
-                <li>Upload PII (Personally Identifiable Information) without customer consent.</li>
-              </ul>
-            </section>
-
-            <section>
-              <h2 className="text-xl font-semibold text-slate-900 mb-3 flex items-center gap-2">
-                <Scale size={20} className="text-blue-500" /> 4. Limitation of Liability
+                <ShieldCheck size={20} className="text-primary" /> 3. Google Brand Features
               </h2>
               <p>
-                To the maximum extent permitted by law, GMB Creation Co shall not be liable for any indirect, incidental, special, or consequential damages, including loss of profits, data, or business opportunities arising from the use of our management tools.
+                Users shall not alter, obscure, or delete any Google Brand Features, logos, or attributions provided through the Google Business Profile API. All Google data must be displayed with the appropriate attributions as required by Google's terms.
               </p>
             </section>
 
             <section>
               <h2 className="text-xl font-semibold text-slate-900 mb-3 flex items-center gap-2">
-                <Gavel size={20} className="text-slate-900" /> 5. Governing Law
+                <AlertCircle size={20} className="text-amber-500" /> 4. Security Notification
               </h2>
               <p>
-                These terms are governed by and construed in accordance with the laws of the <strong>Republic of South Africa</strong>. Any disputes arising from these terms shall be subject to the exclusive jurisdiction of the courts in South Africa.
+                You must notify GMB Creation Co immediately at <strong>william@gmbcreationco.com</strong> of any unauthorized use of your Google Account, API keys, or any other breach of security related to your integration with our platform.
               </p>
             </section>
 
             <section className="pt-8 border-t">
               <p className="text-sm text-slate-500">
-                For legal inquiries or to report a security vulnerability, please contact william@gmbcreationco.com
+                These terms are governed by the laws of the Republic of South Africa. Continued use of the service constitutes acceptance of these terms and Google's <a href="https://www.google.com/intl/en_za/help/terms_maps/" target="_blank" className="text-blue-600 underline">Additional Terms of Service</a>.
               </p>
             </section>
           </div>

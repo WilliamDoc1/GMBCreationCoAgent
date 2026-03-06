@@ -15,7 +15,8 @@ import {
   ArrowLeft,
   Key,
   CheckCircle2,
-  AlertTriangle
+  AlertTriangle,
+  Video
 } from "lucide-react";
 import DashboardHeader from '@/components/DashboardHeader';
 import Footer from "@/components/Footer";
@@ -45,26 +46,42 @@ const Documentation = () => {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-3">
             <BookOpen className="text-primary" />
-            Command Center: Operational Readiness
+            Google Verification Checklist
           </h1>
-          <p className="text-slate-500 mt-2">The system is 100% built. Follow this checklist to resolve Google API errors.</p>
+          <p className="text-slate-500 mt-2">Follow these steps to pass the Google Cloud OAuth verification process.</p>
         </div>
 
         <div className="space-y-10">
-          {/* Troubleshooting 403 */}
-          <section id="troubleshooting">
+          <section id="legal-compliance">
             <div className="flex items-center gap-2 mb-4">
-              <AlertTriangle className="text-amber-600" size={24} />
-              <h2 className="text-xl font-semibold">Fixing Google "403 Access Denied"</h2>
+              <ShieldCheck className="text-green-600" size={24} />
+              <h2 className="text-xl font-semibold">Legal & Transparency</h2>
             </div>
-            <Card className="border-amber-200 bg-amber-50/20 shadow-sm">
+            <Card className="border-green-100 bg-green-50/20 shadow-sm">
               <CardContent className="pt-6 space-y-4">
-                <p className="text-sm text-slate-700">If you see a 403 error after clicking "Connect", check these settings in your <a href="https://console.cloud.google.com/" target="_blank" className="text-blue-600 underline">Google Cloud Console</a>:</p>
-                <ul className="list-decimal ml-6 space-y-3 text-sm text-slate-600">
-                  <li><strong>OAuth Consent Screen:</strong> Ensure "User Type" is set to <strong>External</strong> (unless you only want users from your own company).</li>
-                  <li><strong>Publishing Status:</strong> If it says "Testing", you MUST add your email address under the <strong>"Test Users"</strong> section at the bottom of the page.</li>
-                  <li><strong>Enabled APIs:</strong> Go to "Library" and search for <strong>"Google Business Profile Management API"</strong>. Ensure it is enabled.</li>
-                  <li><strong>Scopes:</strong> Ensure you have added the <code>.../auth/business.manage</code> scope to your consent screen.</li>
+                <p className="text-sm text-slate-700">Your legal documents have been updated to meet Google's strict requirements:</p>
+                <ul className="list-disc ml-6 space-y-2 text-sm text-slate-600">
+                  <li><strong>Privacy Policy:</strong> Now explicitly lists all OAuth scopes and sub-processor purposes.</li>
+                  <li><strong>Terms of Service:</strong> Includes the mandatory 30-day data retention clause and end-client authorization mandate.</li>
+                  <li><strong>In-Product Disclosure:</strong> A prominent data access notice has been added to the Business Profile settings page.</li>
+                </ul>
+              </CardContent>
+            </Card>
+          </section>
+
+          <section id="demo-video">
+            <div className="flex items-center gap-2 mb-4">
+              <Video className="text-blue-600" size={24} />
+              <h2 className="text-xl font-semibold">Mandatory Demo Video</h2>
+            </div>
+            <Card className="border-blue-100 bg-blue-50/30 shadow-sm">
+              <CardContent className="pt-6 space-y-4">
+                <p className="text-sm text-slate-700">Google requires a video showing the end-to-end OAuth flow. Ensure your video includes:</p>
+                <ul className="list-decimal ml-6 space-y-2 text-sm text-slate-600">
+                  <li>The app's homepage and the navigation to the "Business Profile" settings.</li>
+                  <li>The "Prominent Disclosure" text appearing before the connect button.</li>
+                  <li>The full OAuth consent screen (ensure the URL bar is visible and shows your Client ID).</li>
+                  <li>The successful redirection back to the dashboard and the "Connected" status.</li>
                 </ul>
               </CardContent>
             </Card>
@@ -88,43 +105,8 @@ const Documentation = () => {
                     <Button variant="ghost" size="sm" onClick={() => copyToClipboard(`https://uqqzyqgypljxvmnguhky.supabase.co/functions/v1/gmb-callback`)}><Copy size={12} /></Button>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          </section>
-
-          <section id="pre-flight">
-            <div className="flex items-center gap-2 mb-4">
-              <CheckCircle2 className="text-green-600" size={24} />
-              <h2 className="text-xl font-semibold">Environment Variables</h2>
-            </div>
-            <Card className="border-green-200 bg-green-50/20 shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <Key size={16} className="text-green-600" />
-                  Required Secrets
-                </CardTitle>
-                <CardDescription>Add these to your Supabase Project Settings (Edge Functions -> Manage Secrets).</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 gap-3">
-                  {[
-                    { name: 'GOOGLE_CLIENT_ID', desc: 'From Google Cloud Console Credentials' },
-                    { name: 'GOOGLE_CLIENT_SECRET', desc: 'From Google Cloud Console Credentials' },
-                    { name: 'GEMINI_API_KEY', desc: 'From Google AI Studio' },
-                    { name: 'SMTP_USER', desc: 'Your system email (e.g. Gmail address)' },
-                    { name: 'SMTP_PASSWORD', desc: 'Your system email App Password' }
-                  ].map((env) => (
-                    <div key={env.name} className="flex items-center justify-between p-3 bg-white rounded-lg border border-green-100">
-                      <div>
-                        <code className="text-xs font-bold text-slate-700">{env.name}</code>
-                        <p className="text-[10px] text-slate-500">{env.desc}</p>
-                      </div>
-                      <CheckCircle2 size={14} className="text-green-500" />
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+              </ul >
+            </CardContent>
           </section>
         </div>
       </main>

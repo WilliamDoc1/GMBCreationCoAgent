@@ -4,7 +4,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import DashboardHeader from '@/components/DashboardHeader';
 import Footer from "@/components/Footer";
-import { ShieldCheck, Lock, Eye, Database, ShieldAlert, Globe, Trash2, ArrowLeft } from 'lucide-react';
+import { ShieldCheck, Lock, Eye, Database, ShieldAlert, Globe, Trash2, ArrowLeft, Key, RefreshCw } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 
 const Privacy = () => {
@@ -32,63 +32,70 @@ const Privacy = () => {
           <div className="space-y-10 text-slate-700 leading-relaxed">
             <section>
               <h2 className="text-xl font-semibold text-slate-900 mb-3 flex items-center gap-2">
-                <ShieldAlert size={20} className="text-red-500" /> 1. Zero-Trust Data Isolation
+                <Key size={20} className="text-primary" /> 1. Google OAuth Scopes & Data Usage
+              </h2>
+              <p className="mb-4">GMB Creation Co requests the following specific permissions to provide our automation services:</p>
+              <ul className="space-y-3 text-sm">
+                <li className="p-3 bg-slate-50 rounded-lg border">
+                  <strong>https://www.googleapis.com/auth/business.manage</strong>
+                  <p className="text-slate-500 mt-1">Used to retrieve your Business Location ID, manage local posts, and track review status. We do not access personal Google account data beyond what is necessary for business profile management.</p>
+                </li>
+                <li className="p-3 bg-slate-50 rounded-lg border">
+                  <strong>https://www.googleapis.com/auth/gmail.send</strong>
+                  <p className="text-slate-500 mt-1">Used exclusively to send review request emails to your customers from your authorized business email address.</p>
+                </li>
+                <li className="p-3 bg-slate-50 rounded-lg border">
+                  <strong>https://www.googleapis.com/auth/userinfo.email</strong>
+                  <p className="text-slate-500 mt-1">Used to identify your account and ensure secure multi-tenant isolation.</p>
+                </li>
+              </ul>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold text-slate-900 mb-3 flex items-center gap-2">
+                <Database size={20} className="text-blue-600" /> 2. Data Storage & Hosting
               </h2>
               <p>
-                We employ a strict <strong>Zero-Trust Architecture</strong>. Your business data is protected by Row Level Security (RLS) at the database level. This ensures that your information is logically isolated and completely inaccessible to any other tenant or user on the platform.
+                All user data is stored in <strong>encrypted Supabase databases</strong> hosted on AWS/GCP infrastructure. Data is logically isolated using Row Level Security (RLS). We do not store content retrieved from the Google Business Profile API for more than <strong>30 calendar days</strong>, in strict compliance with Google's data policies.
               </p>
             </section>
 
             <section>
               <h2 className="text-xl font-semibold text-slate-900 mb-3 flex items-center gap-2">
-                <Eye size={20} className="text-blue-500" /> 2. Information We Collect
+                <Globe size={20} className="text-amber-500" /> 3. Sub-processors & Purpose
               </h2>
-              <div className="space-y-3">
-                <p><strong>Personal Data:</strong> Name, email address, and contact details provided during registration.</p>
-                <p><strong>Business Data:</strong> Business name, industry, location, and service descriptions used to assist in content generation.</p>
-                <p><strong>Google API Data:</strong> When you link your Google Business Profile, we access your business location ID and post history to facilitate the management and scheduling of user-approved posts and review tracking.</p>
+              <div className="grid grid-cols-1 gap-3 text-sm">
+                <div className="p-3 border rounded-lg">
+                  <strong>Supabase:</strong> Secure database hosting and user authentication.
+                </div>
+                <div className="p-3 border rounded-lg">
+                  <strong>Twilio:</strong> Delivery of SMS review requests to customers.
+                </div>
+                <div className="p-3 border rounded-lg">
+                  <strong>n8n:</strong> Processing of webhooks and automated workflow logic.
+                </div>
+                <div className="p-3 border rounded-lg">
+                  <strong>Google AI (Gemini):</strong> Assisting in the generation of SEO-optimised business posts.
+                </div>
               </div>
             </section>
 
             <section className="bg-blue-50 p-6 rounded-xl border border-blue-100">
               <h2 className="text-xl font-semibold text-slate-900 mb-3 flex items-center gap-2">
-                <Database size={20} className="text-blue-600" /> 3. Google API Limited Use Disclosure
+                <RefreshCw size={20} className="text-blue-600" /> 4. User Controls & Revocation
               </h2>
-              <p className="text-sm">
-                GMB Creation Co's use and transfer of information received from Google APIs to any other app will adhere to <a href="https://developers.google.com/terms/api-services-user-data-policy#additional_requirements_for_specific_api_scopes" target="_blank" className="text-blue-600 font-bold underline">Google API Services User Data Policy</a>, including the Limited Use requirements.
+              <p className="text-sm mb-4">
+                You have full control over your data and Google account access:
               </p>
-              <ul className="list-disc ml-6 mt-4 space-y-2 text-sm">
-                <li>We do not use Google user data to serve advertisements.</li>
-                <li>We do not sell Google user data to third parties.</li>
-                <li>We only use Google user data to provide or improve the features of our application (e.g., facilitating the scheduling of GBP posts and review management).</li>
+              <ul className="list-disc ml-6 space-y-2 text-sm">
+                <li><strong>Revoke Access:</strong> You can revoke our app's access at any time via your <a href="https://myaccount.google.com/permissions" target="_blank" className="text-blue-600 font-bold underline">Google Security Settings</a>.</li>
+                <li><strong>Data Deletion:</strong> You may request the immediate deletion of your account and all associated business data by emailing <strong>william@gmbcreationco.com</strong>. We will process all deletion requests within 48 hours.</li>
               </ul>
-            </section>
-
-            <section>
-              <h2 className="text-xl font-semibold text-slate-900 mb-3 flex items-center gap-2">
-                <Globe size={20} className="text-amber-500" /> 4. Third-Party Processing
-              </h2>
-              <p>To provide our services, we share specific data with the following sub-processors:</p>
-              <ul className="list-disc ml-6 mt-2 space-y-1">
-                <li><strong>Supabase:</strong> Database hosting and authentication.</li>
-                <li><strong>Google AI (Gemini):</strong> Content assistance (data is not used for model training).</li>
-                <li><strong>Twilio:</strong> SMS delivery for review requests.</li>
-                <li><strong>n8n:</strong> Workflow automation and webhook processing.</li>
-              </ul>
-            </section>
-
-            <section>
-              <h2 className="text-xl font-semibold text-slate-900 mb-3 flex items-center gap-2">
-                <Trash2 size={20} className="text-slate-500" /> 5. Data Retention & Deletion
-              </h2>
-              <p>
-                We retain your data only as long as your account is active. Upon account termination, all business context, customer lists, and scheduled posts are permanently deleted from our production databases within 30 days.
-              </p>
             </section>
 
             <section className="pt-8 border-t">
               <p className="text-sm text-slate-500">
-                If you have questions about this policy or wish to exercise your data rights under POPIA or GDPR, please contact us at <strong>william@gmbcreationco.com</strong>
+                GMB Creation Co's use and transfer of information received from Google APIs to any other app will adhere to <a href="https://developers.google.com/terms/api-services-user-data-policy#additional_requirements_for_specific_api_scopes" target="_blank" className="text-blue-600 font-bold underline">Google API Services User Data Policy</a>.
               </p>
             </section>
           </div>
