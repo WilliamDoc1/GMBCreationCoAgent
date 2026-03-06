@@ -28,8 +28,6 @@ const Documentation = () => {
     showSuccess("Copied to clipboard!");
   };
 
-  const currentUrl = window.location.origin;
-
   return (
     <div className="min-h-screen bg-slate-50 pb-12">
       <DashboardHeader />
@@ -49,42 +47,25 @@ const Documentation = () => {
             <BookOpen className="text-primary" />
             Command Center: Operational Readiness
           </h1>
-          <p className="text-slate-500 mt-2">The system is 100% built. Follow this checklist once your Google API access is granted.</p>
+          <p className="text-slate-500 mt-2">The system is 100% built. Follow this checklist to resolve Google API errors.</p>
         </div>
 
         <div className="space-y-10">
-          {/* Pre-Flight Checklist */}
-          <section id="pre-flight">
+          {/* Troubleshooting 403 */}
+          <section id="troubleshooting">
             <div className="flex items-center gap-2 mb-4">
-              <CheckCircle2 className="text-green-600" size={24} />
-              <h2 className="text-xl font-semibold">Pre-Flight Checklist</h2>
+              <AlertTriangle className="text-amber-600" size={24} />
+              <h2 className="text-xl font-semibold">Fixing Google "403 Access Denied"</h2>
             </div>
-            <Card className="border-green-200 bg-green-50/20 shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <Key size={16} className="text-green-600" />
-                  Required Environment Variables
-                </CardTitle>
-                <CardDescription>Once you have your Google Cloud credentials, add these to your Supabase Project Settings (Edge Functions -> Manage Secrets).</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 gap-3">
-                  {[
-                    { name: 'GOOGLE_CLIENT_ID', desc: 'From Google Cloud Console Credentials' },
-                    { name: 'GOOGLE_CLIENT_SECRET', desc: 'From Google Cloud Console Credentials' },
-                    { name: 'GEMINI_API_KEY', desc: 'From Google AI Studio (Already Configured)' },
-                    { name: 'RESEND_API_KEY', desc: 'For Email Outreach (Already Configured)' },
-                    { name: 'TWILIO_ACCOUNT_SID', desc: 'For SMS Outreach (Optional)' }
-                  ].map((env) => (
-                    <div key={env.name} className="flex items-center justify-between p-3 bg-white rounded-lg border border-green-100">
-                      <div>
-                        <code className="text-xs font-bold text-slate-700">{env.name}</code>
-                        <p className="text-[10px] text-slate-500">{env.desc}</p>
-                      </div>
-                      <CheckCircle2 size={14} className="text-green-500" />
-                    </div>
-                  ))}
-                </div>
+            <Card className="border-amber-200 bg-amber-50/20 shadow-sm">
+              <CardContent className="pt-6 space-y-4">
+                <p className="text-sm text-slate-700">If you see a 403 error after clicking "Connect", check these settings in your <a href="https://console.cloud.google.com/" target="_blank" className="text-blue-600 underline">Google Cloud Console</a>:</p>
+                <ul className="list-decimal ml-6 space-y-3 text-sm text-slate-600">
+                  <li><strong>OAuth Consent Screen:</strong> Ensure "User Type" is set to <strong>External</strong> (unless you only want users from your own company).</li>
+                  <li><strong>Publishing Status:</strong> If it says "Testing", you MUST add your email address under the <strong>"Test Users"</strong> section at the bottom of the page.</li>
+                  <li><strong>Enabled APIs:</strong> Go to "Library" and search for <strong>"Google Business Profile Management API"</strong>. Ensure it is enabled.</li>
+                  <li><strong>Scopes:</strong> Ensure you have added the <code>.../auth/business.manage</code> scope to your consent screen.</li>
+                </ul>
               </CardContent>
             </Card>
           </section>
@@ -107,49 +88,43 @@ const Documentation = () => {
                     <Button variant="ghost" size="sm" onClick={() => copyToClipboard(`https://uqqzyqgypljxvmnguhky.supabase.co/functions/v1/gmb-callback`)}><Copy size={12} /></Button>
                   </div>
                 </div>
-                <div className="p-4 bg-amber-50 rounded-lg border border-amber-100 flex gap-3">
-                  <AlertTriangle size={20} className="text-amber-600 shrink-0" />
-                  <p className="text-xs text-amber-800">
-                    <strong>Important:</strong> Ensure the "Google Business Profile Management API" is enabled in your Google Cloud Library before attempting to connect.
-                  </p>
-                </div>
               </CardContent>
             </Card>
           </section>
 
-          <section id="security-architecture">
+          <section id="pre-flight">
             <div className="flex items-center gap-2 mb-4">
-              <Lock className="text-purple-600" size={24} />
-              <h2 className="text-xl font-semibold">Security & Data Isolation</h2>
+              <CheckCircle2 className="text-green-600" size={24} />
+              <h2 className="text-xl font-semibold">Environment Variables</h2>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Card className="border-purple-100 bg-purple-50/30">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm flex items-center gap-2">
-                    <Database size={16} className="text-purple-600" />
-                    Row Level Security (RLS)
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-xs text-slate-600">
-                    Every database row is locked to your unique Business ID. It is physically impossible for one business to query or view another's data.
-                  </p>
-                </CardContent>
-              </Card>
-              <Card className="border-blue-100 bg-blue-50/30">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm flex items-center gap-2">
-                    <History size={16} className="text-blue-600" />
-                    Immutable Audit Logs
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-xs text-slate-600">
-                    Every sensitive action—from AI generation to email outreach—is logged with a timestamp, creating a transparent and secure history.
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
+            <Card className="border-green-200 bg-green-50/20 shadow-sm">
+              <CardHeader>
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <Key size={16} className="text-green-600" />
+                  Required Secrets
+                </CardTitle>
+                <CardDescription>Add these to your Supabase Project Settings (Edge Functions -> Manage Secrets).</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 gap-3">
+                  {[
+                    { name: 'GOOGLE_CLIENT_ID', desc: 'From Google Cloud Console Credentials' },
+                    { name: 'GOOGLE_CLIENT_SECRET', desc: 'From Google Cloud Console Credentials' },
+                    { name: 'GEMINI_API_KEY', desc: 'From Google AI Studio' },
+                    { name: 'SMTP_USER', desc: 'Your system email (e.g. Gmail address)' },
+                    { name: 'SMTP_PASSWORD', desc: 'Your system email App Password' }
+                  ].map((env) => (
+                    <div key={env.name} className="flex items-center justify-between p-3 bg-white rounded-lg border border-green-100">
+                      <div>
+                        <code className="text-xs font-bold text-slate-700">{env.name}</code>
+                        <p className="text-[10px] text-slate-500">{env.desc}</p>
+                      </div>
+                      <CheckCircle2 size={14} className="text-green-500" />
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           </section>
         </div>
       </main>

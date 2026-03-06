@@ -12,6 +12,10 @@ serve(async (req) => {
     const { tenantId, origin } = await req.json()
     const clientId = Deno.env.get('GOOGLE_CLIENT_ID')
     
+    if (!clientId) {
+      throw new Error("GOOGLE_CLIENT_ID is not set in Supabase secrets.")
+    }
+
     // This MUST match exactly what is in your Google Cloud Console
     const redirectUri = `https://uqqzyqgypljxvmnguhky.supabase.co/functions/v1/gmb-callback`
     
@@ -24,12 +28,12 @@ serve(async (req) => {
     const state = btoa(JSON.stringify({ tenantId, origin: origin || 'http://localhost:8080' }))
 
     const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth')
-    authUrl.searchParams.set('client_id', clientId!)
+    authUrl.searchParams.set('client_id', clientId)
     authUrl.searchParams.set('redirect_uri', redirectUri)
     authUrl.searchParams.set('response_type', 'code')
     authUrl.searchParams.set('scope', scopes)
     authUrl.searchParams.set('access_type', 'offline')
-    authUrl.searchParams.set('prompt', 'consent') // Force consent to ensure we get a refresh token
+    authUrl.searchParams.set('prompt', 'consent')
     authUrl.searchParams.set('state', state)
 
     return new Response(JSON.stringify({ url: authUrl.toString() }), {
@@ -37,6 +41,7 @@ serve(async (req) => {
       status: 200,
     })
   } catch (error) {
+    console.error("Auth GMB Error:", error.message)
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400,
