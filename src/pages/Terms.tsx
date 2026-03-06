@@ -4,34 +4,34 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import DashboardHeader from '@/components/DashboardHeader';
 import Footer from "@/components/Footer";
-import { FileText, Scale, AlertCircle, ShieldCheck, Ban, Gavel, ArrowLeft, Clock, UserCheck, Info, CreditCard, ShieldAlert } from 'lucide-react';
+import { FileText, Scale, AlertCircle, ShieldCheck, Ban, Gavel, ArrowLeft, Clock, UserCheck, Info, CreditCard, ShieldAlert, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 
 const Terms = () => {
   return (
-    <div className="min-h-screen bg-slate-50 pb-12">
+    <div className="min-h-screen bg-slate-50 dark:bg-background pb-12">
       <DashboardHeader />
-      <main className="max-w-3xl mx-auto px-4 py-12">
+      <main className="max-w-3xl mx-auto px-4 py-12 pt-32">
         <div className="mb-6">
           <Link to="/">
-            <Button variant="ghost" size="sm" className="flex items-center gap-2 text-slate-500 hover:text-slate-900">
+            <Button variant="ghost" size="sm" className="flex items-center gap-2 text-slate-500 hover:text-slate-900 dark:hover:text-white">
               <ArrowLeft size={16} />
               Back to Home
             </Button>
           </Link>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border p-8 md:p-12">
+        <div className="bg-white dark:bg-card rounded-2xl shadow-sm border p-8 md:p-12">
           <div className="flex items-center gap-3 mb-6">
             <FileText className="text-primary" size={32} />
-            <h1 className="text-3xl font-bold text-slate-900">Terms of Service</h1>
+            <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Terms of Service</h1>
           </div>
           
           <p className="text-slate-500 mb-8">Effective Date: 06/03/2026</p>
 
-          <div className="space-y-10 text-slate-700 leading-relaxed">
+          <div className="space-y-10 text-slate-700 dark:text-slate-300 leading-relaxed">
             <section>
-              <h2 className="text-xl font-semibold text-slate-900 mb-3 flex items-center gap-2">
+              <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
                 <Info size={20} className="text-blue-500" /> 1. Transparency & Agency Disclosure
               </h2>
               <p className="mb-4">
@@ -54,7 +54,7 @@ const Terms = () => {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-slate-900 mb-3 flex items-center gap-2">
+              <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
                 <UserCheck size={20} className="text-green-600" /> 2. End-Client Authorization & Responsibility
               </h2>
               <p className="mb-4">If you use this platform to manage profiles for third-party clients, you warrant that:</p>
@@ -75,7 +75,7 @@ const Terms = () => {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-slate-900 mb-3 flex items-center gap-2">
+              <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
                 <Clock size={20} className="text-primary" /> 3. Data Retention & Google API Compliance
               </h2>
               <ul className="space-y-3 text-sm">
@@ -86,7 +86,7 @@ const Terms = () => {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-slate-900 mb-3 flex items-center gap-2">
+              <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
                 <CreditCard size={20} className="text-amber-600" /> 4. Fees & South African Consumer Rights (CPA)
               </h2>
               <p className="mb-4">These terms are governed by the Republic of South Africa:</p>
@@ -97,7 +97,7 @@ const Terms = () => {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-slate-900 mb-3 flex items-center gap-2">
+              <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
                 <ShieldAlert size={20} className="text-red-500" /> 5. Security & Breach Notification
               </h2>
               <p>
@@ -117,13 +117,5 @@ const Terms = () => {
     </div>
   );
 };
-
-const CheckCircle2 = ({ size, className }: { size?: number, className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={size || 24} height={size || 24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m9 12 2 2 4-4"/></svg>
-);
-
-const AlertTriangle = ({ size, className }: { size?: number, className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={size || 24} height={size || 24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
-);
 
 export default Terms;

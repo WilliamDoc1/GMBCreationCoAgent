@@ -4,34 +4,34 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import DashboardHeader from '@/components/DashboardHeader';
 import Footer from "@/components/Footer";
-import { ShieldCheck, Lock, Eye, Database, ShieldAlert, Globe, Trash2, ArrowLeft, Key, RefreshCw, Info, UserCheck, Zap, Scale } from 'lucide-react';
+import { ShieldCheck, Lock, Eye, Database, ShieldAlert, Globe, ArrowLeft, Key, Info, UserCheck, Zap, Scale } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 
 const Privacy = () => {
   return (
-    <div className="min-h-screen bg-slate-50 pb-12">
+    <div className="min-h-screen bg-slate-50 dark:bg-background pb-12">
       <DashboardHeader />
-      <main className="max-w-3xl mx-auto px-4 py-12">
+      <main className="max-w-3xl mx-auto px-4 py-12 pt-32">
         <div className="mb-6">
           <Link to="/">
-            <Button variant="ghost" size="sm" className="flex items-center gap-2 text-slate-500 hover:text-slate-900">
+            <Button variant="ghost" size="sm" className="flex items-center gap-2 text-slate-500 hover:text-slate-900 dark:hover:text-white">
               <ArrowLeft size={16} />
               Back to Home
             </Button>
           </Link>
         </div>
         
-        <div className="bg-white rounded-2xl shadow-sm border p-8 md:p-12">
+        <div className="bg-white dark:bg-card rounded-2xl shadow-sm border p-8 md:p-12">
           <div className="flex items-center gap-3 mb-6">
             <ShieldCheck className="text-primary" size={32} />
-            <h1 className="text-3xl font-bold text-slate-900">Privacy Policy</h1>
+            <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Privacy Policy</h1>
           </div>
           
           <p className="text-slate-500 mb-8 font-medium">Last Updated: 06/03/2026</p>
 
-          <div className="space-y-10 text-slate-700 leading-relaxed">
+          <div className="space-y-10 text-slate-700 dark:text-slate-300 leading-relaxed">
             <section>
-              <h2 className="text-xl font-semibold text-slate-900 mb-3 flex items-center gap-2">
+              <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
                 <Info size={20} className="text-primary" /> 1. Introduction
               </h2>
               <p>
@@ -39,8 +39,8 @@ const Privacy = () => {
               </p>
             </section>
 
-            <section className="bg-green-50 p-6 rounded-xl border border-green-100">
-              <h2 className="text-xl font-semibold text-slate-900 mb-3 flex items-center gap-2">
+            <section className="bg-green-50 dark:bg-green-900/10 p-6 rounded-xl border border-green-100 dark:border-green-900/30">
+              <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
                 <Scale size={20} className="text-green-600" /> 2. POPIA Compliance (South Africa)
               </h2>
               <p className="text-sm mb-4">
@@ -63,30 +63,30 @@ const Privacy = () => {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-slate-900 mb-3 flex items-center gap-2">
+              <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
                 <Key size={20} className="text-primary" /> 3. Google OAuth Scopes & Data Usage
               </h2>
               <p className="mb-4">
                 GMB Creation Co’s use and transfer to any other app of information received from Google APIs will adhere to the <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" className="text-blue-600 underline font-medium">Google API Services User Data Policy</a>, including the Limited Use requirements. We request the following scopes:
               </p>
               <ul className="space-y-3 text-sm">
-                <li className="p-4 bg-slate-50 rounded-lg border">
-                  <strong className="text-slate-900">https://www.googleapis.com/auth/business.manage (Sensitive)</strong>
-                  <p className="text-slate-600 mt-1">We use this to retrieve your Business Location ID, help you schedule local posts, and track review status. This is essential for the core functionality of managing your Google Business Profile (GBP) engagement.</p>
+                <li className="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-lg border">
+                  <strong className="text-slate-900 dark:text-white">https://www.googleapis.com/auth/business.manage (Sensitive)</strong>
+                  <p className="text-slate-600 dark:text-slate-400 mt-1">We use this to retrieve your Business Location ID, help you schedule local posts, and track review status. This is essential for the core functionality of managing your Google Business Profile (GBP) engagement.</p>
                 </li>
-                <li className="p-4 bg-slate-50 rounded-lg border">
-                  <strong className="text-slate-900">https://www.googleapis.com/auth/gmail.send (Restricted)</strong>
-                  <p className="text-slate-600 mt-1">We use this exclusively to facilitate review request emails to your customers from your authorized business email. We do not read, store, or analyze your personal emails.</p>
+                <li className="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-lg border">
+                  <strong className="text-slate-900 dark:text-white">https://www.googleapis.com/auth/gmail.send (Restricted)</strong>
+                  <p className="text-slate-600 dark:text-slate-400 mt-1">We use this exclusively to facilitate review request emails to your customers from your authorized business email. We do not read, store, or analyze your personal emails.</p>
                 </li>
-                <li className="p-4 bg-slate-50 rounded-lg border">
-                  <strong className="text-slate-900">https://www.googleapis.com/auth/userinfo.email</strong>
-                  <p className="text-slate-600 mt-1">Used to identify your account and ensure secure multi-tenant isolation within our platform.</p>
+                <li className="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-lg border">
+                  <strong className="text-slate-900 dark:text-white">https://www.googleapis.com/auth/userinfo.email</strong>
+                  <p className="text-slate-600 dark:text-slate-400 mt-1">Used to identify your account and ensure secure multi-tenant isolation within our platform.</p>
                 </li>
               </ul>
             </section>
 
-            <section className="bg-blue-50 p-6 rounded-xl border border-blue-100">
-              <h2 className="text-xl font-semibold text-slate-900 mb-3 flex items-center gap-2">
+            <section className="bg-blue-50 dark:bg-blue-900/10 p-6 rounded-xl border border-blue-100 dark:border-blue-900/30">
+              <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
                 <ShieldAlert size={20} className="text-blue-600" /> 4. Limited Use Disclosure
               </h2>
               <p className="text-sm mb-4 font-medium">Our app strictly complies with Google’s Limited Use requirements:</p>
@@ -111,7 +111,7 @@ const Privacy = () => {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-slate-900 mb-3 flex items-center gap-2">
+              <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
                 <Database size={20} className="text-blue-600" /> 5. Data Storage & Hosting
               </h2>
               <ul className="space-y-3 text-sm">
@@ -122,7 +122,7 @@ const Privacy = () => {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-slate-900 mb-3 flex items-center gap-2">
+              <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
                 <Globe size={20} className="text-amber-500" /> 6. Sub-processors
               </h2>
               <p className="text-sm mb-3">We share specific data with the following third parties to provide our services:</p>
@@ -134,7 +134,7 @@ const Privacy = () => {
             </section>
 
             <section className="pt-8 border-t">
-              <h2 className="text-xl font-semibold text-slate-900 mb-3 flex items-center gap-2">
+              <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
                 <UserCheck size={20} className="text-green-600" /> 7. User Controls & Deletion
               </h2>
               <ul className="space-y-4 text-sm">
