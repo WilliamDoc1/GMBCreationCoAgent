@@ -19,14 +19,14 @@ const Landing = () => {
       <section className="py-24 px-4 max-w-7xl mx-auto text-center">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-blue-600 text-xs font-bold mb-8 uppercase tracking-wider">
           <Zap size={14} />
-          Autonomous Local SEO for South African Businesses
+          Streamlined Local SEO for South African Businesses
         </div>
         <h1 className="text-5xl md:text-7xl font-extrabold text-slate-900 mb-8 tracking-tight">
           Dominate Local Search <br />
-          <span className="text-primary">On Autopilot</span>
+          <span className="text-primary">With Efficiency</span>
         </h1>
         <p className="text-xl text-slate-600 mb-12 max-w-3xl mx-auto leading-relaxed">
-          We enable you to autonomously collect reviews and publish SEO optimised posts to your Google Business Profile, keeping your business at the top of local search results.
+          We enable you to efficiently collect reviews and schedule SEO optimised posts to your Google Business Profile, keeping your business at the top of local search results.
         </p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           {session ? (
@@ -67,7 +67,7 @@ const Landing = () => {
               </div>
               <h3 className="text-2xl font-bold mb-4">Smart Outreach</h3>
               <p className="text-slate-600 leading-relaxed">
-                Automatically send personalised review requests via email or SMS. Our AI handles the follow-ups to ensure you get the feedback you deserve.
+                Easily send personalised review requests via email or SMS. Our platform helps you manage follow-ups to ensure you get the feedback you deserve.
               </p>
             </div>
             
@@ -75,9 +75,9 @@ const Landing = () => {
               <div className="w-14 h-14 bg-purple-100 rounded-2xl flex items-center justify-center text-purple-600 mb-8">
                 <Calendar size={28} />
               </div>
-              <h3 className="text-2xl font-bold mb-4">Weekly Posting</h3>
+              <h3 className="text-2xl font-bold mb-4">Weekly Scheduling</h3>
               <p className="text-slate-600 leading-relaxed">
-                Keep your profile active with AI-generated posts that reference local landmarks and neighbourhoods, boosting your relevance in local searches.
+                Keep your profile active with AI-assisted posts that reference local landmarks and neighbourhoods, boosting your relevance in local searches.
               </p>
             </div>
             
@@ -98,14 +98,14 @@ const Landing = () => {
       <section className="py-24 px-4 max-w-7xl mx-auto">
         <div className="flex flex-col lg:flex-row items-center gap-16">
           <div className="flex-1 space-y-8">
-            <h2 className="text-4xl font-bold text-slate-900 leading-tight">Optimise Your Local Presence Without Lifting a Finger</h2>
+            <h2 className="text-4xl font-bold text-slate-900 leading-tight">Optimise Your Local Presence With Ease</h2>
             <p className="text-lg text-slate-600 leading-relaxed">
-              Google rewards active, highly-rated profiles. By consistently posting and receiving fresh reviews, your business climbs the "Local Pack" rankings, putting you in front of more customers exactly when they need you.
+              Google rewards active, highly-rated profiles. By consistently scheduling posts and receiving fresh reviews, your business climbs the "Local Pack" rankings, putting you in front of more customers exactly when they need you.
             </p>
             <div className="space-y-4">
               <div className="flex items-center gap-3 text-slate-700 font-medium">
                 <CheckCircle2 size={20} className="text-green-500" /> 
-                Increase your average star rating automatically
+                Increase your average star rating with smart tools
               </div>
               <div className="flex items-center gap-3 text-slate-700 font-medium">
                 <CheckCircle2 size={20} className="text-green-500" /> 
@@ -123,16 +123,16 @@ const Landing = () => {
               <div className="p-5 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-sm">
                 <p className="text-xs font-mono text-blue-400 mb-2 flex items-center gap-2">
                   <span className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></span>
-                  AGENT_STATUS: ACTIVE
+                  SYSTEM_STATUS: READY
                 </p>
-                <p className="text-slate-200">Generating weekly SEO content for Precision Wealth...</p>
+                <p className="text-slate-200">Assisting with weekly SEO content for Precision Wealth...</p>
               </div>
               <div className="p-5 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-sm">
                 <p className="text-xs font-mono text-green-400 mb-2 flex items-center gap-2">
                   <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-                  OUTREACH_LOG: SENT
+                  OUTREACH_LOG: READY
                 </p>
-                <p className="text-slate-200">Review request delivered to 12 new customers via email.</p>
+                <p className="text-slate-200">Review request prepared for 12 new customers via email.</p>
               </div>
               <div className="p-5 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-sm">
                 <p className="text-xs font-mono text-purple-400 mb-2 flex items-center gap-2">

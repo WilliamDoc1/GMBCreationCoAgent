@@ -45,8 +45,8 @@ const Privacy = () => {
               </h2>
               <div className="space-y-3">
                 <p><strong>Personal Data:</strong> Name, email address, and contact details provided during registration.</p>
-                <p><strong>Business Data:</strong> Business name, industry, location, and service descriptions used to train the AI agent.</p>
-                <p><strong>Google API Data:</strong> When you link your Google Business Profile, we access your business location ID and post history to automate content delivery and review management.</p>
+                <p><strong>Business Data:</strong> Business name, industry, location, and service descriptions used to assist in content generation.</p>
+                <p><strong>Google API Data:</strong> When you link your Google Business Profile, we access your business location ID and post history to facilitate the management and scheduling of user-approved posts and review tracking.</p>
               </div>
             </section>
 
@@ -60,7 +60,7 @@ const Privacy = () => {
               <ul className="list-disc ml-6 mt-4 space-y-2 text-sm">
                 <li>We do not use Google user data to serve advertisements.</li>
                 <li>We do not sell Google user data to third parties.</li>
-                <li>We only use Google user data to provide or improve the features of our application (e.g., automating GBP posts and review responses).</li>
+                <li>We only use Google user data to provide or improve the features of our application (e.g., facilitating the scheduling of GBP posts and review management).</li>
               </ul>
             </section>
 
@@ -71,7 +71,7 @@ const Privacy = () => {
               <p>To provide our services, we share specific data with the following sub-processors:</p>
               <ul className="list-disc ml-6 mt-2 space-y-1">
                 <li><strong>Supabase:</strong> Database hosting and authentication.</li>
-                <li><strong>Google AI (Gemini):</strong> Content generation (data is not used for model training).</li>
+                <li><strong>Google AI (Gemini):</strong> Content assistance (data is not used for model training).</li>
                 <li><strong>Twilio:</strong> SMS delivery for review requests.</li>
                 <li><strong>n8n:</strong> Workflow automation and webhook processing.</li>
               </ul>

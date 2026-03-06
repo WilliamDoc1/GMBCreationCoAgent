@@ -16,7 +16,7 @@ const Terms = () => {
           <Link to="/">
             <Button variant="ghost" size="sm" className="flex items-center gap-2 text-slate-500 hover:text-slate-900">
               <ArrowLeft size={16} />
-              Back to Dashboard
+              Back to Home
             </Button>
           </Link>
         </div>
@@ -41,10 +41,10 @@ const Terms = () => {
 
             <section>
               <h2 className="text-xl font-semibold text-slate-900 mb-3 flex items-center gap-2">
-                <AlertCircle size={20} className="text-amber-500" /> 2. AI Content Responsibility
+                <AlertCircle size={20} className="text-amber-500" /> 2. Content Management Responsibility
               </h2>
               <p>
-                Our service provides AI-generated content for Google Business Profiles. While we strive for accuracy, <strong>you are solely responsible</strong> for reviewing all content before it is published. GMB Creation Co is not liable for any account suspensions, SEO penalties, or reputational damage resulting from AI-generated content.
+                Our service provides tools for managing and scheduling content for Google Business Profiles. While we provide AI-assisted suggestions, <strong>you are solely responsible</strong> for reviewing and approving all content before it is published. GMB Creation Co is a management tool, not a publisher, and is not liable for any account suspensions, SEO penalties, or reputational damage resulting from user-approved content.
               </p>
             </section>
 
@@ -56,7 +56,7 @@ const Terms = () => {
               <ul className="list-disc ml-6 mt-2 space-y-1">
                 <li>Generate spam or deceptive content.</li>
                 <li>Harass customers through excessive outreach.</li>
-                <li>Reverse engineer the agent's logic or API.</li>
+                <li>Reverse engineer the platform's logic or API.</li>
                 <li>Upload PII (Personally Identifiable Information) without customer consent.</li>
               </ul>
             </section>
@@ -66,7 +66,7 @@ const Terms = () => {
                 <Scale size={20} className="text-blue-500" /> 4. Limitation of Liability
               </h2>
               <p>
-                To the maximum extent permitted by law, GMB Creation Co shall not be liable for any indirect, incidental, special, or consequential damages, including loss of profits, data, or business opportunities arising from the use of our automation tools.
+                To the maximum extent permitted by law, GMB Creation Co shall not be liable for any indirect, incidental, special, or consequential damages, including loss of profits, data, or business opportunities arising from the use of our management tools.
               </p>
             </section>
 
