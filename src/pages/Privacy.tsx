@@ -4,7 +4,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import DashboardHeader from '@/components/DashboardHeader';
 import Footer from "@/components/Footer";
-import { ShieldCheck, Lock, Eye, Database, ShieldAlert, Globe, Trash2, ArrowLeft, Key, RefreshCw, Info, UserCheck } from 'lucide-react';
+import { ShieldCheck, Lock, Eye, Database, ShieldAlert, Globe, Trash2, ArrowLeft, Key, RefreshCw, Info, UserCheck, Zap } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 
 const Privacy = () => {
