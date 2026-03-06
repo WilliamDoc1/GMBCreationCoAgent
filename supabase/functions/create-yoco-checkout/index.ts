@@ -12,23 +12,30 @@ serve(async (req) => {
   }
 
   try {
-    const { amountInCents, description, successUrl, cancelUrl } = await req.json()
-    const secretKey = Deno.env.get('YOCO_SECRET_KEY')
+    const body = await req.json();
+    const { amountInCents, description, successUrl, cancelUrl } = body;
+    
+    // Get and trim the secret key to avoid whitespace issues
+    const secretKey = Deno.env.get('YOCO_SECRET_KEY')?.trim();
 
     if (!secretKey) {
-      throw new Error("YOCO_SECRET_KEY is not configured in Supabase secrets.")
+      console.error("Missing YOCO_SECRET_KEY environment variable");
+      return new Response(JSON.stringify({ error: "Payment system configuration error (Missing API Key)." }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500,
+      });
     }
 
-    console.log(`Creating Yoco checkout for ${amountInCents} cents...`)
+    console.log(`Initiating Yoco checkout for ${amountInCents} cents...`);
 
-    const response = await fetch('https://online.yoco.com/api/checkouts', {
+    const yocoResponse = await fetch('https://online.yoco.com/api/checkouts', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${secretKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        amount: amountInCents,
+        amount: Math.round(amountInCents), // Ensure it's an integer
         currency: 'ZAR',
         successUrl: successUrl,
         cancelUrl: cancelUrl,
@@ -36,24 +43,32 @@ serve(async (req) => {
           description: description
         }
       }),
-    })
+    });
 
-    const data = await response.json()
+    const data = await yocoResponse.json();
 
-    if (!response.ok) {
-      console.error("Yoco API Error:", data)
-      throw new Error(data.message || "Failed to create Yoco checkout session")
+    if (!yocoResponse.ok) {
+      console.error("Yoco API Error Response:", data);
+      // Return the specific error from Yoco if available
+      const errorMessage = data.message || data.error || "Yoco payment gateway error";
+      return new Response(JSON.stringify({ error: errorMessage, details: data }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: yocoResponse.status,
+      });
     }
+
+    console.log("Yoco checkout created successfully:", data.id);
 
     return new Response(JSON.stringify({ redirectUrl: data.redirectUrl, checkoutId: data.id }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
-    })
+    });
+
   } catch (error) {
-    console.error("Edge Function Error:", error.message)
+    console.error("Edge Function Exception:", error.message);
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400,
-    })
+    });
   }
 })
