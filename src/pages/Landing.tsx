@@ -52,37 +52,8 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Google Integration Section - REFRAMED FOR VERIFICATION */}
-      <section className="py-16 bg-blue-50/50 border-y border-blue-100">
-        <div className="max-w-5xl mx-auto px-4 text-center">
-          <h2 className="text-2xl font-bold text-slate-900 mb-6 flex items-center justify-center gap-3">
-            <Globe className="text-blue-600" />
-            Verified Google Business Integration
-          </h2>
-          <p className="text-slate-600 mb-8 max-w-2xl mx-auto">
-            GMB Creation Co integrates directly with the Google Business Profile API and Gmail API to provide a seamless management experience.
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
-            <div className="bg-white p-6 rounded-2xl border border-blue-100 shadow-sm">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="p-2 bg-blue-50 rounded-lg text-blue-600"><Globe size={20} /></div>
-                <h3 className="font-bold">Profile Management</h3>
-              </div>
-              <p className="text-sm text-slate-500">We use the <code>business.manage</code> scope to help you schedule weekly posts and track review status directly on your profile.</p>
-            </div>
-            <div className="bg-white p-6 rounded-2xl border border-blue-100 shadow-sm">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="p-2 bg-blue-50 rounded-lg text-blue-600"><Mail size={20} /></div>
-                <h3 className="font-bold">Smart Outreach</h3>
-              </div>
-              <p className="text-sm text-slate-500">We use the <code>gmail.send</code> scope to facilitate review requests from your own business email, ensuring high trust and conversion.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Features Grid */}
-      <section className="py-24 bg-slate-50 border-b">
+      <section className="py-24 bg-slate-50 border-y">
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-20">
             <h2 className="text-4xl font-bold text-slate-900">Engineered for Growth</h2>
@@ -170,6 +141,35 @@ const Landing = () => {
                 </p>
                 <p className="text-slate-200">Local keyword density increased by 24% this month.</p>
               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Google Integration Section - REFRAMED FOR VERIFICATION */}
+      <section className="py-16 bg-blue-50/50 border-t border-blue-100">
+        <div className="max-w-5xl mx-auto px-4 text-center">
+          <h2 className="text-2xl font-bold text-slate-900 mb-6 flex items-center justify-center gap-3">
+            <Globe className="text-blue-600" />
+            Verified Google Business Integration
+          </h2>
+          <p className="text-slate-600 mb-8 max-w-2xl mx-auto">
+            GMB Creation Co integrates directly with the Google Business Profile API and Gmail API to provide a seamless management experience.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
+            <div className="bg-white p-6 rounded-2xl border border-blue-100 shadow-sm">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="p-2 bg-blue-50 rounded-lg text-blue-600"><Globe size={20} /></div>
+                <h3 className="font-bold">Profile Management</h3>
+              </div>
+              <p className="text-sm text-slate-500">We use the <code>business.manage</code> scope to help you schedule weekly posts and track review status directly on your profile.</p>
+            </div>
+            <div className="bg-white p-6 rounded-2xl border border-blue-100 shadow-sm">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="p-2 bg-blue-50 rounded-lg text-blue-600"><Mail size={20} /></div>
+                <h3 className="font-bold">Smart Outreach</h3>
+              </div>
+              <p className="text-sm text-slate-500">We use the <code>gmail.send</code> scope to facilitate review requests from your own business email, ensuring high trust and conversion.</p>
             </div>
           </div>
         </div>
