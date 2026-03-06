@@ -131,6 +131,14 @@ serve(async (req) => {
       status: 'success'
     });
 
+    // 8. Populate review_logs table
+    await supabase.from('review_logs').insert({
+      customer_name: customer.full_name,
+      customer_email: customer.email,
+      business_name: tenant.business_name,
+      status: 'Sent'
+    });
+
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
