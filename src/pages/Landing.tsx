@@ -26,7 +26,7 @@ const Landing = () => {
           <span className="text-primary">On Autopilot</span>
         </h1>
         <p className="text-xl text-slate-600 mb-12 max-w-3xl mx-auto leading-relaxed">
-          The Outreach Agent autonomously collects 5-star reviews and publishes SEO-optimised posts to your Google Business Profile, keeping your business at the top of local search results.
+          We enable you to autonomously collect reviews and publish SEO optimised posts to your Google Business Profile, keeping your business at the top of local search results.
         </p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           {session ? (
