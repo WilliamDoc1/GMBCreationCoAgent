@@ -102,11 +102,13 @@ const Documentation = () => {
                   <p className="text-[10px] font-bold text-slate-500 uppercase">Redirect URI</p>
                   <div className="flex items-center gap-2">
                     <code className="bg-white px-2 py-1 rounded border text-xs flex-1 truncate">https://uqqzyqgypljxvmnguhky.supabase.co/functions/v1/gmb-callback</code>
-                    <Button variant="ghost" size="sm" onClick={() => copyToClipboard(`https://uqqzyqgypljxvmnguhky.supabase.co/functions/v1/gmb-callback`)}><Copy size={12} /></Button>
+                    <Button variant="ghost" size="sm" onClick={() => copyToClipboard(`https://uqqzyqgypljxvmnguhky.supabase.co/functions/v1/gmb-callback`)}>
+                      <Copy size={12} />
+                    </Button>
                   </div>
                 </div>
-              </ul >
-            </CardContent>
+              </CardContent>
+            </Card>
           </section>
         </div>
       </main>
