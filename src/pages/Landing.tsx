@@ -4,13 +4,9 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Zap, 
-  ShieldCheck, 
   ArrowRight, 
   MessageSquare, 
   Calendar, 
-  CheckCircle2, 
-  Globe, 
-  Mail,
   TrendingUp,
   Check
 } from "lucide-react";
@@ -56,14 +52,14 @@ const Landing = () => {
       <main>
         {/* Hero Section */}
         <section className="pt-32 pb-20 px-4 max-w-7xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold mb-8 uppercase tracking-wider">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-muted text-foreground text-xs font-bold mb-8 uppercase tracking-wider border">
             <Zap size={14} />
             Local SEO Automation for South African Businesses
           </div>
 
           <h1 className="text-5xl md:text-7xl font-extrabold text-foreground mb-6 tracking-tight">
             Dominate Local Search <br />
-            <span className="text-primary">With Efficiency</span>
+            <span className="opacity-50">With Efficiency</span>
           </h1>
 
           <p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-3xl mx-auto leading-relaxed">
@@ -89,7 +85,7 @@ const Landing = () => {
         </section>
 
         {/* Features Section */}
-        <section id="features" className="py-20 bg-muted/50 px-4">
+        <section id="features" className="py-20 bg-muted/30 px-4 border-y">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-4xl font-bold mb-4">Engineered for Growth</h2>
@@ -99,9 +95,9 @@ const Landing = () => {
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <Card>
+              <Card className="bg-background">
                 <CardHeader>
-                  <MessageSquare className="text-primary mb-4" size={32} />
+                  <MessageSquare className="text-foreground mb-4" size={32} />
                   <CardTitle>Smart Outreach</CardTitle>
                   <CardDescription>
                     Easily facilitate personalised review requests via email or SMS. Manage follow-ups to ensure you get the feedback you deserve.
@@ -109,9 +105,9 @@ const Landing = () => {
                 </CardHeader>
               </Card>
 
-              <Card>
+              <Card className="bg-background">
                 <CardHeader>
-                  <Calendar className="text-primary mb-4" size={32} />
+                  <Calendar className="text-foreground mb-4" size={32} />
                   <CardTitle>Weekly Scheduling</CardTitle>
                   <CardDescription>
                     Keep your profile active with scheduled posts that reference local landmarks and neighbourhoods, boosting your relevance.
@@ -119,9 +115,9 @@ const Landing = () => {
                 </CardHeader>
               </Card>
 
-              <Card>
+              <Card className="bg-background">
                 <CardHeader>
-                  <TrendingUp className="text-primary mb-4" size={32} />
+                  <TrendingUp className="text-foreground mb-4" size={32} />
                   <CardTitle>SEO Insights</CardTitle>
                   <CardDescription>
                     AI-driven suggestions to rank higher on Google search results and monitor your local keyword performance.
@@ -143,9 +139,9 @@ const Landing = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {plans.map((plan) => (
-              <Card key={plan.id} className={plan.popular ? 'border-primary shadow-lg relative' : ''}>
+              <Card key={plan.id} className={plan.popular ? 'border-foreground shadow-lg relative' : ''}>
                 {plan.popular && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-[10px] font-bold px-3 py-1 rounded-full">
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-foreground text-background text-[10px] font-bold px-3 py-1 rounded-full">
                     MOST POPULAR
                   </div>
                 )}
@@ -161,7 +157,7 @@ const Landing = () => {
                   <ul className="space-y-3 mb-8">
                     {plan.features.map((feature, index) => (
                       <li key={index} className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Check size={16} className="text-primary shrink-0" />
+                        <Check size={16} className="text-foreground shrink-0" />
                         {feature}
                       </li>
                     ))}

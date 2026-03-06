@@ -4,7 +4,7 @@ import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "./AuthProvider";
 import { Button } from "./ui/button";
-import { LogOut, LayoutDashboard, Moon, Sun, Building2 } from "lucide-react";
+import { LogOut, LayoutDashboard, Moon, Sun } from "lucide-react";
 import { useTheme } from "./ThemeProvider";
 
 const DashboardHeader = () => {
@@ -25,9 +25,9 @@ const DashboardHeader = () => {
         </Link>
 
         <nav className="hidden md:flex items-center gap-8">
-          <Link to="/" className="text-sm font-medium hover:text-primary transition-colors">Home</Link>
-          <Link to="/features" className="text-sm font-medium hover:text-primary transition-colors">Features</Link>
-          <Link to="/pricing" className="text-sm font-medium hover:text-primary transition-colors">Pricing</Link>
+          <Link to="/" className="text-sm font-medium hover:opacity-70 transition-opacity">Home</Link>
+          <Link to="/features" className="text-sm font-medium hover:opacity-70 transition-opacity">Features</Link>
+          <Link to="/pricing" className="text-sm font-medium hover:opacity-70 transition-opacity">Pricing</Link>
         </nav>
 
         <div className="flex items-center gap-4">
