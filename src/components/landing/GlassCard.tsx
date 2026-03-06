@@ -20,8 +20,9 @@ const GlassCard = ({ children, className, delay = 0, glowColor = 'sage' }: Glass
   const mouseXSpring = useSpring(x);
   const mouseYSpring = useSpring(y);
 
-  const rotateX = useTransform(mouseYSpring, [-0.5, 0.5], ["12deg", "-12deg"]);
-  const rotateY = useTransform(mouseXSpring, [-0.5, 0.5], ["-12deg", "12deg"]);
+  // Reduced tilt intensity for better usability
+  const rotateX = useTransform(mouseYSpring, [-0.5, 0.5], ["8deg", "-8deg"]);
+  const rotateY = useTransform(mouseXSpring, [-0.5, 0.5], ["-8deg", "8deg"]);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!ref.current) return;
@@ -46,7 +47,7 @@ const GlassCard = ({ children, className, delay = 0, glowColor = 'sage' }: Glass
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 30 }}
+      initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ 
@@ -64,12 +65,12 @@ const GlassCard = ({ children, className, delay = 0, glowColor = 'sage' }: Glass
       onMouseLeave={handleMouseLeave}
       ref={ref}
       className={cn(
-        "glass-morphism rounded-[2.5rem] p-10 transition-all duration-700",
+        "glass-morphism rounded-[2rem] p-8 md:p-10 transition-all duration-500",
         glowColor === 'sage' ? "hover:diffused-glow-sage" : "hover:diffused-glow-amber",
         className
       )}
     >
-      <div style={{ transform: "translateZ(60px)" }}>
+      <div style={{ transform: "translateZ(40px)" }}>
         {children}
       </div>
     </motion.div>

@@ -55,17 +55,18 @@
   }
 
   body {
-    @apply bg-obsidian text-foreground antialiased;
+    @apply bg-obsidian text-slate-300 antialiased;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
     letter-spacing: 0.01em;
   }
 
   h1, h2, h3, h4, h5, h6 {
+    @apply text-white;
     letter-spacing: -0.02em;
   }
 }
 
-/* Noise Overlay */
+/* Subtle Noise Overlay */
 body::before {
   content: "";
   position: fixed;
@@ -74,29 +75,29 @@ body::before {
   width: 100%;
   height: 100%;
   pointer-events: none;
-  opacity: 0.02;
+  opacity: 0.015;
   z-index: 9999;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
 }
 
 .glass-morphism {
-  @apply backdrop-blur-[24px] bg-white/[0.03] border border-white/[0.08];
+  @apply backdrop-blur-[20px] bg-white/[0.04] border border-white/[0.1];
   box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.05);
 }
 
 .diffused-glow-sage {
-  box-shadow: 0 0 150px -20px rgba(74, 93, 78, 0.3);
+  box-shadow: 0 0 100px -20px rgba(74, 93, 78, 0.25);
 }
 
 .diffused-glow-amber {
-  box-shadow: 0 0 150px -20px rgba(212, 175, 55, 0.2);
+  box-shadow: 0 0 100px -20px rgba(212, 175, 55, 0.15);
 }
 
 .text-shimmer {
   background: linear-gradient(
     90deg,
     rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.8) 50%,
+    rgba(255, 255, 255, 0.9) 50%,
     rgba(255, 255, 255, 0) 100%
   );
   background-size: 200% 100%;

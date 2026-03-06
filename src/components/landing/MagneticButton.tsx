@@ -26,11 +26,10 @@ const MagneticButton = ({ children, className, variant = 'primary', onClick }: M
     const distanceX = clientX - centerX;
     const distanceY = clientY - centerY;
     
-    // 50px pull radius
     const distance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
     
-    if (distance < 150) {
-      setPosition({ x: distanceX * 0.4, y: distanceY * 0.4 });
+    if (distance < 120) {
+      setPosition({ x: distanceX * 0.35, y: distanceY * 0.35 });
     } else {
       setPosition({ x: 0, y: 0 });
     }
@@ -51,14 +50,14 @@ const MagneticButton = ({ children, className, variant = 'primary', onClick }: M
       transition={{ type: "spring", stiffness: 150, damping: 15, mass: 0.1 }}
       onClick={onClick}
       className={cn(
-        "relative h-16 px-12 rounded-full font-bold text-lg transition-all duration-300 overflow-hidden group",
+        "relative h-14 px-10 rounded-full font-bold text-base transition-all duration-300 overflow-hidden group",
         variant === 'primary' 
-          ? "bg-gradient-to-r from-gold to-sage text-obsidian shadow-xl shadow-gold/10" 
+          ? "bg-gradient-to-r from-gold to-sage text-obsidian shadow-lg shadow-gold/10" 
           : "glass-morphism text-white hover:bg-white/10",
         className
       )}
     >
-      <span className="relative z-10 flex items-center justify-center gap-3">
+      <span className="relative z-10 flex items-center justify-center gap-2.5">
         {children}
       </span>
       {variant === 'primary' && (
