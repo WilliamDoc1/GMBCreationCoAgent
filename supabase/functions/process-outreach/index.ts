@@ -22,8 +22,6 @@ serve(async (req) => {
       .limit(5)
 
     for (const item of queueItems || []) {
-      console.log(`Processing outreach for customer: ${item.customer_id}`)
-      
       const outreachRes = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-outreach`, {
         method: 'POST',
         headers: { 
@@ -41,11 +39,24 @@ serve(async (req) => {
       }
     }
 
-    // 2. Content Gap Analysis & Generation
+    // 2. Sync Reviews & Content Generation
     const { data: tenants } = await supabase.from('tenants').select('*')
     
     for (const tenant of tenants || []) {
-      // Check if they have enough pending posts for the week
+      // Sync Reviews from Google
+      if (tenant.gmb_location_id && tenant.gmb_refresh_token) {
+        console.log(`Syncing reviews for: ${tenant.business_name}`)
+        await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/sync-gmb-reviews`, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`
+          },
+          body: JSON.stringify({ tenantId: tenant.id })
+        })
+      }
+
+      // Check if they have enough pending posts
       const { count } = await supabase
         .from('posts')
         .select('*', { count: 'exact', head: true })
@@ -53,7 +64,6 @@ serve(async (req) => {
         .eq('status', 'pending')
       
       if ((count || 0) < 3) {
-        console.log(`Generating content for tenant: ${tenant.business_name}`)
         await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/gbp-content-generator`, {
           method: 'POST',
           headers: { 
@@ -75,7 +85,6 @@ serve(async (req) => {
       .limit(5)
 
     for (const post of duePosts || []) {
-      console.log(`Auto-publishing post: ${post.id}`)
       await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/publish-gmb`, {
         method: 'POST',
         headers: { 
