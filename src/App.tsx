@@ -12,13 +12,14 @@ import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
 import Outreach from "./pages/Outreach";
 import Scheduling from "./pages/Scheduling";
+import Features from "./pages/Features";
+import Pricing from "./pages/Pricing";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    {/* ThemeProvider must be at the root to provide context to all components */}
     <ThemeProvider>
       <AuthProvider>
         <TooltipProvider>
@@ -33,6 +34,8 @@ const App = () => (
               <Route path="/profile" element={<Profile />} />
               <Route path="/outreach" element={<Outreach />} />
               <Route path="/scheduling" element={<Scheduling />} />
+              <Route path="/features" element={<Features />} />
+              <Route path="/pricing" element={<Pricing />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

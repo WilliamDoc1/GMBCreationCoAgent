@@ -4,16 +4,16 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%; /* Pure White */
-    --foreground: 240 10% 3.9%;
+    --background: 0 0% 100%; /* Pure White #FFFFFF */
+    --foreground: 240 2% 11%; /* Charcoal #1A1A1B */
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
+    --card-foreground: 240 2% 11%;
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
+    --popover-foreground: 240 2% 11%;
     --primary: 135 11% 33%; /* Sage */
     --primary-foreground: 0 0% 98%;
     --secondary: 43 58% 56%; /* Gold */
-    --secondary-foreground: 240 10% 3.9%;
+    --secondary-foreground: 240 2% 11%;
     --muted: 240 4.8% 95.9%;
     --muted-foreground: 240 3.8% 46.1%;
     --accent: 240 4.8% 95.9%;
@@ -61,8 +61,13 @@
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply text-foreground;
+    @apply text-foreground font-bold;
+    color: #000000; /* Bold Black for headings in light mode */
     letter-spacing: -0.02em;
+  }
+
+  .dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6 {
+    color: #FFFFFF;
   }
 }
 
@@ -87,8 +92,8 @@ body::before {
 }
 
 .light .glass-morphism {
-  @apply bg-black/[0.02] border-black/[0.05];
-  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.02);
+  @apply bg-white/60 border-black/[0.05];
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03), inset 0 1px 1px rgba(255, 255, 255, 0.8);
 }
 
 .diffused-glow-sage {
