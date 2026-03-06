@@ -9,6 +9,7 @@ import ScrollRestoration from "./components/ScrollRestoration";
 import Index from "./pages/Index";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
+import Register from "./pages/Register";
 import Feedback from "./pages/Feedback";
 import Documentation from "./pages/Documentation";
 import Privacy from "./pages/Privacy";
@@ -39,6 +40,7 @@ const App = () => (
               <Route path="/" element={<Landing />} />
               <Route path="/dashboard" element={<Index />} />
               <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
               <Route path="/feedback" element={<Feedback />} />
               <Route path="/documentation" element={<Documentation />} />
               <Route path="/privacy" element={<Privacy />} />

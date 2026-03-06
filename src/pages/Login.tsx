@@ -37,17 +37,6 @@ const Login = () => {
     setLoading(false);
   };
 
-  const handleSignUp = async () => {
-    setLoading(true);
-    const { error } = await supabase.auth.signUp({ email, password });
-    if (error) {
-      showError(error.message);
-    } else {
-      showSuccess("Check your email for the confirmation link");
-    }
-    setLoading(false);
-  };
-
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-4 relative">
       <div className="absolute top-8 left-8">
@@ -91,9 +80,11 @@ const Login = () => {
             <Button type="submit" className="w-full h-14 text-xl font-bold" disabled={loading}>
               {loading ? "Processing..." : "Login"}
             </Button>
-            <Button type="button" variant="outline" className="w-full h-14 text-xl font-semibold" onClick={handleSignUp} disabled={loading}>
-              Create New Account
-            </Button>
+            <Link to="/register" className="w-full">
+              <Button type="button" variant="outline" className="w-full h-14 text-xl font-semibold">
+                Create New Account
+              </Button>
+            </Link>
           </CardFooter>
         </form>
       </Card>

@@ -1,0 +1,234 @@
+"use client";
+
+import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { supabase } from '@/lib/supabase';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Check, ArrowLeft, ArrowRight, Loader2, CreditCard, ShieldCheck } from "lucide-react";
+import { showError, showSuccess } from '@/utils/toast';
+
+const PLANS = [
+  {
+    id: 'starter',
+    name: 'Local Hero',
+    price: 'R499',
+    description: 'Perfect for single-location local shops.',
+    features: ['1 GBP Location', '3x Weekly AI Posts', 'Email Review Outreach']
+  },
+  {
+    id: 'growth',
+    name: 'Market Leader',
+    price: 'R1,299',
+    description: 'For growing businesses with multiple branches.',
+    features: ['Up to 5 Locations', 'Advanced AI SEO Insights', 'SMS & Email Outreach'],
+    popular: true
+  },
+  {
+    id: 'agency',
+    name: 'Agency',
+    price: 'R3,499',
+    description: 'For agencies managing multiple clients.',
+    features: ['Unlimited Locations', 'Full Audit Logs', 'Bulk CSV Uploads']
+  }
+];
+
+const Register = () => {
+  const [step, setStep] = useState<'plan' | 'details'>('plan');
+  const [selectedPlan, setSelectedPlan] = useState(PLANS[1]);
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+    businessName: '',
+    cardNumber: '',
+    expiry: '',
+    cvc: ''
+  });
+
+  const handlePlanSelect = (plan: typeof PLANS[0]) => {
+    setSelectedPlan(plan);
+    setStep('details');
+  };
+
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const { error } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: {
+            plan_type: selectedPlan.id,
+            business_name: formData.businessName
+          }
+        }
+      });
+
+      if (error) throw error;
+
+      showSuccess("Account created! Please check your email for confirmation.");
+      navigate('/login');
+    } catch (err: any) {
+      showError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (step === 'plan') {
+    return (
+      <div className="min-h-screen bg-slate-50 py-12 px-4">
+        <div className="max-w-5xl mx-auto space-y-8">
+          <div className="text-center space-y-4">
+            <Link to="/login" className="inline-flex items-center gap-2 text-slate-500 hover:text-slate-900 mb-4">
+              <ArrowLeft size={16} /> Back to Login
+            </Link>
+            <h1 className="text-4xl font-extrabold text-slate-900">Choose Your Growth Plan</h1>
+            <p className="text-xl text-slate-500">Select the best option for your business to start dominating local search.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-8">
+            {PLANS.map((plan) => (
+              <Card 
+                key={plan.id} 
+                className={`relative flex flex-col cursor-pointer transition-all hover:shadow-xl ${plan.popular ? 'border-primary shadow-lg scale-105 z-10' : 'border-slate-200'}`}
+                onClick={() => handlePlanSelect(plan)}
+              >
+                {plan.popular && (
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                    <Badge className="bg-primary text-white px-3 py-1">MOST POPULAR</Badge>
+                  </div>
+                )}
+                <CardHeader>
+                  <CardTitle className="text-2xl">{plan.name}</CardTitle>
+                  <div className="flex items-baseline gap-1 mt-2">
+                    <span className="text-4xl font-bold">{plan.price}</span>
+                    <span className="text-slate-500 text-sm">/month</span>
+                  </div>
+                  <CardDescription className="mt-4 text-base">{plan.description}</CardDescription>
+                </CardHeader>
+                <CardContent className="flex-1">
+                  <ul className="space-y-4">
+                    {plan.features.map((feature, i) => (
+                      <li key={i} className="flex items-center gap-3 text-sm text-slate-600">
+                        <Check size={18} className="text-green-500 shrink-0" />
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+                <CardFooter>
+                  <Button className="w-full h-12 text-lg" variant={plan.popular ? "default" : "outline"}>
+                    Select {plan.name}
+                  </Button>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+      <Card className="w-full max-w-2xl shadow-2xl">
+        <CardHeader className="space-y-2">
+          <Button variant="ghost" size="sm" onClick={() => setStep('plan')} className="w-fit gap-2 text-slate-500">
+            <ArrowLeft size={16} /> Change Plan
+          </Button>
+          <div className="flex justify-between items-center">
+            <CardTitle className="text-3xl font-bold">Complete Your Registration</CardTitle>
+            <Badge variant="secondary" className="bg-blue-50 text-blue-700 h-6">
+              {selectedPlan.name} Plan
+            </Badge>
+          </div>
+          <CardDescription>Enter your business and payment details to activate your account.</CardDescription>
+        </CardHeader>
+        <form onSubmit={handleSignUp}>
+          <CardContent className="space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <h3 className="font-bold text-slate-900 flex items-center gap-2">
+                  <ShieldCheck size={18} className="text-primary" /> Account Details
+                </h3>
+                <div className="space-y-2">
+                  <Input 
+                    placeholder="Business Name" 
+                    value={formData.businessName}
+                    onChange={(e) => setFormData({...formData, businessName: e.target.value})}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Input 
+                    type="email" 
+                    placeholder="Email Address" 
+                    value={formData.email}
+                    onChange={(e) => setFormData({...formData, email: e.target.value})}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Input 
+                    type="password" 
+                    placeholder="Create Password" 
+                    value={formData.password}
+                    onChange={(e) => setFormData({...formData, password: e.target.value})}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="font-bold text-slate-900 flex items-center gap-2">
+                  <CreditCard size={18} className="text-primary" /> Payment Details
+                </h3>
+                <div className="space-y-2">
+                  <Input 
+                    placeholder="Card Number" 
+                    value={formData.cardNumber}
+                    onChange={(e) => setFormData({...formData, cardNumber: e.target.value})}
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <Input 
+                    placeholder="MM/YY" 
+                    value={formData.expiry}
+                    onChange={(e) => setFormData({...formData, expiry: e.target.value})}
+                    required
+                  />
+                  <Input 
+                    placeholder="CVC" 
+                    value={formData.cvc}
+                    onChange={(e) => setFormData({...formData, cvc: e.target.value})}
+                    required
+                  />
+                </div>
+                <p className="text-[10px] text-slate-400 italic">
+                  Your card will be charged {selectedPlan.price} monthly. Secure payment processed via Paystack.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+          <CardFooter className="bg-slate-50/50 border-t p-6">
+            <Button type="submit" className="w-full h-14 text-xl font-bold" disabled={loading}>
+              {loading ? <Loader2 className="animate-spin mr-2" /> : <ArrowRight className="mr-2" />}
+              Activate {selectedPlan.name} Account
+            </Button>
+          </CardFooter>
+        </form>
+      </Card>
+    </div>
+  );
+};
+
+export default Register;
