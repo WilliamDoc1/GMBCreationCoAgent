@@ -39,27 +39,29 @@ serve(async (req) => {
       throw new Error("Missing SMTP_USER or SMTP_PASSWORD secrets in Supabase");
     }
 
-    console.log(`Auth Check: User=${smtpUser.charAt(0)}...${smtpUser.split('@')[1]}, Pass Length=${smtpPassword.length}`);
-
     const transporter = nodemailer.createTransport({
       host: "smtp.gmail.com",
       port: 587,
-      secure: false, // Use STARTTLS
+      secure: false,
       auth: {
         user: smtpUser,
         pass: smtpPassword,
       },
       tls: {
-        rejectUnauthorized: false // Helps with connection stability in cloud functions
+        rejectUnauthorized: false
       }
     });
 
     // 3. Send Email
     const subject = `How was your experience with ${tenant.business_name}?`;
-    const body = (tenant.message_template || "Hi [Customer Name], thank you for choosing [Business Name]!")
+    
+    // Prepare the review link as a clickable HTML anchor
+    const reviewLinkHtml = `<a href="${tenant.gmb_review_link}" style="color: #2563eb; font-weight: bold; text-decoration: underline;">${tenant.gmb_review_link}</a>`;
+    
+    const body = (tenant.message_template || "Hi [Customer Name], thank you for choosing [Business Name]! Please leave us a review: [Review Link]")
       .replace(/\[Customer Name\]/g, customer.full_name)
       .replace(/\[Business Name\]/g, tenant.business_name)
-      .replace(/\[Review Link\]/g, tenant.gmb_review_link);
+      .replace(/\[Review Link\]/g, reviewLinkHtml);
 
     console.log(`Attempting send to ${customer.email} via ${smtpUser}...`);
     
@@ -67,7 +69,11 @@ serve(async (req) => {
       from: `"William @ ${tenant.business_name}" <william@gmbcreationco.com>`,
       to: customer.email,
       subject: subject,
-      html: body.replace(/\n/g, '<br>'),
+      html: `
+        <div style="font-family: sans-serif; line-height: 1.6; color: #334155; max-width: 600px;">
+          ${body.replace(/\n/g, '<br>')}
+        </div>
+      `,
     });
 
     console.log("Email sent successfully!");

@@ -21,7 +21,10 @@ serve(async (req) => {
       Constraint: Under 280 characters.
       Language: South African English (e.g., "optimise", "centre").
       
-      IMPORTANT: If a URL or link is provided in the instructions, ensure it is included exactly as written.
+      IMPORTANT: 
+      1. DO NOT include a "Subject:" line or any subject text. 
+      2. Only provide the message body.
+      3. If a URL or link is provided in the instructions, ensure it is included exactly as written.
     `
 
     const geminiResponse = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${geminiKey}`, {
@@ -31,7 +34,10 @@ serve(async (req) => {
     })
     
     const geminiData = await geminiResponse.json()
-    const preview = geminiData.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "AI failed to generate content."
+    let preview = geminiData.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "AI failed to generate content."
+
+    // Strip any accidental "Subject:" prefix if the AI still includes it
+    preview = preview.replace(/^Subject:\s*/i, '');
 
     return new Response(JSON.stringify({ preview }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
