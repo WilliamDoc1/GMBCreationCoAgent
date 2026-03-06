@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { showError, showSuccess } from '@/utils/toast';
-import Footer from "@/components/Footer";
 import { ArrowLeft } from "lucide-react";
 
 const Login = () => {
@@ -60,13 +59,6 @@ const Login = () => {
         </Link>
       </div>
 
-      <div className="mb-16">
-        <img 
-          src="/logo.png" 
-          alt="GMB Creation Co." 
-          className="h-64 w-auto object-contain mx-auto"
-        />
-      </div>
       <Card className="w-full max-w-md shadow-2xl border-slate-200">
         <CardHeader className="space-y-3 text-center pb-10">
           <CardTitle className="text-4xl font-extrabold tracking-tight">Welcome Back</CardTitle>
@@ -105,7 +97,6 @@ const Login = () => {
           </CardFooter>
         </form>
       </Card>
-      <Footer />
     </div>
   );
 };
