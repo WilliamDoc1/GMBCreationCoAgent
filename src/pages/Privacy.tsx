@@ -16,7 +16,7 @@ const Privacy = () => {
           <Link to="/">
             <Button variant="ghost" size="sm" className="flex items-center gap-2 text-slate-500 hover:text-slate-900">
               <ArrowLeft size={16} />
-              Back to Dashboard
+              Back to Home
             </Button>
           </Link>
         </div>
@@ -46,17 +46,22 @@ const Privacy = () => {
               <div className="space-y-3">
                 <p><strong>Personal Data:</strong> Name, email address, and contact details provided during registration.</p>
                 <p><strong>Business Data:</strong> Business name, industry, location, and service descriptions used to train the AI agent.</p>
-                <p><strong>Google API Data:</strong> When you link your Google Business Profile, we access your business location ID and post history to automate content delivery.</p>
+                <p><strong>Google API Data:</strong> When you link your Google Business Profile, we access your business location ID and post history to automate content delivery and review management.</p>
               </div>
             </section>
 
-            <section>
+            <section className="bg-blue-50 p-6 rounded-xl border border-blue-100">
               <h2 className="text-xl font-semibold text-slate-900 mb-3 flex items-center gap-2">
-                <Database size={20} className="text-green-500" /> 3. Google API Limited Use
+                <Database size={20} className="text-blue-600" /> 3. Google API Limited Use Disclosure
               </h2>
-              <p>
-                Our application's use and transfer of information received from Google APIs adheres to the <a href="https://developers.google.com/terms/api-services-user-data-policy" className="text-blue-600 underline">Google API Services User Data Policy</a>. We do not use Google user data to serve advertisements or sell it to third-party data brokers.
+              <p className="text-sm">
+                GMB Creation Co's use and transfer of information received from Google APIs to any other app will adhere to <a href="https://developers.google.com/terms/api-services-user-data-policy#additional_requirements_for_specific_api_scopes" target="_blank" className="text-blue-600 font-bold underline">Google API Services User Data Policy</a>, including the Limited Use requirements.
               </p>
+              <ul className="list-disc ml-6 mt-4 space-y-2 text-sm">
+                <li>We do not use Google user data to serve advertisements.</li>
+                <li>We do not sell Google user data to third parties.</li>
+                <li>We only use Google user data to provide or improve the features of our application (e.g., automating GBP posts and review responses).</li>
+              </ul>
             </section>
 
             <section>
@@ -81,18 +86,9 @@ const Privacy = () => {
               </p>
             </section>
 
-            <section>
-              <h2 className="text-xl font-semibold text-slate-900 mb-3 flex items-center gap-2">
-                <Lock size={20} className="text-purple-500" /> 6. Identity Verification
-              </h2>
-              <p>
-                Every action performed within the app is verified using cryptographically signed JSON Web Tokens (JWT). This ensures that only you can trigger automations or view data associated with your business.
-              </p>
-            </section>
-
             <section className="pt-8 border-t">
               <p className="text-sm text-slate-500">
-                If you have questions about this policy or wish to exercise your data rights under POPIA or GDPR, please contact us at william@gmbcreationco.com
+                If you have questions about this policy or wish to exercise your data rights under POPIA or GDPR, please contact us at <strong>william@gmbcreationco.com</strong>
               </p>
             </section>
           </div>
