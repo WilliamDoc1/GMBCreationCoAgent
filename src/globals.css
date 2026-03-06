@@ -83,7 +83,6 @@ body::before {
 .glass-morphism {
   @apply backdrop-blur-[20px] transition-all duration-300;
   @apply bg-white/[0.04] border-white/[0.1] dark:bg-white/[0.04] dark:border-white/[0.1];
-  @apply light:bg-black/[0.02] light:border-black/[0.05];
   box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.05);
 }
 
