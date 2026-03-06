@@ -31,9 +31,9 @@ const ensureYocoLoaded = (): Promise<void> => {
       return;
     }
 
-    // 2. Poll for the object (check every 200ms)
+    // 2. Poll for the object (check every 250ms)
     let attempts = 0;
-    const maxAttempts = 25; // 5 seconds total
+    const maxAttempts = 40; // 10 seconds total
     
     const interval = setInterval(() => {
       attempts++;
@@ -42,9 +42,9 @@ const ensureYocoLoaded = (): Promise<void> => {
         resolve();
       } else if (attempts >= maxAttempts) {
         clearInterval(interval);
-        reject(new Error("Yoco SDK failed to load. This is usually caused by an Ad-Blocker or strict browser privacy settings. Please disable them for this site and refresh."));
+        reject(new Error("Yoco SDK failed to load. Please ensure you have disabled Ad-Blockers or 'Strict Tracking Protection' for this site and refresh the page."));
       }
-    }, 200);
+    }, 250);
   });
 };
 
