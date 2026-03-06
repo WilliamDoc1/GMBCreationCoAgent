@@ -9,9 +9,6 @@ import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
-import Profile from "./pages/Profile";
-import Outreach from "./pages/Outreach";
-import Scheduling from "./pages/Scheduling";
 import Features from "./pages/Features";
 import Pricing from "./pages/Pricing";
 import Privacy from "./pages/Privacy";
@@ -34,9 +31,6 @@ const App = () => (
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/outreach" element={<Outreach />} />
-              <Route path="/scheduling" element={<Scheduling />} />
               <Route path="/features" element={<Features />} />
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/privacy" element={<Privacy />} />

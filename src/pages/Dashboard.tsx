@@ -1,68 +1,293 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/components/AuthProvider';
+import { useTenant } from '@/hooks/use-tenant';
+import { Loader2, LayoutDashboard, Settings, Users, ShieldCheck, History, TrendingUp, Calendar, Zap, MapPin, CreditCard, Lock } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import CustomerTable from '@/components/CustomerTable';
 import DashboardHeader from '@/components/DashboardHeader';
+import CustomerActionBar from '@/components/CustomerActionBar';
+import DashboardStats from '@/components/DashboardStats';
+import ActivityFeed from '@/components/ActivityFeed';
+import ReviewFeed from '@/components/ReviewFeed';
+import TenantSettings from '@/components/TenantSettings';
+import OutreachSettings from '@/components/OutreachSettings';
+import AdminTenantsTable from '@/components/AdminTenantsTable';
+import AuditLogTable from '@/components/AuditLogTable';
+import OnboardingChecklist from '@/components/OnboardingChecklist';
+import AgentMonitoring from '@/components/AgentMonitoring';
+import SEOInsights from '@/components/SEOInsights';
+import PostQueue from '@/components/PostQueue';
+import AdminDiagnostics from '@/components/AdminDiagnostics';
+import BranchManager from '@/components/BranchManager';
+import SubscriptionManager from '@/components/SubscriptionManager';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Footer from "@/components/Footer";
-import { LayoutDashboard, Users, Calendar, Zap, TrendingUp } from "lucide-react";
-import GlassCard from '@/components/landing/GlassCard';
+import { showSuccess, showError } from '@/utils/toast';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 const Dashboard = () => {
+  const { session, loading: authLoading } = useAuth();
+  const { tenant, loading: tenantLoading } = useTenant();
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const queryClient = useQueryClient();
+  
+  const activeTab = searchParams.get('tab') || 'overview';
+  const [userRole, setUserRole] = useState('client');
+  const [isAddOpen, setIsAddOpen] = useState(false);
+  const [isBulkProcessing, setIsBulkProcessing] = useState(false);
+
+  useEffect(() => {
+    if (!authLoading && !session) {
+      navigate('/login');
+    }
+  }, [session, authLoading, navigate]);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!session?.user) return;
+      const { data } = await supabase.from('profiles').select('role').eq('id', session.user.id).single();
+      if (data) setUserRole(data.role);
+    };
+    fetchProfile();
+  }, [session]);
+
+  const { data: customers = [], refetch: fetchCustomers } = useQuery({
+    queryKey: ['customers', tenant?.id],
+    queryFn: async () => {
+      if (!tenant) return [];
+      const { data, error } = await supabase
+        .from('customers')
+        .select('*')
+        .eq('tenant_id', tenant.id)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!tenant,
+  });
+
+  useEffect(() => {
+    if (tenant) {
+      const channel = supabase
+        .channel('schema-db-changes')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'customers', filter: `tenant_id=eq.${tenant.id}` },
+          () => queryClient.invalidateQueries({ queryKey: ['customers', tenant.id] })
+        )
+        .subscribe();
+      return () => { supabase.removeChannel(channel); };
+    }
+  }, [tenant, queryClient]);
+
+  const handleTabChange = (value: string) => {
+    setSearchParams({ tab: value });
+  };
+
+  const handleBulkProcess = async () => {
+    const newCustomers = customers.filter((c: any) => c.status === 'new');
+    if (newCustomers.length === 0) {
+      showError("No new customers to process");
+      return;
+    }
+
+    setIsBulkProcessing(true);
+    try {
+      const queueItems = newCustomers.map((c: any) => ({
+        tenant_id: tenant?.id,
+        customer_id: c.id,
+        status: 'pending'
+      }));
+
+      const { error } = await supabase.from('outreach_queue').insert(queueItems);
+      if (error) throw error;
+
+      await supabase.functions.invoke('process-outreach');
+      showSuccess(`Queued ${newCustomers.length} customers for outreach`);
+      queryClient.invalidateQueries({ queryKey: ['customers', tenant?.id] });
+    } catch (err) {
+      showError("Failed to queue outreach");
+    } finally {
+      setIsBulkProcessing(false);
+    }
+  };
+
+  if (authLoading || tenantLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <Loader2 className="animate-spin text-primary" size={32} />
+      </div>
+    );
+  }
+
+  if (!session) return null;
+
+  const currentPlan = (tenant as any)?.plan_type || 'starter';
+  const hasSEOAccess = currentPlan === 'growth' || currentPlan === 'agency';
+  const hasLogAccess = currentPlan === 'agency';
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-slate-50 pb-12">
       <DashboardHeader />
-      <main className="max-w-7xl mx-auto px-6 pt-32 pb-20">
-        <div className="flex items-center gap-3 mb-10">
-          <LayoutDashboard className="text-primary" size={32} />
-          <h1 className="text-4xl font-bold">Dashboard</h1>
-        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-          {[
-            { label: "Total Reviews", value: "128", icon: Users, color: "sage" },
-            { label: "Scheduled Posts", value: "12", icon: Calendar, color: "amber" },
-            { label: "Active Campaigns", value: "4", icon: Zap, color: "sage" },
-            { label: "SEO Score", value: "92/100", icon: TrendingUp, color: "amber" },
-          ].map((stat, i) => (
-            <GlassCard key={i} className="p-6" glowColor={stat.color as 'sage' | 'amber'}>
-              <div className="flex items-center justify-between mb-4">
-                <stat.icon size={24} className="text-muted-foreground" />
-                <span className="text-2xl font-bold">{stat.value}</span>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-8">
+          <div className="flex items-center justify-between overflow-x-auto pb-2">
+            <TabsList className="flex-nowrap">
+              <TabsTrigger value="overview" className="flex items-center gap-2">
+                <LayoutDashboard size={16} /> Overview
+              </TabsTrigger>
+              <TabsTrigger value="locations" className="flex items-center gap-2">
+                <MapPin size={16} /> Locations
+              </TabsTrigger>
+              <TabsTrigger value="customers" className="flex items-center gap-2">
+                <Users size={16} /> Customers
+              </TabsTrigger>
+              <TabsTrigger value="posts" className="flex items-center gap-2">
+                <Calendar size={16} /> Content Queue
+              </TabsTrigger>
+              <TabsTrigger value="outreach" className="flex items-center gap-2">
+                <Zap size={16} /> Outreach Settings
+              </TabsTrigger>
+              <TabsTrigger value="subscription" className="flex items-center gap-2 text-blue-600">
+                <CreditCard size={16} /> Subscription
+              </TabsTrigger>
+              
+              <TabsTrigger value="seo" className="flex items-center gap-2">
+                <TrendingUp size={16} /> SEO Insights
+                {!hasSEOAccess && <Lock size={12} className="text-slate-400" />}
+              </TabsTrigger>
+              
+              <TabsTrigger value="logs" className="flex items-center gap-2">
+                <History size={16} /> Audit Logs
+                {!hasLogAccess && <Lock size={12} className="text-slate-400" />}
+              </TabsTrigger>
+
+              <TabsTrigger value="settings" className="flex items-center gap-2">
+                <Settings size={16} /> Business Profile
+              </TabsTrigger>
+              {userRole === 'admin' && (
+                <TabsTrigger value="admin" className="flex items-center gap-2 text-purple-600">
+                  <ShieldCheck size={16} /> Admin
+                </TabsTrigger>
+              )}
+            </TabsList>
+          </div>
+
+          <TabsContent value="overview" className="space-y-8">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+              <div className="lg:col-span-3 space-y-8">
+                <DashboardStats customers={customers} />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <ReviewFeed />
+                  <ActivityFeed />
+                </div>
               </div>
-              <p className="text-sm text-muted-foreground font-medium uppercase tracking-wider">{stat.label}</p>
-            </GlassCard>
-          ))}
-        </div>
+              <div className="lg:col-span-1 space-y-6">
+                <AgentMonitoring />
+                <OnboardingChecklist />
+              </div>
+            </div>
+          </TabsContent>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <GlassCard className="lg:col-span-2" glowColor="sage">
-            <h2 className="text-xl font-bold mb-6">Recent Activity</h2>
-            <div className="space-y-4">
-              {[1, 2, 3].map((_, i) => (
-                <div key={i} className="flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/10">
-                  <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                    <Zap size={18} className="text-primary" />
+          <TabsContent value="locations">
+            <BranchManager />
+          </TabsContent>
+
+          <TabsContent value="subscription">
+            <SubscriptionManager />
+          </TabsContent>
+
+          <TabsContent value="posts">
+            <PostQueue />
+          </TabsContent>
+
+          <TabsContent value="customers" className="space-y-6">
+            <CustomerActionBar 
+              customers={customers}
+              isBulkProcessing={isBulkProcessing}
+              onBulkProcess={handleBulkProcess}
+              onRefresh={() => fetchCustomers()}
+              isAddOpen={isAddOpen}
+              setIsAddOpen={setIsAddOpen}
+            />
+            <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+              <CustomerTable customers={customers} onRefresh={() => fetchCustomers()} />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="outreach">
+            <div className="max-w-2xl">
+              <OutreachSettings />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="settings">
+            <div className="max-w-2xl">
+              <TenantSettings />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="seo">
+            <div className="max-w-3xl">
+              {!hasSEOAccess ? (
+                <Card className="border-dashed py-12 text-center">
+                  <CardContent className="space-y-4">
+                    <TrendingUp size={48} className="mx-auto text-slate-200" />
+                    <h3 className="text-lg font-bold">SEO Insights Locked</h3>
+                    <p className="text-slate-500 max-w-sm mx-auto">
+                      Advanced AI SEO analysis is available on the <strong>Market Leader</strong> and <strong>Agency</strong> plans.
+                    </p>
+                    <Button onClick={() => handleTabChange('subscription')}>Upgrade Now</Button>
+                  </CardContent>
+                </Card>
+              ) : (
+                <SEOInsights />
+              )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="logs">
+            {!hasLogAccess ? (
+              <Card className="border-dashed py-12 text-center">
+                <CardContent className="space-y-4">
+                  <History size={48} className="mx-auto text-slate-200" />
+                  <h3 className="text-lg font-bold">Audit Logs Locked</h3>
+                  <p className="text-slate-500 max-w-sm mx-auto">
+                    Full operational audit logs are exclusive to the <strong>Agency</strong> plan.
+                  </p>
+                  <Button onClick={() => handleTabChange('subscription')}>Upgrade to Agency</Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <AuditLogTable />
+            )}
+          </TabsContent>
+
+          {userRole === 'admin' && (
+            <TabsContent value="admin">
+              <div className="space-y-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-4">
+                    <h2 className="text-xl font-bold">SaaS Administration</h2>
+                    <AdminTenantsTable />
                   </div>
-                  <div>
-                    <p className="font-medium">New review request sent to John Doe</p>
-                    <p className="text-xs text-muted-foreground">2 hours ago</p>
+                  <div className="space-y-4">
+                    <h2 className="text-xl font-bold">Diagnostics</h2>
+                    <AdminDiagnostics />
                   </div>
                 </div>
-              ))}
-            </div>
-          </GlassCard>
-          
-          <GlassCard glowColor="amber">
-            <h2 className="text-xl font-bold mb-6">Quick Actions</h2>
-            <div className="space-y-3">
-              <button className="w-full p-4 rounded-xl bg-primary text-primary-foreground font-bold hover:opacity-90 transition-opacity">
-                Create New Post
-              </button>
-              <button className="w-full p-4 rounded-xl glass-morphism font-bold hover:bg-white/10 transition-colors">
-                Import Customers
-              </button>
-            </div>
-          </GlassCard>
-        </div>
+              </div>
+            </TabsContent>
+          )}
+        </Tabs>
       </main>
       <Footer />
     </div>
